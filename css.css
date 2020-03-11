@@ -1,0 +1,19 @@
+#main {
+  margin-bottom: 50px;
+  border: 1px solid #000;
+  background: rgba(255,255,255,0.5);
+  border-radius: 11px;
+  float: left;
+  width: 800px;
+  padding-bottom:
+  15px; position: relative;
+  z-index: 2;
+}
+
+.player{
+  height: 42px;
+  box-shadow: 0 -1px #000; 
+  margin-bottom: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
