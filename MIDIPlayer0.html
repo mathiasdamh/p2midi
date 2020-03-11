@@ -35,13 +35,14 @@
 	<h1>P2 webmidi - baseret på MIDI.js</h1>
 	<div id="main">
 		<div class="player">
-			<div style="margin: 0 auto; width: 160px; float: right;">
+			<div>
 				<input type="image" src="images/pause.png" align="absmiddle" value="pause" onclick="pausePlayStop()" id="pausePlayStop">
 				<input type="image" src="images/stop.png" align="absmiddle" value="stop" onclick="pausePlayStop(true)">
 				<input type="image" src="images/backward.png" align="absmiddle" value="stop" onclick="player.getNextSong(-1);">
 				<input type="image" src="images/forward.png" align="absmiddle" value="stop" onclick="player.getNextSong(+1);">
 			</div>
-			<div class="time-controls" style="float: left; margin: 0; position: relative; top: 5px;">
+
+			<div class="time-controls">
 				<span id="time1" class="time">0:00</span>
 				<span id="capsule">
 					<span id="cursor"></span>
@@ -49,16 +50,18 @@
 				<span id="time2" class="time" style="text-align: left;">-0:00</span>
 			</div>
 		</div>
-		<div id="title" style="background: rgba(255,255,0,0.5); position: relative;color: #000; z-index: -1;padding: 5px 11px 5px;">Loading API...</div>
-		<h3 style="margin: 0">Dam dam daaaa</h3>
+
+		<div id="title">Loading API...</div>
+		<h3>Dam dam daaaa</h3>
 		<p>Project based on <b><a href="https://github.com/mudcube/MIDI.js">MIDI.js</a></b></p>
-			<p><a href="https://www.google.com/chrome">Google Chrome</a> is recommended for best listening experience, it&rsquo;s timing perfection! Firefox and Safari can both perform a bit more like the piano has been drinking, arrr.</p>
-			<p>Carpe beerum, and <a href="https://github.com/mudcube/MIDI.js">commandeer</a> yer own copy!</p>
+			<p><a href="https://www.google.com/chrome">Google Chrome</a>
+				 is recommended for best listening experience, it&rsquo;s timing perfection!
+			</p>
 			<p><a href="README.md" target="_blank">Documentation</a>
-				<div class="test">
+		<div class="test">
 					<input type="button" id="btn_speed" name="testBtn1" value="Change speed">
 					<input type="number" id="playback_speed" value="1">
-				</div>
+		</div>
 	</div>
 
 <script type="text/javascript" src="songs.js"></script>
