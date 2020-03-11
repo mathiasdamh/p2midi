@@ -74,12 +74,12 @@
 		var d = document.getElementById("pausePlayStop");
 		if (stop) {
 			MIDI.Player.stop();
-			d.src = "examples/images/play.png";
+			d.src = "images/play.png";
 		} else if (MIDI.Player.playing) {
-			d.src = "examples/images/play.png";
+			d.src = "images/play.png";
 			MIDI.Player.pause(true);
 		} else {
-			d.src = "examples/images/pause.png";
+			d.src = "images/pause.png";
 			MIDI.Player.resume();
 		}
 	};
