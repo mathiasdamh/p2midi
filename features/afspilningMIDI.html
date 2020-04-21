@@ -3,8 +3,100 @@
     <head>
         <meta charset="utf-8">
         <title>Afspilning af MIDI filer</title>
+    	<!-- shim -->
+    	<script src="../modules/shim/Base64.js" type="text/javascript"></script>
+    	<script src="../modules/shim/Base64binary.js" type="text/javascript"></script>
+    	<script src="../modules/shim/WebAudioAPI.js" type="text/javascript"></script>
+    	<script src="../modules/shim/WebMIDIAPI.js" type="text/javascript"></script>
+    	<!-- jasmid package -->
+    	<script src="../modules/jasmid/stream.js"></script>
+    	<script src="../modules/jasmid/midifile.js"></script>
+    	<script src="../modules/jasmid/replayer.js"></script>
+    	<!-- midi.js package -->
+    	<script src="../modules/midi_js/audioDetect.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/gm.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/loader.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/plugin.audiotag.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/plugin.webaudio.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/plugin.webmidi.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/player.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/synesthesia.js" type="text/javascript"></script>
+    	<!-- utils -->
+    	<script src="../modules/util/dom_request_xhr.js" type="text/javascript"></script>
+    	<script src="../modules/util/dom_request_script.js" type="text/javascript"></script>
+    	<!-- includes -->
+    	<script src="../modules/inc/colorspace.js" type="text/javascript"></script>
+    	<script src="../modules/inc/event.js" type="text/javascript"></script>
+    	<script src="../modules/inc/timer.js" type="text/javascript"></script>
     </head>
     <body>
+        <input type="button" id="btn_play" value="Play/Stop">
+        <input type="button" id="btn_pause" value="Pause/Resume">
+
+
+        <br>
+
+        <input type="button" id="btn_load" value="Load">
+        <input type="text" id="midi_file" value="../midi/tetris.mid">
 
     </body>
+    <script type="text/javascript">
+        MIDI.loadPlugin({
+            soundfontUrl: "./FluidR3_GM/",
+            onsuccess: function() { }
+        });
+
+        function load_file(file_path){
+            console.log("start load_file()" + file_path);
+            MIDI.Player.loadFile(file_path, () => {
+                MIDI.Player.addListener(function(data) {
+                    console.log(data.now +"/"+data.end+" "+data.channel);
+
+                    if(data.now === data.end) {
+                        MIDI.Player.stop();
+                        console.log("end of song, stopping player");
+                    };
+                });
+            })
+        };
+
+        function btn_play(){
+            console.log(MIDI.Player.playing + " start btn_play()");
+            switch (MIDI.Player.playing) {
+                case true: MIDI.Player.stop();
+
+                    break;
+
+                case false: MIDI.Player.start();
+
+                    break;
+                default: console.log("error in btn_play switch");
+
+            }
+        };
+
+        function btn_pause(){
+            console.log(MIDI.Player.playing + " start btn_pause()");
+            switch (MIDI.Player.playing) {
+                case true: MIDI.Player.pause();
+
+                    break;
+
+                case false: MIDI.Player.resume();
+
+                    break;
+                default: console.log("error in btn_pause switch");
+
+            }
+        }
+
+        function btn_load(){
+            let file_name = document.getElementById('midi_file').value;
+            load_file(file_name);
+        }
+
+        document.getElementById('btn_play').addEventListener("click", btn_play);
+        document.getElementById('btn_load').addEventListener("click", btn_load);
+        document.getElementById('btn_pause').addEventListener("click", btn_pause);
+    </script>
 </html>

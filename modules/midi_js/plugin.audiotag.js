@@ -11,7 +11,7 @@
 	window.Audio && (function() {
 		var midi = root.AudioTag = { api: 'audiotag' };
 		var noteToKey = {};
-		var volume = 127; // floating point 
+		var volume = 127; // floating point
 		var buffer_nid = -1; // current channel
 		var audioBuffers = []; // the audio channels
 		var notesOn = []; // instrumentId + noteId that is currently playing in each 'channel', for routing noteOff/chordOff calls
@@ -27,6 +27,7 @@
 			var note = notes[note];
 			if (note) {
 				var instrumentNoteId = instrumentId + '' + note.id;
+				console.log(instrumentNoteId);
 				var nid = (buffer_nid + 1) % audioBuffers.length;
 				var audio = audioBuffers[nid];
 				notesOn[ nid ] = instrumentNoteId;
@@ -61,7 +62,7 @@
 				}
 			}
 		};
-	
+
 		midi.audioBuffers = audioBuffers;
 		midi.send = function(data, delay) { };
 		midi.setController = function(channel, type, value, delay) { };
@@ -86,19 +87,19 @@
 				playChannel(channel, id);
 			}
 		};
-	
+
 		midi.noteOff = function(channel, note, delay) {
-// 			var id = noteToKey[note];
-// 			if (!notes[id]) return;
-// 			if (delay) {
-// 				return setTimeout(function() {
-// 					stopChannel(channel, id);
-// 				}, delay * 1000)
-// 			} else {
-// 				stopChannel(channel, id);
-// 			}
+ 			var id = noteToKey[note];
+ 			if (!notes[id]) return;
+ 			if (delay) {
+ 				return setTimeout(function() {
+ 					stopChannel(channel, id);
+ 				}, delay * 1000)
+ 			} else {
+ 				stopChannel(channel, id);
+ 			}
 		};
-	
+
 		midi.chordOn = function(channel, chord, velocity, delay) {
 			for (var idx = 0; idx < chord.length; idx ++) {
 				var n = chord[idx];
@@ -113,7 +114,7 @@
 				}
 			}
 		};
-	
+
 		midi.chordOff = function(channel, chord, delay) {
 			for (var idx = 0; idx < chord.length; idx ++) {
 				var n = chord[idx];
@@ -128,13 +129,13 @@
 				}
 			}
 		};
-	
+
 		midi.stopAllNotes = function() {
 			for (var nid = 0, length = audioBuffers.length; nid < length; nid++) {
 				audioBuffers[nid].pause();
 			}
 		};
-	
+
 		midi.connect = function(opts) {
 			root.setDefaultPlugin(midi);
 			///
