@@ -44,12 +44,19 @@
     const testMidi = new Midi();
     const testTrack = testMidi.addTrack();
 
+    let startTime = 0;
+    let deltaTime = 0;
+    let noteOnTime = 0;
+
     function main(){
         /*  Her indlæses MIDI.js plugin.
          *  Det hele er sat i en funktion for at sørge for at AudioContext ikke
          *  bliver forhindret i at starte, hvis browseren forlanger at en bruger
          *  skal starte handlingen.
          */
+
+        startTime = 0;
+        testMidi.tracks[0].notes = [];
         MIDI.loadPlugin({
             soundfontUrl: "./FluidR3_GM/",
             instrument: 1,
@@ -86,23 +93,31 @@
             console.log(midiMessage);
             switch (midiMessage.data[0]) {
                 case 144: // note On channel 1
+                    if(startTime === 0) startTime = midiMessage.timeStamp;
                     console.log("playing note "+midiMessage.data[1]);
                     MIDI.noteOn(0, midiMessage.data[1], midiMessage.data[2]);
+                    noteOnTime = midiMessage.timeStamp - startTime;
+                    console.log(noteOnTime);
 
-                    testTrack.addNote({
-                        midi: midiMessage.data[1],
-                        time: MIDI.getContext().currentTime,
-                        duration: 1
-                    });
                     break;
                 case 128: // note Off channel 1
                     MIDI.noteOff(0, midiMessage.data[1], midiMessage.data[2]);
+                    deltaTime = (midiMessage.timeStamp - startTime) - noteOnTime;
+                    console.log(deltaTime);
+
+                    testTrack.addNote({
+                        midi: midiMessage.data[1],
+                        ticks: (midiMessage.timeStamp - startTime) - deltaTime,
+                        durationTicks: deltaTime
+                    });
+
                     break;
                 case 192: // switch program channel 1
                     MIDI.programChange(0, midiMessage.data[1]);
                     MIDI.loadPlugin({
                         instrument: midiMessage.data[1]
                     });
+                    testMidi.tracks[0].instrument.number = midiMessage.data[1]
                 default:
             }
         }

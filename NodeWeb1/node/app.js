@@ -89,8 +89,9 @@ const server = http.createServer((req, res) => {
                     if(verbose)console.log("after parse: "+typeof body);
 
                     // Skriver dataet ud til en MIDI fil
-                    fs.writeFileSync("output.mid", new Buffer.alloc(10, Object.values(body)));
+                    fs.writeFileSync("output.mid", new Buffer(Object.values(body)));
 
+                    console.log("end write midi file");
                     res.end('end write midi file');
                 });
                 res.end('unexpected ending ' + req.url);
