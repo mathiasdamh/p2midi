@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>Indspilning af MIDI filer</title>
+        <!-- shim -->
+    	<script src="../modules/shim/Base64.js" type="text/javascript"></script>
+    	<script src="../modules/shim/Base64binary.js" type="text/javascript"></script>
+    	<script src="../modules/shim/WebAudioAPI.js" type="text/javascript"></script>
+    	<script src="../modules/shim/WebMIDIAPI.js" type="text/javascript"></script>
+    	<!-- jasmid package -->
+    	<script src="../modules/jasmid/stream.js"></script>
+    	<script src="../modules/jasmid/midifile.js"></script>
+    	<script src="../modules/jasmid/replayer.js"></script>
+    	<!-- midi.js package -->
+    	<script src="../modules/midi_js/audioDetect.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/gm.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/loader.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/plugin.audiotag.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/plugin.webaudio.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/plugin.webmidi.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/player.js" type="text/javascript"></script>
+    	<script src="../modules/midi_js/synesthesia.js" type="text/javascript"></script>
+    	<!-- utils -->
+    	<script src="../modules/util/dom_request_xhr.js" type="text/javascript"></script>
+    	<script src="../modules/util/dom_request_script.js" type="text/javascript"></script>
+    	<!-- includes -->
+    	<script src="../modules/inc/colorspace.js" type="text/javascript"></script>
+    	<script src="../modules/inc/event.js" type="text/javascript"></script>
+    	<script src="../modules/inc/timer.js" type="text/javascript"></script>
+        <!-- tonejs -->
+        <script src="https://unpkg.com/@tonejs/midi"></script>
+    </head>
+    <body>
+
+        <input type="button" id="btnRecord" value="record">
+
+        <input type="button" id="btnMidi" value="create">
+
+    </body>
+    <script type="text/javascript">
+    /* Test af at lave live indspilning om til en midi fil, bruger tone.js
+    */
+    const testMidi = new Midi();
+    const testTrack = testMidi.addTrack();
+
+    function main(){
+        /*  Her indlæses MIDI.js plugin.
+         *  Det hele er sat i en funktion for at sørge for at AudioContext ikke
+         *  bliver forhindret i at starte, hvis browseren forlanger at en bruger
+         *  skal starte handlingen.
+         */
+        MIDI.loadPlugin({
+            soundfontUrl: "./FluidR3_GM/",
+            instrument: 1,
+            onsuccess: function() { }
+        });
+
+        /* Web MIDI Api til at lede efter MIDI controllere.
+        */
+        navigator.requestMIDIAccess()
+        .then(onMIDISuccess, onMIDIFailure);
+
+        function onMIDIFailure() {
+            console.log('Could not access your MIDI devices.');
+        }
+
+        /* Hvis der er nogle, sæt en funktion til at aktivere, når der kommer
+        *  en MIDI besked fra controlleren.
+        */
+        function onMIDISuccess(midiAccess) {
+            for (let input of midiAccess.inputs.values()){
+                input.onmidimessage = getMIDIMessage;
+            }
+
+            console.log(midiAccess);
+
+            var inputs = midiAccess.inputs;   // Input controllere
+            var outputs = midiAccess.outputs; // Output controllere
+        }
+
+        /* Denne funktion agere på beskeder fra controlleren, og bruger MIDI.js
+        *  til at afspille lyd.
+        */
+        function getMIDIMessage(midiMessage) {
+            console.log(midiMessage);
+            switch (midiMessage.data[0]) {
+                case 144: // note On channel 1
+                    console.log("playing note "+midiMessage.data[1]);
+                    MIDI.noteOn(0, midiMessage.data[1], midiMessage.data[2]);
+
+                    testTrack.addNote({
+                        midi: midiMessage.data[1],
+                        time: MIDI.getContext().currentTime,
+                        duration: 1
+                    });
+                    break;
+                case 128: // note Off channel 1
+                    MIDI.noteOff(0, midiMessage.data[1], midiMessage.data[2]);
+                    break;
+                case 192: // switch program channel 1
+                    MIDI.programChange(0, midiMessage.data[1]);
+                    MIDI.loadPlugin({
+                        instrument: midiMessage.data[1]
+                    });
+                default:
+            }
+        }
+    }
+
+    /* Funktion til at sende POST request til serveren.
+    */
+    function createMidi(){
+        console.log(testMidi);
+        let data = JSON.stringify(testMidi.toArray());
+        fetch ("midi/newMidiFile", {
+            headers:{
+                "content-type":"application/json; charset=UTF-8"
+            },
+            body: data,
+            method:"POST"
+        })
+        .then(data=>{return data})
+        .then(res=>{console.log(res)})
+        .catch(error=>console.log(error));
+    }
+
+    /* Knapper
+    */
+    document.getElementById('btnRecord').addEventListener("click", main);
+    document.getElementById('btnMidi').addEventListener("click", createMidi);
+
+    </script>
+</html>
