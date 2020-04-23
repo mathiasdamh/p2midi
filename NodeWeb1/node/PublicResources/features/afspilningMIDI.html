@@ -41,12 +41,15 @@
 
     </body>
     <script type="text/javascript">
-        // Indlæser 
+        // Indlæser
         MIDI.loadPlugin({
             soundfontUrl: "./FluidR3_GM/",
             onsuccess: function() { }
         });
 
+        /* Læser en fil fra file_path parameteren
+        *  console.logger nogle data for sjov
+        */
         function load_file(file_path){
             console.log("start load_file()" + file_path);
             MIDI.Player.loadFile(file_path, () => {
@@ -61,6 +64,9 @@
             })
         };
 
+        /* Knap der afspiller sangen, hvis MIDI.player ikke spiller, og stopper
+        *  den hvis den spiller.
+        */
         function btn_play(){
             console.log(MIDI.Player.playing + " start btn_play()");
             switch (MIDI.Player.playing) {
@@ -76,6 +82,8 @@
             }
         };
 
+        /* Ligesom btn_play, men i stedet afspiller den fra der man pausede.
+        */
         function btn_pause(){
             console.log(MIDI.Player.playing + " start btn_pause()");
             switch (MIDI.Player.playing) {
@@ -91,11 +99,15 @@
             }
         }
 
+        /* Knap til at loade en fil.
+        */
         function btn_load(){
             let file_name = document.getElementById('midi_file').value;
             load_file(file_name);
         }
 
+        /* Knap events.
+        */
         document.getElementById('btn_play').addEventListener("click", btn_play);
         document.getElementById('btn_load').addEventListener("click", btn_load);
         document.getElementById('btn_pause').addEventListener("click", btn_pause);
