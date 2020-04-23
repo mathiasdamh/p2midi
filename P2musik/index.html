@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forside</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="register.css">
+</head>
+<body>
+    <header>
+        <h1>WebMusik - P2</h1>
+    </header>
+    <div class="topnav">
+        <a class="active" href="index.html">Home</a>
+        <a href="#about">Indspilning</a>
+        <a href="#contact">Download</a>
+        <a href="server/upload.html">Upload</a>
+        <a href="#contact">Realtime Lyd</a>
+        <a href="#contact">Redigering</a>
+        <a href="#contact">Sammensætning</a>
+        <a href="#contact">Om</a>
+        <a href="login.html">Login</a>
+        <div class="search-container">
+          <form action="server.js">
+            <input type="text" placeholder="Search.." name="search">
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+    </div>
+
+    <form action="server/server.js">
+        <div class="container">
+          <h1>Registrer</h1>
+          <p>Udfyld formularen herunder!</p>
+          <hr>
+      
+          <label for="email"><b>Email</b></label>
+          <input type="text" placeholder="Email" name="email" required>
+      
+          <label for="psw"><b>Password</b></label>
+          <input type="password" placeholder="Password" name="psw" required>
+      
+          <label for="psw-repeat"><b>Password</b></label>
+          <input type="password" placeholder="Password" name="psw-repeat" required>
+          <hr>
+      
+          <p>By creating an account you agree to our <a href="#">Terms & Privacy</a>.</p>
+          <button type="submit" class="registerbtn">Register</button>
+        </div>
+      
+        <div class="container signin">
+          <p>Already have an account? <a href="login.html">Sign in</a>.</p>
+        </div>
+      </form>
+</body>
+</html>
