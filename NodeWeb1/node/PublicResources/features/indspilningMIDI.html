@@ -59,7 +59,7 @@
         testMidi.tracks[0].notes = [];
         MIDI.loadPlugin({
             soundfontUrl: "./FluidR3_GM/",
-            instrument: 1,
+            instrument: 0,
             onsuccess: function() { }
         });
 
@@ -125,7 +125,7 @@
 
     /* Funktion til at sende POST request til serveren.
     */
-    function createMidi(){
+    function createTestMidi(){
         console.log(testMidi);
         let data = JSON.stringify(testMidi.toArray());
         fetch ("midi/newMidiFile", {
@@ -140,10 +140,79 @@
         .catch(error=>console.log(error));
     }
 
+    function createMidi(track){
+        console.log("createMidi() track: ");
+        console.log(track);
+        let data = JSON.stringify(track.toArray());
+        fetch ("midi/newMidiFile", {
+            headers:{
+                "content-type":"application/json; charset=UTF-8"
+            },
+            body: data,
+            method:"POST"
+        })
+        .then(data=>{return data})
+        .then(res=>{console.log(res)})
+        .catch(error=>console.log(error));
+    }
+
+    /*async function getMidiTrack(trackName){
+        let trackData;
+
+        trackData = await fetch (trackName, {
+            headers:{
+                "content-type":"application/json; charset=UTF-8"
+            },
+            method: "GET"
+        });
+        trackData = await trackData.text();
+
+        trackData = await JSON.parse(trackData);
+
+        console.log(trackData);
+        return trackData;
+    }*/
+
+    async function getMidiTrack(trackName){
+        try {
+            const response = await fetch (trackName, {
+                headers:{
+                    "content-type":"application/json; charset=UTF-8"
+                },
+                method: "GET"
+            });
+            const data = await response.text();
+            console.log(data);
+
+            return data;
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async function createMidiFromTrack(track){
+        const tempMidi = new Midi();
+        const tempTrack = tempMidi.addTrack();
+
+        const data = await getMidiTrack(track);
+
+        let trackData = JSON.parse(data);
+
+        for (let i = 0; i < trackData.length; i++) {
+            tempTrack.addNote({
+                midi: trackData[i].midi,
+                ticks: trackData[i].time,
+                durationTicks: trackData[i].duration
+            });
+        }
+
+        createMidi(tempMidi);
+    }
+
     /* Knapper
     */
     document.getElementById('btnRecord').addEventListener("click", main);
-    document.getElementById('btnMidi').addEventListener("click", createMidi);
+    document.getElementById('btnMidi').addEventListener("click", createTestMidi);
 
     </script>
 </html>

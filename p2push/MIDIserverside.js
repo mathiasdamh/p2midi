@@ -34,19 +34,20 @@ const server = http.createServer((req, res) => {
     else if (req.method === "POST"){
         switch (req.url){
             case '/musicData':
+                let body = '';
                 req.on("data", chunk => {
-                    obj = JSON.parse(chunk);
-                    fs.appendFile("song.txt", chunk + '\n', (err) => {
+                    body += chunk.toString();
+
+                }).on("end", () => {;
+                    fs.appendFile("song.txt", body, (err) => {
                         if (err) console.log(err)
                     });
-                    fs.appendFile
-                }).on("end", () => {;
                     res.writeHead(200);
                     res.end();
                 });
                 break;
             default: console.log('30 ' + req.url);
-        
+
         }
     }
     else if (req.method === "PUT"){
@@ -61,4 +62,3 @@ const server = http.createServer((req, res) => {
         }
     }
 }).listen(port);
-
