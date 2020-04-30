@@ -12,7 +12,7 @@ const verbose = true;
 //https://blog.todotnet.com/2018/11/simple-static-file-webserver-in-node-js/
 //https://stackoverflow.com/questions/16333790/node-js-quick-file-server-static-files-over-http
 
-const publicResources="NodeWeb1/node/PublicResources/";
+const publicResources="PublicResources/";
 //secture file system access as described on
 //https://nodejs.org/en/knowledge/file-system/security/introduction/
 const rootFileSystem=process.cwd();
@@ -51,6 +51,8 @@ function fileResponse(filename,res){
     }
   })
 }
+let body = '';
+
 const server = http.createServer((req, res) => {
     let date=new Date();
     console.log("GOT: " + req.method + " " +req.url);
@@ -65,10 +67,10 @@ const server = http.createServer((req, res) => {
         }
     }else if(req.method=="POST"){ // Tager sig af POST requests
         switch(req.url){
-            case "/features/midi/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
+            case "/P2musik/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
                                                // Specificeret under Indspilning.html
 
-                let body = ''; // En tom string til at holde den data som
+                body = ''; // En tom string til at holde den data som
                                // Bliver sendt med POST requesten
 
                 console.log("start write midi file");
@@ -89,13 +91,26 @@ const server = http.createServer((req, res) => {
                     if(verbose)console.log("after parse: "+typeof body);
 
                     // Skriver dataet ud til en MIDI fil
-                    fs.writeFileSync("output.mid", new Buffer(Object.values(body)));
+                    fs.writeFileSync("PublicResources/P2musik/SavedFiles/midi/song.mid", new Buffer(Object.values(body)));
 
                     console.log("end write midi file");
                     res.end('end write midi file');
                 });
                 res.end('unexpected ending ' + req.url);
             break;
+            case '/P2musik/musicData':
+                body = '';
+                req.on("data", chunk => {
+                    body += chunk.toString();
+
+                }).on("end", () => {;
+                    fs.writeFileSync("PublicResources/P2musik/SavedFiles/tracks/song.txt", body, (err) => {
+                        if (err) console.log(err)
+                    });
+                    res.writeHead(200);
+                    res.end();
+                });
+                break;
             default:
                 res.end('unknown POST request');
             break;

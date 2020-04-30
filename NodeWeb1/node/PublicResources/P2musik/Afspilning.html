@@ -4,20 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indspilning</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- shim -->
+    <script src="../modules/shim/Base64.js" type="text/javascript"></script>
+    <script src="../modules/shim/Base64binary.js" type="text/javascript"></script>
+    <script src="../modules/shim/WebAudioAPI.js" type="text/javascript"></script>
+    <script src="../modules/shim/WebMIDIAPI.js" type="text/javascript"></script>
+    <!-- jasmid package -->
+    <script src="../modules/jasmid/stream.js"></script>
+    <script src="../modules/jasmid/midifile.js"></script>
+    <script src="../modules/jasmid/replayer.js"></script>
+    <!-- midi.js package -->
+    <script src="../modules/midi_js/audioDetect.js" type="text/javascript"></script>
+    <script src="../modules/midi_js/gm.js" type="text/javascript"></script>
+    <script src="../modules/midi_js/loader.js" type="text/javascript"></script>
+    <script src="../modules/midi_js/plugin.audiotag.js" type="text/javascript"></script>
+    <script src="../modules/midi_js/plugin.webaudio.js" type="text/javascript"></script>
+    <script src="../modules/midi_js/plugin.webmidi.js" type="text/javascript"></script>
+    <script src="../modules/midi_js/player.js" type="text/javascript"></script>
+    <script src="../modules/midi_js/synesthesia.js" type="text/javascript"></script>
+    <!-- utils -->
+    <script src="../modules/util/dom_request_xhr.js" type="text/javascript"></script>
+    <script src="../modules/util/dom_request_script.js" type="text/javascript"></script>
+    <!-- includes -->
+    <script src="../modules/inc/colorspace.js" type="text/javascript"></script>
+    <script src="../modules/inc/event.js" type="text/javascript"></script>
+    <script src="../modules/inc/timer.js" type="text/javascript"></script>
+    <!-- tonejs -->
+    <script src="https://unpkg.com/@tonejs/midi"></script>
 </head>
 <body>
     <header>
         <h1>WebMusik - P2</h1>
     </header>
     <div class="topnav">
-        <a class="active" href="index.html">Home</a>
+        <a href="index.html">Home</a>
         <a href="indspilning.html">Indspilning</a>
-        <a href="Download.html">Download</a>
-        <a href="server/upload.html">Upload</a>
-        <a href="Afspilning.html">Afspilning</a>
-        <a href="Redigering.html">Redigering</a>
-        <a href="Sammensætning.html">Sammensætning</a>
+        <a href="download.html">Download</a>
+        <a href="upload.html">Upload</a>
+        <a class="active" href="afspilning.html">Afspilning</a>
+        <a href="redigering.html">Redigering</a>
+        <a href="sammensaetning.html">Sammensætning</a>
         <a href="om.html">Om</a>
         <a href="login.html">Login</a>
         <div class="search-container">
@@ -26,6 +54,133 @@
             <button type="submit">Submit</button>
           </form>
         </div>
+    </div>
+
+    <div class="main">
+        <input type="button" id="btn_play" value="Play/Stop">
+        <input type="button" id="btn_pause" value="Pause/Resume">
+
+        <br>
+
+        <input type="button" id="btn_load" value="Load">
+        <input type="text" id="midi_file" value="SavedFiles/midi/song.mid">
+
+        <br>
+
+        <p id="BPM">BPM: NaN</p>
+        <p id="PPQ">PPQ: NaN</p>
+        <p id="timer"> 0/???</p>
+
+        <script type="text/javascript">
+            let playerBPM = 0;
+            let midiPPQ = 0;
+            let playerTime = 0;
+            let playerEnd = 0;
+
+            let midi;
+
+            // Indlæser
+            MIDI.loadPlugin({
+                soundfontUrl: "./FluidR3_GM/",
+                onsuccess: function() { }
+            });
+
+            /* Læser en fil fra file_path parameteren
+            *  console.logger nogle data for sjov
+            */
+            async function load_file(file_path){
+                console.log(file_path);
+                console.log("start load_file()" + file_path);
+
+                midi = await getMidiData(file_path);
+
+                playerBPM = MIDI.Player.BPM;
+                midiPPQ = midi.header.ppq;
+                playerTime = 0;
+                playerEnd = midi.duration;
+
+                document.getElementById('BPM').innerHTML = "BPM: "+playerBPM;
+                document.getElementById('PPQ').innerHTML = "PPQ: "+midiPPQ;
+
+                MIDI.Player.loadFile(file_path, () => {
+                    MIDI.Player.addListener(function(data) {
+                        console.log(data.now +"/"+data.end+" "+data.channel);
+
+                        if(data.now === data.end) {
+                            MIDI.Player.stop();
+                            console.log("end of song, stopping player");
+                        };
+                    });
+                })
+
+                let time = setInterval(()=>{
+                    if(MIDI.Player.playing) {
+                        playerTime += 0.010;
+
+                    }
+                    document.getElementById('timer').innerHTML =
+                    Math.max(playerTime.toFixed(2), (MIDI.Player.currentTime/1000).toFixed(2)) +
+                    " / " + playerEnd.toFixed(2);
+
+                } , 10);
+            };
+
+            async function getMidiData(filePath){
+                const midiData = await Midi.fromUrl(filePath);
+                return midiData;
+            };
+            /* Knapper #########################################################
+            ##################################################################*/
+            /* Knap der afspiller sangen, hvis MIDI.player ikke spiller, og stopper
+            *  den hvis den spiller.
+            */
+            function btn_play(){
+                playerBPM = MIDI.Player.BPM
+
+                console.log(MIDI.Player.playing + " start btn_play()");
+                switch (MIDI.Player.playing) {
+                    case true:  MIDI.Player.stop();
+
+                        break;
+
+                    case false: MIDI.Player.start();
+
+                        break;
+                    default: console.log("error in btn_play switch");
+
+                }
+            };
+
+            /* Ligesom btn_play, men i stedet afspiller den fra der man pausede.
+            */
+            function btn_pause(){
+                console.log(MIDI.Player.playing + " start btn_pause()");
+                switch (MIDI.Player.playing) {
+                    case true: MIDI.Player.pause();
+
+                        break;
+
+                    case false: MIDI.Player.resume();
+
+                        break;
+                    default: console.log("error in btn_pause switch");
+
+                }
+            }
+
+            /* Knap til at loade en fil.
+            */
+            function btn_load(){
+                let file_name = document.getElementById('midi_file').value;
+                load_file(file_name);
+            }
+
+            /* Knap events.
+            */
+            document.getElementById('btn_play').addEventListener("click", btn_play);
+            document.getElementById('btn_load').addEventListener("click", btn_load);
+            document.getElementById('btn_pause').addEventListener("click", btn_pause);
+        </script>
     </div>
 
 </body>
