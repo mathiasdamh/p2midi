@@ -29,13 +29,14 @@ class Song{
     }
 }
 
-
+/* ACTUAL PROGRAM */
 checkMIDIAPI();
 getMIDIAccess();
+//createNewUser();
 let activeNotes = []; //notes which have yet to be ended 
 let noteArray = []; //notes which have been ended
 
-
+/*GENERAL*/
 function checkMIDIAPI(){
     if (navigator.requestMIDIAccess){
         console.log("This browser supports MIDIAccess");
@@ -49,7 +50,7 @@ function getMIDIAccess(){
     navigator.requestMIDIAccess()
         .then(MIDIAccessSuccess, MIDIAccessFailure);
 }
-
+/* CASES SKAL ÆNDRES!!1!!1!!!!11! */
 function MIDIAccessSuccess(MIDIAccessObj){
     console.log(MIDIAccessObj.inputs);
     for (let input of MIDIAccessObj.inputs.values()){
@@ -67,6 +68,61 @@ function MIDIAccessSuccess(MIDIAccessObj){
 function MIDIAccessFailure(error){
     console.log(error);
 }
+
+/* CREATING A USER */
+
+async function createNewUser(){
+    let desiredName = prompt("Please enter your user name: ");
+    await checkIfNameIsTaken(desiredName)
+    .then(response => {
+        return response.json(); // VIRKER IKKE, response er undefined, ved ikke hvorfor :(
+    })
+    .then(data => console.log(data));
+}
+
+async function checkIfNameIsTaken(name){
+    await fetch("userCheck", {
+        method: "POST",
+        body: name.toLowerCase()
+    });
+}
+
+function onCheckIfNameIsTakenSuccess(statusCode){ //cases skal ændres
+    console.log("yoooo");
+    switch (statusCode){
+        case 409:
+            alert("Username is already taken!");
+            break;
+        case 201:
+            console.log("Succesfully created new user");
+            break;
+        default: console.log(statusCode);
+    }
+}
+
+/*CREATE A NEW SONG*/
+
+async function createNewSong(userName){
+    songName = prompt("What would you like to call the song?");
+    console.log("creating new track...");
+    await fetch('/songs', {
+        method: "PUT",
+        body: JSON.stringify({user: userName, song: songName}),
+        headers: {
+            "Content-Type": "text"
+        }
+    }).then(createNewSongOnFulfilled(songName), createNewSongOnRejected);
+}
+
+function createNewSongOnFulfilled(songName){
+    console.log("Succesfully created a new song with name " + songName);
+}
+
+function createNewSongOnRejected(error){
+    console.log("Could not create a new song!\n\n" + error);
+}
+
+/*MAKING A TRACK*/
 
 function newNote(message, noteArray){ // make a new note (duration will be defined in function endNote)
     let note = {
@@ -101,7 +157,7 @@ function endNote(message, activeNotes, noteArray){
         resolve(result);
     });
 }*/
-async function sendTrack(track){ // !!!NEEDS REVAMPING!!! for sending the track/file (undecided which) to a server 
+async function sendTrack(track){ // !!!NEEDS REVAMPING!!! include ID/name to the track
     console.log("sending track");
     console.log("track length: " + track.length);
     await fetch('musicData', {
@@ -120,6 +176,13 @@ function sendTrackOnFulfilled(track){
 
 function sendTrackOnRejected(error){
     alert("COULD NOT SEND TRACK!!11!!1");
+}
+
+async function appendTrack(track, songInfo){ //NEEDS UPDATING - what is 'songInfo'?
+    await fetch('appendTrack', {
+        method: "POST",
+        body: JSON.stringify({track: track, song: song})
+    })
 }
     </script>
 
