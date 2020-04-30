@@ -91,8 +91,8 @@ const server = http.createServer((req, res) => {
                     if(verbose)console.log("after parse: "+typeof body);
 
                     // Skriver dataet ud til en MIDI fil
-                    fs.writeFileSync("PublicResources/P2musik/SavedFiles/midi/track_"+body.name+"_"+body.owner+".mid",
-                    new Buffer(Object.values(body.midiNotes)));
+                    fs.writeFileSync("PublicResources/P2musik/SavedFiles/midi/track_"+req.headers["song-name"]+".mid",
+                    new Buffer(Object.values(body)));
 
                     console.log("end write midi file");
                     res.end('end write midi file');
@@ -101,21 +101,59 @@ const server = http.createServer((req, res) => {
             break;
             case '/P2musik/musicData':
                 body = '';
+                let owner;
+                let newId;
+                let path;
                 req.on("data", chunk => {
                     body += chunk.toString();
 
                 }).on("end", () => {
-                    let owner = JSON.parse(body).owner;
-                    let id = 0;
-                    fs.readFile("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt", "w", (err, data) => {
-                        console.log(data);
-                    });
-                    fs.appendFile("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt", body + "\n", (err) => {
-                        if (err) console.log(err)
-                    });
-                    res.writeHead(200);
-                    res.end();
+                    owner = JSON.parse(body).owner;
+                    newId = 0;
+                    path = ("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt");
+
+                    if(fs.existsSync(path)){
+                        fs.readFile(path, "utf-8", (err, data) => {
+                            if (err) console.log(err)
+                            if(data === undefined){
+                                console.log("creating txt for " + owner);
+                            }else{
+                                let dataSet = data.split("\n")
+                                if (dataSet.length === 0) {
+                                    newId = 0;
+                                } else if( dataSet.length > 0) {
+                                    console.log("dataset length: "+dataSet.length);
+                                    console.log("id: "+newId);
+                                    newId = dataSet.length-1;
+                                    console.log("id: "+newId);
+                                }
+
+                            }
+                            body = JSON.parse(body);
+                            body.id = newId;
+
+                            console.log(body.id+ ", "+newId);
+
+                            fs.appendFile("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt", JSON.stringify(body) + "\n", (err) => {
+                                if (err) console.log(err)
+                            });
+                            res.writeHead(200);
+                            res.end();
+                        });
+                    }else {
+                        body = JSON.parse(body);
+                        body.id = newId;
+
+                        console.log(body.id+ ", "+newId);
+
+                        fs.appendFile("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt", JSON.stringify(body) + "\n", (err) => {
+                            if (err) console.log(err)
+                        });
+                        res.writeHead(200);
+                        res.end();
+                    }
                 });
+
                 break;
             default:
                 res.end('unknown POST request');

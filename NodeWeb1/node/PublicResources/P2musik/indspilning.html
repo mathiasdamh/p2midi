@@ -66,16 +66,28 @@
         <br>
 
         <input type="button" id="btnCreateMidi" value="create">
-        <input type="text" size="50" id="trackValue" value="SavedFiles/tracks/song.txt">
 
         <br>
 
-        <input type="text" name="30" id="trackName" value="trackName">
+        <input type="text" name="30" id="trackName" value="Track Name">
+
+        <br>
+        <br>
+
+        <input type="text" name="15" id="trackId" value="">
+        <p id="trackIdValue"></p>
     </div>
 
     <script type="text/javascript">
+    /* Global varible
+    *  Regner med at login systemet bestemmer hvem currentUser er.
+    */
+    // Bliver brugt til at gemme tracks.
     let currentUser = "mads"
+    // Brugt til at få tiden startet ved 0, i stedet for det første time stamp
+    let startTime = 0;
 
+    // Class til tracks. Gør det muligt at skrive flere egenskaber end bare midi notes.
     class midiTrack {
         constructor(name, trackNotes) {
             this.id = -1;
@@ -84,9 +96,13 @@
             this.owner = currentUser;
         };
 
+        // Til at tilføje en eller flere noder
         addNotes(notes){
-            if(notes !== undefined){
-                (notes.length > 1 && typeof notes[0] === "object") ? notes.forEach((item, i) => {
+            if(notes !== undefined){ //Tjek om der er blevet givet en værdifuld parameter
+                /* Hvis der tilføjes flere noder vil det være et [[]] array af array.
+                *  Derfor (length >= 1) og (typeof === object).
+                */
+                (notes.length >= 1 && typeof notes[0] === "object") ? notes.forEach((item, i) => {
                     for (let j = 0; j < item.length; j++) {
                         if (typeof item[j] !== "number") {
                             console.log("note not a number");
@@ -95,7 +111,7 @@
                     }
                     this.midiNotes.push(item);
                 })
-                :
+                : // Og hvis længden er 1, så tjek om det er et object, derefter push.
                 (notes.length === 1 || typeof notes === "object") ? this.midiNotes.push(notes) :
                  console.log("unexpected input: "+notes);
             }
@@ -111,6 +127,7 @@
 
     }
     /* Test
+    *  Dette er WIP
     */
     let testing = true;
     let failedTest = 0;
@@ -182,8 +199,7 @@
         console.log("Tests done running\nFailed: "+failedTest+"\nPassed: "+passedTest);
     }
 
-
-    /* Nicholas
+    /* Nicholas' kode
     */
     let activeNotes = []; //notes which have yet to be ended
     let noteArray = []; //notes which have been ended
@@ -191,28 +207,28 @@
     function newNote(message, noteArray){ // make a new note (duration will be defined in function endNote)
         let note = {
             midi: message.data[1],
-            time: message.timeStamp,
+            time: (message.timeStamp-startTime), // {mads} Satte startTime ind
             duration: undefined
         }
         activeNotes.push(note);
-        console.log(activeNotes[activeNotes.length - 1]);
+        //console.log(activeNotes[activeNotes.length - 1]);
     }
 
     function endNote(message, activeNotes, noteArray){
         for (let i = 0; i < activeNotes.length; i++){ // loop through activeNotes
             if (message.data[1] === activeNotes[i].midi){
-                activeNotes[i].duration = message.timeStamp - activeNotes[i].time;
+                activeNotes[i].duration = (message.timeStamp-startTime) - activeNotes[i].time; // {mads} Satte startTime ind
                 noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
             }
         }
-        console.log(noteArray.length);
+        //console.log(noteArray.length);
     }
 
     async function sendTrack(track){ // !!!NEEDS REVAMPING!!! for sending the track/file (undecided which) to a server
-        newTrack = new midiTrack(document.getElementById('trackName').value, track);
+        newTrack = new midiTrack(document.getElementById('trackName').value, track); // Bruger midiTrack class
 
         console.log("sending track");
-        console.log("track length: " + track.length);
+        console.log("amount of notes: " + track.length);
         await fetch('musicData', {
             method: "POST",
             body: JSON.stringify(newTrack),
@@ -273,13 +289,14 @@
             //console.log(midiMessage);
             switch (midiMessage.data[0]) {
                 case 144: // note On channel 1
-                    console.log("noteOn() "+midiMessage.data[1]);
+                    if(startTime === 0) startTime = midiMessage.timeStamp;
+                    //console.log("noteOn() "+midiMessage.data[1]);
                     newNote(midiMessage, activeNotes);
                     MIDI.noteOn(0, midiMessage.data[1], midiMessage.data[2]);
 
                     break;
                 case 128: // note Off channel 1
-                    console.log("noteOff() "+midiMessage.data[1]);
+                    //console.log("noteOff() "+midiMessage.data[1]);
                     MIDI.noteOff(0, midiMessage.data[1], midiMessage.data[2]);
                     endNote(midiMessage, activeNotes, noteArray);
 
@@ -291,6 +308,8 @@
                         instrument: midiMessage.data[1]
                     });
                 default:
+                    console.log("default reaction to midimessage, line 311\ngetMidiMessage(midiMessage)");
+                    break;
             }
         }
     }
@@ -299,13 +318,14 @@
     *  Denne vil sende track information til serveren,
     *  og derefter vil serveren lave midi filen.
     */
-    function createMidi(track){
+    function createMidi(midiData, name){
         console.log("createMidi() track: ");
-        console.log(track);
-        let data = JSON.stringify(track.toArray());
+        console.log(midiData);
+        let data = JSON.stringify(midiData.toArray());
         fetch ("newMidiFile", {
             headers:{
-                "content-type":"application/json; charset=UTF-8"
+                "content-type":"application/json; charset=UTF-8",
+                "song-name":name
             },
             body: data,
             method:"POST"
@@ -335,7 +355,10 @@
             console.log(e);
         }
     }
-    async function getMidiTrackById(owner, id){
+    /* Opdateret version af getMidiTrack
+    *  Denne bruger searchId til at finde tracken med det id, i owner's track fil
+    */
+    async function getMidiTrackById(owner, searchId){
         try {
             const response = await fetch ("SavedFiles/tracks/"+owner+".txt", {
                 headers:{
@@ -343,18 +366,18 @@
                 },
                 method: "GET"
             });
-            const data = await response.text();
+            const data = await response.text(); // await fordi skal bruge værdi fra promise
 
             let dataSet = data.split("\n");
-
             for (let i = 0; i < (dataSet.length-2); i++) { //To tomme data set pga \n derfor -2
                 //console.log(i +"# data set: "+dataSet[i]);
                 let tempParse = JSON.parse(dataSet[i])
-                if( tempParse.id === id ){
+                // Sammenlignings tjek, hvis searchId matcher et i tekstfilen
+                if( Number.parseInt(tempParse.id) === Number.parseInt(searchId) ){
                     return dataSet[i];
+
                 }
             }
-
             return -1;
         } catch (e) {
             console.log(e);
@@ -362,40 +385,75 @@
     }
 
     /* Lave en midi fra et track teskt dokument.
-    *  Bruger getMidiTrack og createMidi.
+    *  Bruger getMidiTrackById og createMidi.
     */
-    async function createMidiFromTrack(track){
+    async function createMidiFromTrack(owner, id, name){
+        // tonejs/midi funktioner
         const tempMidi = new Midi();
         const tempTrack = tempMidi.addTrack();
 
-        const data = await getMidiTrack(track);
+        //console.log("owner: "+owner+"\nid: "+id+"\nname: "+name);
 
-        let trackData = JSON.parse(data);
+        const data = await getMidiTrackById(owner, id); // await fordi skal bruge værdi fra promise
 
-        for (let i = 0; i < trackData.length; i++) {
+        let trackData = JSON.parse(data); // string --> object
+
+        //console.log(trackData);
+
+        // Tilføjer noderne fra den valgte track
+        for (let i = 0; i < trackData.midiNotes.length; i++) {
             tempTrack.addNote({
-                midi: trackData[i].midi,
-                ticks: trackData[i].time,
-                durationTicks: trackData[i].duration
+                midi: trackData.midiNotes[i].midi,
+                ticks: trackData.midiNotes[i].time,
+                durationTicks: trackData.midiNotes[i].duration
             });
         }
 
-        createMidi(tempMidi);
+        tempTrack.name = name;
+
+        // Sender midi data til create midi funktion.
+        createMidi(tempMidi, name);
     }
 
     /* Knapper
     */
-    function btnSendTrack(){
+    function btnSendTrack(){ // Sender en track
         sendTrack(noteArray);
     }
 
-    function btnCreateMidi(){
-        createMidiFromTrack(document.getElementById('trackValue').value);
+    function btnCreateMidi(){ // Laver midi fil
+        createMidiFromTrack(currentUser,
+            document.getElementById('trackId').value,
+            document.getElementById('trackName').value);
     }
 
+    function btnResetRecord(){ // resetter start tid, og note arrays
+        startTime = 0;
+        noteArray = [];
+        activeNotes = [];
+    }
+
+    /* Viser track information når man skriver Id i feltet.
+    */
+    document.getElementById('trackId').onchange = async function(){
+        let p = document.getElementById('trackIdValue');
+        let q = document.getElementById('trackId');
+        const data = await getMidiTrackById(currentUser, q.value);
+        console.log(data);
+
+
+        if (data === undefined){
+            p.innerHTML = "not a track";
+        }else{
+            p.innerHTML = ("Name: "+JSON.parse(data).name);
+        }
+    }
+
+    // Tilføjelse af event listerners
     document.getElementById('btnStart').addEventListener("click", main);
     document.getElementById('btnSendTrack').addEventListener("click", btnSendTrack);
     document.getElementById('btnCreateMidi').addEventListener("click", btnCreateMidi);
+    document.getElementById('btnResetRecord').addEventListener("click", btnResetRecord);
 
     </script>
 </body>
