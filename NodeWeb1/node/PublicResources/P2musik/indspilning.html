@@ -58,6 +58,7 @@
 
     <div class="main">
         <input type="button" id="btnStart" value="start">
+        <input type="button" id="btnResetRecord" value="reset">
 
         <br><br>
 
@@ -318,21 +319,24 @@
     *  Denne vil sende track information til serveren,
     *  og derefter vil serveren lave midi filen.
     */
-    function createMidi(midiData, name){
+    async function createMidi(midiData, name){
         console.log("createMidi() track: ");
         console.log(midiData);
         let data = JSON.stringify(midiData.toArray());
-        fetch ("newMidiFile", {
-            headers:{
-                "content-type":"application/json; charset=UTF-8",
-                "song-name":name
-            },
-            body: data,
-            method:"POST"
-        })
-        .then(data=>{return data})
-        .then(res=>{console.log(res)})
-        .catch(error=>console.log(error));
+        try {
+            const response = await fetch ("newMidiFile", {
+                headers:{
+                    "content-type":"application/json; charset=UTF-8",
+                    "song-name":name
+                },
+                body: data,
+                method:"POST"
+            })
+
+        } catch (e) {
+            console.log(e);
+
+        }
     }
 
     /* Får data fra en track og returnerer det
@@ -355,6 +359,7 @@
             console.log(e);
         }
     }
+
     /* Opdateret version af getMidiTrack
     *  Denne bruger searchId til at finde tracken med det id, i owner's track fil
     */
