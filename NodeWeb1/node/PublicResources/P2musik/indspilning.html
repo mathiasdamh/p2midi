@@ -60,9 +60,12 @@
         <input type="button" id="btnStart" value="start">
         <input type="button" id="btnResetRecord" value="reset">
 
+        <p id="currentTime">Current time: 0</p>
+
         <br><br>
 
         <input type="button" id="btnSendTrack" value="send">
+        <p id="currentTrackData">Notes: 0, duration: 0</p>
 
         <br>
 
@@ -87,6 +90,9 @@
     let currentUser = "mads"
     // Brugt til at få tiden startet ved 0, i stedet for det første time stamp
     let startTime = 0;
+
+    let timer;
+    let counter = 0;
 
     // Class til tracks. Gør det muligt at skrive flere egenskaber end bare midi notes.
     class midiTrack {
@@ -212,6 +218,7 @@
             duration: undefined
         }
         activeNotes.push(note);
+
         //console.log(activeNotes[activeNotes.length - 1]);
     }
 
@@ -222,6 +229,7 @@
                 noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
             }
         }
+        updateCurrentTrackData(noteArray.length, (message.timeStamp-startTime))
         //console.log(noteArray.length);
     }
 
@@ -248,12 +256,19 @@
         alert("COULD NOT SEND TRACK!!11!!1");
     }
 
+    function updateCurrentTrackData(amountOfNotes, duration){
+        let p = document.getElementById('currentTrackData');
+        p.innerHTML = "Notes: "+amountOfNotes+", duration: "+duration;
+    }
+
     function main(){
         /*  Her indlæses MIDI.js plugin.
          *  Det hele er sat i en funktion for at sørge for at AudioContext ikke
          *  bliver forhindret i at starte, hvis browseren forlanger at en bruger
          *  skal starte handlingen.
          */
+
+        document.getElementById('btnStart').parentNode.removeChild(document.getElementById('btnStart'));
         MIDI.loadPlugin({
             soundfontUrl: "./FluidR3_GM/",
             instrument: 0,
@@ -286,11 +301,20 @@
         /* Denne funktion agere på beskeder fra controlleren, og bruger MIDI.js
         *  til at afspille lyd.
         */
+
         function getMIDIMessage(midiMessage) {
             //console.log(midiMessage);
             switch (midiMessage.data[0]) {
                 case 144: // note On channel 1
-                    if(startTime === 0) startTime = midiMessage.timeStamp;
+                    if(startTime === 0) {
+                        startTime = midiMessage.timeStamp;
+                        counter = 0;
+                        console.log("hej");
+                        timer = setInterval(()=>{
+                            counter += 1000;
+                            document.getElementById('currentTime').innerHTML = "Current time: "+counter;
+                        } , 1000);
+                    }
                     //console.log("noteOn() "+midiMessage.data[1]);
                     newNote(midiMessage, activeNotes);
                     MIDI.noteOn(0, midiMessage.data[1], midiMessage.data[2]);
@@ -436,6 +460,10 @@
         startTime = 0;
         noteArray = [];
         activeNotes = [];
+        clearInterval(timer);
+        document.getElementById('currentTime').innerHTML = "Current time: 0";
+        updateCurrentTrackData(noteArray.length, 0)
+        console.log("note arrays and startTime reset");
     }
 
     /* Viser track information når man skriver Id i feltet.
@@ -444,7 +472,7 @@
         let p = document.getElementById('trackIdValue');
         let q = document.getElementById('trackId');
         const data = await getMidiTrackById(currentUser, q.value);
-        console.log(data);
+        //console.log(data);
 
 
         if (data === undefined){
