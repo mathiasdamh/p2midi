@@ -91,7 +91,8 @@ const server = http.createServer((req, res) => {
                     if(verbose)console.log("after parse: "+typeof body);
 
                     // Skriver dataet ud til en MIDI fil
-                    fs.writeFileSync("PublicResources/P2musik/SavedFiles/midi/song.mid", new Buffer(Object.values(body)));
+                    fs.writeFileSync("PublicResources/P2musik/SavedFiles/midi/track_"+body.name+"_"+body.owner+".mid",
+                    new Buffer(Object.values(body.midiNotes)));
 
                     console.log("end write midi file");
                     res.end('end write midi file');
@@ -103,8 +104,13 @@ const server = http.createServer((req, res) => {
                 req.on("data", chunk => {
                     body += chunk.toString();
 
-                }).on("end", () => {;
-                    fs.writeFileSync("PublicResources/P2musik/SavedFiles/tracks/song.txt", body, (err) => {
+                }).on("end", () => {
+                    let owner = JSON.parse(body).owner;
+                    let id = 0;
+                    fs.readFile("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt", "w", (err, data) => {
+                        console.log(data);
+                    });
+                    fs.appendFile("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt", body + "\n", (err) => {
                         if (err) console.log(err)
                     });
                     res.writeHead(200);

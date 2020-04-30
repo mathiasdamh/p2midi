@@ -67,9 +67,122 @@
 
         <input type="button" id="btnCreateMidi" value="create">
         <input type="text" size="50" id="trackValue" value="SavedFiles/tracks/song.txt">
+
+        <br>
+
+        <input type="text" name="30" id="trackName" value="trackName">
     </div>
 
     <script type="text/javascript">
+    let currentUser = "mads"
+
+    class midiTrack {
+        constructor(name, trackNotes) {
+            this.id = -1;
+            ( trackNotes !== undefined && trackNotes.length >= 0) ? this.midiNotes = trackNotes : this.midiNotes = [];
+            this.name = name;
+            this.owner = currentUser;
+        };
+
+        addNotes(notes){
+            if(notes !== undefined){
+                (notes.length > 1 && typeof notes[0] === "object") ? notes.forEach((item, i) => {
+                    for (let j = 0; j < item.length; j++) {
+                        if (typeof item[j] !== "number") {
+                            console.log("note not a number");
+                            return -1;
+                        }
+                    }
+                    this.midiNotes.push(item);
+                })
+                :
+                (notes.length === 1 || typeof notes === "object") ? this.midiNotes.push(notes) :
+                 console.log("unexpected input: "+notes);
+            }
+        };
+
+        resetNotes(){
+            this.midiNotes = [];
+        }
+
+        set newName(newName){
+            this.name = newName;
+        }
+
+    }
+    /* Test
+    */
+    let testing = true;
+    let failedTest = 0;
+    let passedTest = 0;
+
+    function test0_midiTrack(){
+        let test = new midiTrack("test");
+
+        let expected = "60,60,60";
+        let outcome;
+
+        test.addNotes([60,60,60]);
+
+        outcome = test.midiNotes[0].toString();
+
+        if(outcome === expected){
+            passedTest += 1;
+            return 0;
+        }
+
+        failedTest += 1;
+        console.log("test0_midiTrack failed\nExpected: "+expected+"\nOutcome: "+outcome);
+
+    }
+    function test1_midiTrack(){
+        let test = new midiTrack("test");
+
+        let expected = "62,62,62";
+        let outcome;
+
+        test.addNotes([[62,62,62], [61,61,61]]);
+
+        outcome = test.midiNotes[0].toString();
+
+        if(outcome === expected){
+            passedTest += 1;
+            return 0;
+        }
+
+        failedTest += 1;
+        console.log("test1_midiTrack failed\nExpected: "+expected+"\nOutcome: "+outcome);
+
+    }
+    function test2_midiTrack(){
+        let test = new midiTrack("test");
+
+        let expected = undefined;
+        let outcome;
+
+        outcome = test.addNotes("haha");
+
+        if(outcome === expected){
+            passedTest += 1;
+            return 0;
+        }
+
+        failedTest += 1;
+        console.log("test1_midiTrack failed\nExpected: "+expected+"\nOutcome: "+outcome);
+
+    }
+
+    function testAll(){
+        test0_midiTrack();
+        test1_midiTrack();
+        test2_midiTrack();
+    }
+    if(testing){
+        document.body.onload = testAll();
+        console.log("Tests done running\nFailed: "+failedTest+"\nPassed: "+passedTest);
+    }
+
+
     /* Nicholas
     */
     let activeNotes = []; //notes which have yet to be ended
@@ -96,15 +209,17 @@
     }
 
     async function sendTrack(track){ // !!!NEEDS REVAMPING!!! for sending the track/file (undecided which) to a server
+        newTrack = new midiTrack(document.getElementById('trackName').value, track);
+
         console.log("sending track");
         console.log("track length: " + track.length);
         await fetch('musicData', {
             method: "POST",
-            body: JSON.stringify(track),
+            body: JSON.stringify(newTrack),
             headers: {
                 "Content-Type": "text/javascript"
             }
-        }).then(sendTrackOnFulfilled(track), sendTrackOnRejected);
+        }).then(sendTrackOnFulfilled(newTrack), sendTrackOnRejected);
     }
 
     function sendTrackOnFulfilled(track){
@@ -212,9 +327,35 @@
                 method: "GET"
             });
             const data = await response.text();
-            console.log(data);
+
+            //console.log(data);
 
             return data;
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async function getMidiTrackById(owner, id){
+        try {
+            const response = await fetch ("SavedFiles/tracks/"+owner+".txt", {
+                headers:{
+                    "content-type":"application/json; charset=UTF-8"
+                },
+                method: "GET"
+            });
+            const data = await response.text();
+
+            let dataSet = data.split("\n");
+
+            for (let i = 0; i < (dataSet.length-2); i++) { //To tomme data set pga \n derfor -2
+                //console.log(i +"# data set: "+dataSet[i]);
+                let tempParse = JSON.parse(dataSet[i])
+                if( tempParse.id === id ){
+                    return dataSet[i];
+                }
+            }
+
+            return -1;
         } catch (e) {
             console.log(e);
         }
