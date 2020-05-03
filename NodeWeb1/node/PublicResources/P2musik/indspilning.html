@@ -303,7 +303,7 @@
         */
 
         function getMIDIMessage(midiMessage) {
-            //console.log(midiMessage);
+            console.log(midiMessage);
             switch (midiMessage.data[0]) {
                 case 144: // note On channel 1
                     if(startTime === 0) {
@@ -315,9 +315,10 @@
                             document.getElementById('currentTime').innerHTML = "Current time: "+counter;
                         } , 1000);
                     }
-                    //console.log("noteOn() "+midiMessage.data[1]);
+                    //console.log("noteOn() "+midiMessage.data[1]+", "+midiMessgae.data[2]);
                     newNote(midiMessage, activeNotes);
                     MIDI.noteOn(0, midiMessage.data[1], midiMessage.data[2]);
+
 
                     break;
                 case 128: // note Off channel 1
@@ -334,6 +335,7 @@
                     });
                 default:
                     console.log("default reaction to midimessage, line 311\ngetMidiMessage(midiMessage)");
+                    console.log(midiMessage);
                     break;
             }
         }
@@ -473,12 +475,14 @@
         let q = document.getElementById('trackId');
         const data = await getMidiTrackById(currentUser, q.value);
         //console.log(data);
+        const trackData = JSON.parse(data);
 
 
         if (data === undefined){
             p.innerHTML = "not a track";
         }else{
-            p.innerHTML = ("Name: "+JSON.parse(data).name);
+            p.innerHTML = ("Name: "+trackData.name);
+            p.innerHTML += ("\rDuration: "+JSON.parse(data).n)
         }
     }
 
