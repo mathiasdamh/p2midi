@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload</title>
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" type="text/css" href="/server/public/css/styles.css">
 </head>
 <body>
     <header>
@@ -12,7 +12,7 @@
     </header>
     <div class="topnav">
         <a class="active" href="../index.html">Home</a>
-        <a href="#about">Indspilning</a>
+        <a href="../indspilning.html">Indspilning</a>
         <a href="../Download.html">Download</a>
         <a href="upload.html">Upload</a>
         <a href="../Afspilning.html">Afspilning</a>
@@ -21,12 +21,16 @@
         <a href="../om.html">Om</a>
         <a href="../login.html">Login</a>
         <div class="search-container">
-          <form action="server.js">
+          <form action="">
             <input type="text" placeholder="Search.." name="search">
             <button type="submit">Submit</button>
           </form>
         </div>
     </div>
     
+    <form method="post" enctype="multipart/form-data" action="/">
+      <input type="file" name="filename">
+      <input type="submit" value="Upload">
+    </form>
 </body>
 </html>
