@@ -67,7 +67,7 @@ const server = http.createServer((req, res) => {
         }
     }else if(req.method=="POST"){ // Tager sig af POST requests
         switch(req.url){
-            case "/P2musik/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
+            case "/webpage/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
                                                // Specificeret under Indspilning.html
 
                 body = ''; // En tom string til at holde den data som
@@ -91,15 +91,15 @@ const server = http.createServer((req, res) => {
                     if(verbose)console.log("after parse: "+typeof body);
 
                     // Skriver dataet ud til en MIDI fil
-                    fs.writeFileSync("PublicResources/P2musik/SavedFiles/midi/track_"+req.headers["song-name"]+".mid",
+                    fs.writeFileSync("PublicResources/webpage/SavedFiles/midi/track_"+req.headers["song-name"]+".mid",
                     new Buffer(Object.values(body)));
 
                     console.log("end write midi file");
                     res.end('end write midi file');
                 });
                 res.end('unexpected ending ' + req.url);
-            break;
-            case '/P2musik/musicData':
+                break;
+            case '/webpage/musicData':
                 body = '';
                 let owner;
                 let newId;
@@ -110,7 +110,7 @@ const server = http.createServer((req, res) => {
                 }).on("end", () => {
                     owner = JSON.parse(body).owner;
                     newId = 0;
-                    path = ("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt");
+                    path = ("PublicResources/webpage/SavedFiles/users/"+owner+"/tracks.txt");
 
                     if(fs.existsSync(path)){
                         fs.readFile(path, "utf-8", (err, data) => {
@@ -134,7 +134,7 @@ const server = http.createServer((req, res) => {
 
                             console.log(body.id+ ", "+newId);
 
-                            fs.appendFile("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt", JSON.stringify(body) + "\n", (err) => {
+                            fs.appendFile("PublicResources/webpage/SavedFiles/users/"+owner+"/tracks.txt", JSON.stringify(body) + "\n", (err) => {
                                 if (err) console.log(err)
                             });
                             res.writeHead(200);
@@ -146,7 +146,7 @@ const server = http.createServer((req, res) => {
 
                         console.log(body.id+ ", "+newId);
 
-                        fs.appendFile("PublicResources/P2musik/SavedFiles/tracks/"+owner+".txt", JSON.stringify(body) + "\n", (err) => {
+                        fs.appendFile("PublicResources/webpage/SavedFiles/users/"+owner+"/tracks.txt", JSON.stringify(body) + "\n", (err) => {
                             if (err) console.log(err)
                         });
                         res.writeHead(200);
@@ -155,8 +155,39 @@ const server = http.createServer((req, res) => {
                 });
 
                 break;
+            case '/webpage/userCheck':
+                let host = "C:/Users/m4dsw/git-main/p2midi/main/node/PublicResources/webpage/SavedFiles/";
+                let user;
+                let input = [];
+                let users = fs.readdirSync(host +"users");
+                req.on("data", (chunk) => {
+                    input.push(chunk);
+                }).on("end", () => {
+
+                    user = input.toString();
+                        if (users.includes(user)){
+                        console.log("faulty uname req");
+                        res.writeHead(200);
+                        console.log("wrote header");
+                        res.write("name taken");
+                        console.log("wrote appropriate res");
+                        res.end("name takeen");
+                        console.log("ended res");
+                    }
+                    else {
+                        fs.mkdirSync(host + "users/" + user);
+                        fs.mkdirSync(host + "users/" + user + '/songs');
+                        fs.writeFile(host + "users/" + user + "/tracks.txt","",function(err){
+                            console.log(err);
+                        });
+                        res.writeHead(201);
+                        res.end();
+                    }
+                });
+                break;
             default:
                 res.end('unknown POST request');
+                console.log("unknown POST request");
             break;
         }
     };

@@ -236,6 +236,8 @@
     async function sendTrack(track){ // !!!NEEDS REVAMPING!!! for sending the track/file (undecided which) to a server
         newTrack = new midiTrack(document.getElementById('trackName').value, track); // Bruger midiTrack class
 
+        userCheck(newTrack.owner);
+
         console.log("sending track");
         console.log("amount of notes: " + track.length);
         await fetch('musicData', {
@@ -365,6 +367,16 @@
         }
     }
 
+    function userCheck(username){
+        fetch ("userCheck", {
+            headers:{
+                "content-type":"text/plain; charset=UTF-8"
+            },
+            method: "POST",
+            body: username
+        });
+    }
+
     /* Får data fra en track og returnerer det
     *  som et promise
     */
@@ -391,7 +403,9 @@
     */
     async function getMidiTrackById(owner, searchId){
         try {
-            const response = await fetch ("SavedFiles/tracks/"+owner+".txt", {
+            userCheck(owner);
+
+            const response = await fetch ("SavedFiles/users/"+owner+"/tracks.txt", {
                 headers:{
                     "content-type":"application/json; charset=UTF-8"
                 },
@@ -474,13 +488,12 @@
         let p = document.getElementById('trackIdValue');
         let q = document.getElementById('trackId');
         const data = await getMidiTrackById(currentUser, q.value);
-        //console.log(data);
-        const trackData = JSON.parse(data);
-
+        console.log(data);
 
         if (data === undefined){
             p.innerHTML = "not a track";
         }else{
+            const trackData = JSON.parse(data);
             p.innerHTML = ("Name: "+trackData.name);
             p.innerHTML += ("\rDuration: "+JSON.parse(data).n)
         }
