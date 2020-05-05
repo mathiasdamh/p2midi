@@ -80,6 +80,7 @@
 
         <input type="text" name="15" id="trackId" value="">
         <input type="button" id="btnPlayTrack" value="play">
+        <input type="button" id="btnStop" value="stop">
         <p id="trackIdValue"></p>
 
         <br>
@@ -109,6 +110,9 @@
     // Timer når man spiller musik, counter er variable som timeren bruger.
     let timer;
     let counter = 0;
+    let countStartRecord = 0;
+    let extraTime = 1;
+    let recording = false;
 
     // Class til tracks. Gør det muligt at skrive flere egenskaber end bare midi notes.
     class midiTrack {
@@ -150,9 +154,11 @@
 
     }
 
-    /* Test
-    *  Dette er WIP
-    */
+    /* ################################################
+     * ################################################
+     * ################    Test    ####################
+     *  Dette er WIP
+     */
     let testing = true;
     let failedTest = 0;
     let passedTest = 0;
@@ -223,15 +229,17 @@
         console.log("Tests done running\nFailed: "+failedTest+"\nPassed: "+passedTest);
     }
 
-    /* Nicholas' kode
-    */
+    /* #################################################
+     * #################################################
+     * ################ Nicholas' kode #################
+     */
     let activeNotes = []; //notes which have yet to be ended
     let noteArray = []; //notes which have been ended
 
     function newNote(message, noteArray){ // make a new note (duration will be defined in function endNote)
         let note = {
             midi: message.data[1],
-            time: (message.timeStamp-startTime+1), // {mads} Satte startTime ind
+            time: (message.timeStamp+countStartRecord-(startTime)), // {mads} Satte startTime ind
             duration: undefined
         }
         activeNotes.push(note);
@@ -242,12 +250,38 @@
     function endNote(message, activeNotes, noteArray){
         for (let i = 0; i < activeNotes.length; i++){ // loop through activeNotes
             if (message.data[1] === activeNotes[i].midi){
-                activeNotes[i].duration = (message.timeStamp-startTime+1) - activeNotes[i].time; // {mads} Satte startTime ind
+                console.log("starttime: "+activeNotes[i].time);
+                activeNotes[i].duration = (message.timeStamp+countStartRecord-(startTime)) - activeNotes[i].time; // {mads} Satte startTime ind
                 noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
             }
         }
-        updateCurrentTrackData(noteArray.length, (message.timeStamp-startTime))
+
+        console.log("endtime: "+(message.timeStamp+countStartRecord-(startTime)));
+
+        updateCurrentTrackData(noteArray.length, (message.timeStamp+countStartRecord-(startTime)));
         //console.log(noteArray.length);
+    }
+
+    function startRecordTimer(time){
+        counter = 0;
+        if(time !== undefined) startTime = time;
+        console.log(startTime);
+        recording = true;
+        console.log("starting record timer");
+        timer = setInterval(()=>{
+            counter += 100;
+
+            document.getElementById('currentTime').innerHTML = "Current time: "+counter;
+        } , 100);
+    }
+
+    function stopRecordTimer(){
+        console.log("stopping record timer");
+        clearInterval(timer);
+        recording = false;
+        startTime = 0;
+        counter = 0;
+        countStartRecord = 0;
     }
 
     async function sendTrack(track){ // !!!NEEDS REVAMPING!!! for sending the track/file (undecided which) to a server
@@ -306,6 +340,18 @@
         })
     }
 
+
+
+    function userCheck(username){
+        fetch ("userCheck", {
+            headers:{
+                "content-type":"text/plain; charset=UTF-8"
+            },
+            method: "POST",
+            body: username
+        });
+    }
+
     function updateCurrentTrackData(amountOfNotes, duration){
         let p = document.getElementById('currentTrackData');
         p.innerHTML = "Notes: "+amountOfNotes+", duration: "+duration;
@@ -345,6 +391,8 @@
             }
 
             console.log(midiAccess);
+            console.log(midiAccess.inputs);
+            console.log(midiAccess.outpus);
 
             var inputs = midiAccess.inputs;   // Input controllere
             var outputs = midiAccess.outputs; // Output controllere
@@ -355,17 +403,17 @@
         */
 
         function getMIDIMessage(midiMessage) {
-            console.log(midiMessage);
+            //console.log(midiMessage);
+            /*let a1 = midiMessage.timeStamp;
+            let a2 = MIDI.getContext().currentTime;
+            console.log("timestamp: "+a1+", context time: "+a2);
+            console.log("divided: "+(a1 / a2));*/
             switch (midiMessage.data[0]) {
                 case 144: // note On channel 1
-                    if(startTime === 0) {
+                    if(noteArray.length === 0) {
+                        countStartRecord = counter;
                         startTime = midiMessage.timeStamp;
-                        counter = 0;
-                        console.log("hej");
-                        timer = setInterval(()=>{
-                            counter += 100;
-                            document.getElementById('currentTime').innerHTML = "Current time: "+counter;
-                        } , 100);
+                        if(!recording) startRecordTimer(midiMessage.timeStamp);
                     }
                     //console.log("noteOn() "+midiMessage.data[1]+", "+midiMessgae.data[2]);
                     newNote(midiMessage, activeNotes);
@@ -386,7 +434,7 @@
                         instrument: midiMessage.data[1]
                     });
                 default:
-                    console.log("default reaction to midimessage, line 311\ngetMidiMessage(midiMessage)");
+                    console.log("default reaction to midimessage\ngetMidiMessage(midiMessage)");
                     console.log(midiMessage);
                     break;
             }
@@ -417,38 +465,6 @@
 
         }
     }
-
-    function userCheck(username){
-        fetch ("userCheck", {
-            headers:{
-                "content-type":"text/plain; charset=UTF-8"
-            },
-            method: "POST",
-            body: username
-        });
-    }
-
-    /* Får data fra en track og returnerer det
-    *  som et promise
-    *
-    async function getMidiTrack(trackName){
-        try {
-            const response = await fetch (trackName, {
-                headers:{
-                    "content-type":"application/json; charset=UTF-8"
-                },
-                method: "GET"
-            });
-            const data = await response.text();
-
-            //console.log(data);
-
-            return data;
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    */
 
     /* Opdateret version af getMidiTrack
     *  Denne bruger searchId til at finde tracken med det id, i owner's track fil
@@ -530,18 +546,8 @@
 
         const data = await getMidiTrackById(owner, id); // await fordi skal bruge værdi fra promise
 
-        let trackData = JSON.parse(data); // string --> object
-
-        //console.log(trackData);
-
         // Tilføjer noderne fra den valgte track
-        for (let i = 0; i < trackData.midiNotes.length; i++) {
-            tempTrack.addNote({
-                midi: trackData.midiNotes[i].midi,
-                ticks: trackData.midiNotes[i].time,
-                durationTicks: trackData.midiNotes[i].duration
-            });
-        }
+        addNotesFromTrack(tempTrack, data);
 
         tempTrack.name = name;
 
@@ -555,8 +561,8 @@
         for (let i = 0; i < data.midiNotes.length; i++) {
             midiTrack.addNote({
                 midi: data.midiNotes[i].midi,
-                ticks: data.midiNotes[i].time,
-                durationTicks: data.midiNotes[i].duration
+                time: (data.midiNotes[i].time/1000)+extraTime,
+                duration: (data.midiNotes[i].duration/1000)+extraTime
             });
         }
     }
@@ -600,7 +606,7 @@
         startTime = 0;
         noteArray = [];
         activeNotes = [];
-        clearInterval(timer);
+        stopRecordTimer();
         document.getElementById('currentTime').innerHTML = "Current time: 0";
         updateCurrentTrackData(noteArray.length, 0)
         console.log("note arrays and startTime reset");
@@ -614,7 +620,7 @@
         const data = await getMidiTrackById(p.value, q.value);
         let trackData = JSON.parse(data);
         appendTrack({owner:trackData.owner,id:trackData.id}, {owner:r.value,name:s.value});
-
+        console.log("appended "+trackData.name+"(id: "+trackData.id+") to "+r.value+"\'s song: "+s.value);
     }
 
     function btnCreateSong(){
@@ -631,16 +637,21 @@
         const tempMidi = new Midi();
         const tempTrack = tempMidi.addTrack();
 
-        let p = document.getElementById('trackName');
         let q = document.getElementById('trackId');
 
         userCheck(currentUser);
 
-        createMidiFromTrack(currentUser, q.value, p.value)
+        const tData = await getMidiTrackById(currentUser, q.value);
 
-        MIDI.Player.loadFile("SavedFiles/midi/track_"+p.value+".mid", () => {
+        createMidiFromTrack(currentUser, q.value, tData.name).then(()=>{
+
+        MIDI.Player.loadFile("SavedFiles/midi/track_"+tData.name+".mid", () => {
             MIDI.Player.addListener(function(data) {
                 console.log(data.now +"/"+data.end+" "+data.channel);
+
+                if(!recording){
+                    startRecordTimer(0);
+                }
 
                 if(data.now === data.end) {
                     MIDI.Player.stop();
@@ -648,7 +659,13 @@
                 };
             });
             MIDI.Player.start();
-        });
+            });
+        }); //.then
+    }
+
+    function btnStop(){
+        MIDI.Player.stop();
+        stopRecordTimer();
     }
     /* Viser track information når man skriver Id i feltet.
     */
@@ -688,6 +705,7 @@
     document.getElementById('btnAppendTrack').addEventListener("click", btnAppendTrack);
     document.getElementById('btnCreateSong').addEventListener("click", btnCreateSong);
     document.getElementById('btnPlayTrack').addEventListener("click", btnPlayTrack);
+    document.getElementById('btnStop').addEventListener("click", btnStop);
 
     </script>
 </body>
