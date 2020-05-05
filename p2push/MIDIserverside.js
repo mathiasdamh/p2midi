@@ -1,7 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 
-const host = 'C:/Users/Lenovo/P2_midi/p2midi/p2push/';
+const host = 'C:/Users/m4dsw/git-main/p2midi/p2push/';
+
 const port = 8000;
 
 
@@ -41,18 +42,6 @@ const server = http.createServer((req, res) => {
     }
     else if (req.method === "POST"){
         switch (req.url){
-<<<<<<< HEAD
-            case '/musicData':
-                let body = '';
-                req.on("data", chunk => {
-                    body += chunk.toString();
-
-                }).on("end", () => {;
-                    fs.appendFile("song.txt", body, (err) => {
-                        if (err) console.log(err)
-                    });
-                    res.writeHead(200);
-=======
             case '/trackData':
                 let trackData = [];
                 req.on("data", chunk => {
@@ -62,7 +51,6 @@ const server = http.createServer((req, res) => {
                     fs.appendFile("song.txt", chunk + '\n', (err) => { //skal denne være asynkron?
                         if (err) console.log(err)
                     res.writeHead(202);
->>>>>>> prototype
                     res.end();
                     });
                 });
@@ -93,10 +81,6 @@ const server = http.createServer((req, res) => {
                 });
                 break;
             case '/appendTrack':
-<<<<<<< HEAD
-
-            default: console.log('30 ' + req.url);
-=======
                 let data = [];
                 let usersArr = [];
                 let track;
@@ -122,7 +106,6 @@ const server = http.createServer((req, res) => {
                 });
                 break;
             default: console.log('unhandled POST request: ' + req.url);
->>>>>>> prototype
         }
     }
     else if (req.method === "PUT"){
@@ -143,11 +126,7 @@ const server = http.createServer((req, res) => {
                         res.end();
                     }
                     else {
-<<<<<<< HEAD
-                        fs.writeFile(host + "/users/" + obj.user + "/songs/" + obj.song, "Date created: " + creationDate +
-=======
-                        fs.writeFile(host + "/users/" + obj.user + "/songs/" + obj.song + '.txt', "Date created: " + creationDate + 
->>>>>>> prototype
+                        fs.writeFile(host + "/users/" + obj.user + "/songs/" + obj.song + '.txt', "Date created: " + creationDate +
                         "\nCreated by: " + obj.user + "\nOther contributors: ", (error) => {
                             if (error) throw error;
                             console.log("file created succesfully");

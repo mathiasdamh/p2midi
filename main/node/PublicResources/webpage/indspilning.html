@@ -79,7 +79,22 @@
         <br>
 
         <input type="text" name="15" id="trackId" value="">
+        <input type="button" id="btnPlayTrack" value="play">
         <p id="trackIdValue"></p>
+
+        <br>
+        <br>
+
+        songName<input type="text" id="songName" value="name">
+        songOwner<input type="text" id="songOwner" value="owner">
+        trackOwner:<input type="text" id="trackOwner" value="track owner">
+
+        <input type="button" id="btnAppendTrack" value="append">
+        <p id="songNameValue"></p>
+
+        <br>
+
+        <input type="button" id="btnCreateSong" value="create song">
     </div>
 
     <script type="text/javascript">
@@ -91,6 +106,7 @@
     // Brugt til at få tiden startet ved 0, i stedet for det første time stamp
     let startTime = 0;
 
+    // Timer når man spiller musik, counter er variable som timeren bruger.
     let timer;
     let counter = 0;
 
@@ -133,6 +149,7 @@
         }
 
     }
+
     /* Test
     *  Dette er WIP
     */
@@ -214,7 +231,7 @@
     function newNote(message, noteArray){ // make a new note (duration will be defined in function endNote)
         let note = {
             midi: message.data[1],
-            time: (message.timeStamp-startTime), // {mads} Satte startTime ind
+            time: (message.timeStamp-startTime+1), // {mads} Satte startTime ind
             duration: undefined
         }
         activeNotes.push(note);
@@ -225,7 +242,7 @@
     function endNote(message, activeNotes, noteArray){
         for (let i = 0; i < activeNotes.length; i++){ // loop through activeNotes
             if (message.data[1] === activeNotes[i].midi){
-                activeNotes[i].duration = (message.timeStamp-startTime) - activeNotes[i].time; // {mads} Satte startTime ind
+                activeNotes[i].duration = (message.timeStamp-startTime+1) - activeNotes[i].time; // {mads} Satte startTime ind
                 noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
             }
         }
@@ -237,6 +254,7 @@
         newTrack = new midiTrack(document.getElementById('trackName').value, track); // Bruger midiTrack class
 
         userCheck(newTrack.owner);
+        console.log("hallo?");
 
         console.log("sending track");
         console.log("amount of notes: " + track.length);
@@ -258,6 +276,36 @@
         alert("COULD NOT SEND TRACK!!11!!1");
     }
 
+    /*CREATE A NEW SONG*/
+
+    async function createNewSong(userName){
+        songName = prompt("What would you like to call the song?");
+        console.log("creating new track...");
+        await fetch('songs', {
+            method: "PUT",
+            body: JSON.stringify({user: userName, song: songName}),
+            headers: {
+                "Content-Type": "text"
+            }
+        }).then(response => {response.json
+        }).then(data => console.log(data));
+    }
+
+    function createNewSongOnFulfilled(songName){
+        console.log("Succesfully created a new song with name " + songName);
+    }
+
+    function createNewSongOnRejected(error){
+        console.log("Could not create a new song!\n\n" + error);
+    }
+
+    async function appendTrack(trackInfo, songInfo){ //NEEDS UPDATING - what is 'songInfo'?
+        await fetch('appendTrack', {
+            method: "POST",
+            body: JSON.stringify({track: trackInfo, song: songInfo})
+        })
+    }
+
     function updateCurrentTrackData(amountOfNotes, duration){
         let p = document.getElementById('currentTrackData');
         p.innerHTML = "Notes: "+amountOfNotes+", duration: "+duration;
@@ -270,7 +318,9 @@
          *  skal starte handlingen.
          */
 
+         //fjerner start knappen så man ikke kan starte flere af gangen.
         document.getElementById('btnStart').parentNode.removeChild(document.getElementById('btnStart'));
+
         MIDI.loadPlugin({
             soundfontUrl: "./FluidR3_GM/",
             instrument: 0,
@@ -313,9 +363,9 @@
                         counter = 0;
                         console.log("hej");
                         timer = setInterval(()=>{
-                            counter += 1000;
+                            counter += 100;
                             document.getElementById('currentTime').innerHTML = "Current time: "+counter;
-                        } , 1000);
+                        } , 100);
                     }
                     //console.log("noteOn() "+midiMessage.data[1]+", "+midiMessgae.data[2]);
                     newNote(midiMessage, activeNotes);
@@ -355,7 +405,8 @@
             const response = await fetch ("newMidiFile", {
                 headers:{
                     "content-type":"application/json; charset=UTF-8",
-                    "song-name":name
+                    "song-name":name,
+                    "owner-name":currentUser
                 },
                 body: data,
                 method:"POST"
@@ -379,7 +430,7 @@
 
     /* Får data fra en track og returnerer det
     *  som et promise
-    */
+    *
     async function getMidiTrack(trackName){
         try {
             const response = await fetch (trackName, {
@@ -397,6 +448,7 @@
             console.log(e);
         }
     }
+    */
 
     /* Opdateret version af getMidiTrack
     *  Denne bruger searchId til at finde tracken med det id, i owner's track fil
@@ -427,6 +479,43 @@
         } catch (e) {
             console.log(e);
         }
+    }
+
+    async function getSongByName(owner, songName){
+        try {
+            userCheck(owner);
+            const response = await fetch ("SavedFiles/users/"+owner+"/songs/"+songName+".txt", {
+                headers:{
+                    "content-type":"application/json; charset=UTF-8"
+                },
+                method: "GET"
+            });
+            const data = await response.text(); // await fordi skal bruge værdi fra promise
+
+            if (response.status !== 404) {
+                return data;
+            }
+            return -1;
+        } catch (e) {
+            console.log(e);
+        };
+    }
+
+    async function getTracksFromSong(songData){
+        let data = await songData;
+        let dataArray = data.split('\n');
+        console.log(dataArray);
+        //remove all empty/unessecary strings strings
+        for (let i = 0; i < dataArray.length; i++) {
+            if (dataArray[i].charAt(0) != "{" || dataArray[i] === "" || dataArray[i] === undefined) {
+                dataArray.splice(i, 1);
+                i--;
+            }
+        }
+
+        console.log(dataArray);
+
+        return dataArray;
     }
 
     /* Lave en midi fra et track teskt dokument.
@@ -460,9 +549,44 @@
         createMidi(tempMidi, name);
     }
 
+    async function addNotesFromTrack(midiTrack, trackData){
+        const data = JSON.parse(trackData);
+
+        for (let i = 0; i < data.midiNotes.length; i++) {
+            midiTrack.addNote({
+                midi: data.midiNotes[i].midi,
+                ticks: data.midiNotes[i].time,
+                durationTicks: data.midiNotes[i].duration
+            });
+        }
+    }
+
+    async function createMidiFromSong(owner, songName){
+        // tonejs/midi funktioner
+        const tempMidi = new Midi();
+        const tempTrack = tempMidi.addTrack();
+
+        userCheck(currentUser);
+
+        let dataArray = await getTracksFromSong( getSongByName(owner, songName) );
+        let trackData;
+
+        //add all notes
+        for (let i = 0; i < dataArray.length; i++) {
+            trackData = JSON.parse(dataArray[i]);
+            addNotesFromTrack(tempTrack, dataArray[i]);
+
+        }
+
+        tempTrack.name = songName;
+        createMidi(tempMidi, songName);
+    }
+
+
+
     /* Knapper
     */
-    function btnSendTrack(){ // Sender en track
+    function btnSendTrack(){ // Laver midi fil
         sendTrack(noteArray);
     }
 
@@ -482,13 +606,56 @@
         console.log("note arrays and startTime reset");
     }
 
+    async function btnAppendTrack(){
+        let q = document.getElementById('trackId');
+        let p = document.getElementById('trackOwner');
+        let s = document.getElementById('songName');
+        let r = document.getElementById('songOwner');
+        const data = await getMidiTrackById(p.value, q.value);
+        let trackData = JSON.parse(data);
+        appendTrack({owner:trackData.owner,id:trackData.id}, {owner:r.value,name:s.value});
+
+    }
+
+    function btnCreateSong(){
+        createNewSong(currentUser);
+    };
+
+    function btnCreateMidiSong(){
+        let p = document.getElementById('songName');
+        let q = document.getElementById('songOwner');
+        createMidiFromSong(q, p);
+    }
+
+    async function btnPlayTrack(){
+        const tempMidi = new Midi();
+        const tempTrack = tempMidi.addTrack();
+
+        let p = document.getElementById('trackName');
+        let q = document.getElementById('trackId');
+
+        userCheck(currentUser);
+
+        createMidiFromTrack(currentUser, q.value, p.value)
+
+        MIDI.Player.loadFile("SavedFiles/midi/track_"+p.value+".mid", () => {
+            MIDI.Player.addListener(function(data) {
+                console.log(data.now +"/"+data.end+" "+data.channel);
+
+                if(data.now === data.end) {
+                    MIDI.Player.stop();
+                    console.log("end of song, stopping player");
+                };
+            });
+            MIDI.Player.start();
+        });
+    }
     /* Viser track information når man skriver Id i feltet.
     */
     document.getElementById('trackId').onchange = async function(){
         let p = document.getElementById('trackIdValue');
         let q = document.getElementById('trackId');
         const data = await getMidiTrackById(currentUser, q.value);
-        console.log(data);
 
         if (data === undefined){
             p.innerHTML = "not a track";
@@ -499,11 +666,28 @@
         }
     }
 
+    // til sange
+    document.getElementById('songName').onchange = async function(){
+        let p = document.getElementById('songNameValue');
+        let q = document.getElementById('songName');
+        let s = document.getElementById('songOwner');
+        const data = await getSongByName(s.value, q.value);
+
+        if (typeof data !== "string"){
+            p.innerHTML = "not a song";
+        }else{
+            p.innerHTML = data;
+        }
+    }
+
     // Tilføjelse af event listerners
     document.getElementById('btnStart').addEventListener("click", main);
     document.getElementById('btnSendTrack').addEventListener("click", btnSendTrack);
     document.getElementById('btnCreateMidi').addEventListener("click", btnCreateMidi);
     document.getElementById('btnResetRecord').addEventListener("click", btnResetRecord);
+    document.getElementById('btnAppendTrack').addEventListener("click", btnAppendTrack);
+    document.getElementById('btnCreateSong').addEventListener("click", btnCreateSong);
+    document.getElementById('btnPlayTrack').addEventListener("click", btnPlayTrack);
 
     </script>
 </body>

@@ -32,6 +32,30 @@ function securePath(userPath){
 /* more accurate error codes should be sent to client */
 
 /**/
+let host = "C:/Users/m4dsw/git-main/p2midi/main/node/PublicResources/webpage/SavedFiles/";
+
+function getTrack(user, id){
+    let tracks = (fs.readFileSync(host + 'users/' + user + '/tracks.txt', "utf-8")).split('\n');
+    let re = RegExp("\"id\":"+id);
+    let i = 0;
+    let flag = false;
+
+    console.log("\"id\":"+id);
+
+    while (i < tracks.length && flag === false){
+        if (re.test(tracks[i])){
+            flag = true;
+        }
+        console.log(tracks[i]);
+        console.log(re);
+        i++;
+    }
+    if (flag){
+        console.log(tracks[i-1] + ", hej med dig");
+        return tracks[i-1];
+    }
+    else return false;
+}
 
 function fileResponse(filename,res){
   const sPath=securePath(filename);
@@ -156,7 +180,6 @@ const server = http.createServer((req, res) => {
 
                 break;
             case '/webpage/userCheck':
-                let host = "C:/Users/m4dsw/git-main/p2midi/main/node/PublicResources/webpage/SavedFiles/";
                 let user;
                 let input = [];
                 let users = fs.readdirSync(host +"users");
@@ -185,13 +208,68 @@ const server = http.createServer((req, res) => {
                     }
                 });
                 break;
+            case '/webpage/appendTrack':
+                let data = [];
+                let usersArr = [];
+                let track;
+                req.on("data", (chunk) => {
+                    data.push(chunk);
+                }).on("end", () => {
+                    obj = JSON.parse(data.toString());
+                    console.log(obj);
+                    if (fs.readdirSync(host + 'users').includes(obj.track.owner)){ // MANGLER ERROR HANDLING
+                        track = getTrack(obj.track.owner, obj.track.id); //HVIS DENNE ER FALSE
+                    console.log(track);
+                    }
+                    else {
+                        res.writeHead(400);
+                        res.end();
+                    }
+                    usersArr = fs.readdirSync(host + 'users');
+                    songPath = host + 'users/' + obj.song.owner + '/songs/' + obj.song.name + '.txt';
+                    if (usersArr.includes(obj.song.owner) && fs.readdirSync(host + 'users/' + obj.song.owner + '/songs/').includes(obj.song.name + '.txt')){ // MANGLER ERROR HANDLING
+                        fs.appendFileSync(songPath, track + '\n');
+                        console.log('boh');
+                    }
+                });
+                break;
             default:
                 res.end('unknown POST request');
                 console.log("unknown POST request");
             break;
         }
-    };
-});
+    }else if (req.method === "PUT"){
+        switch (req.url){
+            case '/webpage/songs':
+                console.log("new song PUT request");
+                let data = [];
+                req.on("data", chunk => {
+                    data.push(chunk);
+                }).on("end", () => {
+                    console.log("ended " + data);
+                    obj = JSON.parse(data);
+                    let creationDate = new Date();
+                    let songs = fs.readdirSync(host + '/users/' + obj.user + '/songs/');
+                    if (songs.includes(obj.song)){
+                        res.writeHead(200, {'Content-Type': 'text'});
+                        res.write("You have already created a song by that name!");
+                        res.end();
+                    }
+                    else {
+                        fs.writeFile(host + "/users/" + obj.user + "/songs/" + obj.song + '.txt', "Date created: " + creationDate +
+                        "\nCreated by: " + obj.user + "\nOther contributors: \n", (error) => {
+                            if (error) throw error;
+                            console.log("file created succesfully");
+                        });
+                    }
+                    res.writeHead(201);
+                    res.end();
+                });
+                break;
+            default: console.log("yooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
+        }
+    } // end switch
+}); // end request handler
 
 //better alternative: use require('mmmagic') library
 function guessMimeType(fileName){
