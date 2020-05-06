@@ -63,7 +63,7 @@
         <br>
 
         <input type="button" id="btn_load" value="Load">
-        <input type="text" id="midi_file" value="SavedFiles/midi/song.mid">
+        <input type="text" id="midi_file" value="SavedFiles/midi/track_channelTest.mid">
 
         <br>
 
@@ -81,8 +81,8 @@
 
             // Indlæser
             MIDI.loadPlugin({
-                soundfontUrl: "./FluidR3_GM/",
-                onsuccess: function() { }
+                soundfontUrl: "FluidR3_GM/",
+                onsuccess: function() {console.log("ready");}
             });
 
             /* Læser en fil fra file_path parameteren
@@ -94,6 +94,10 @@
 
                 midi = await getMidiData(file_path);
 
+                console.log(midi);
+
+                MIDI.Player.BPM = 0;
+
                 playerBPM = MIDI.Player.BPM;
                 midiPPQ = midi.header.ppq;
                 playerTime = 0;
@@ -103,8 +107,10 @@
                 document.getElementById('PPQ').innerHTML = "PPQ: "+midiPPQ;
 
                 MIDI.Player.loadFile(file_path, () => {
+                    MIDI.Player.getFileInstruments();
                     MIDI.Player.addListener(function(data) {
                         console.log(data.now +"/"+data.end+" "+data.channel);
+
 
                         if(data.now === data.end) {
                             MIDI.Player.stop();
@@ -173,6 +179,46 @@
             function btn_load(){
                 let file_name = document.getElementById('midi_file').value;
                 load_file(file_name);
+            }
+
+            function makeTestMidi(){
+                const tempMidi = new Midi();
+                let trackArray = [];
+
+                for (let i = 0; i < 16; i++) {
+                    trackArray.push(tempMidi.addTrack());
+                    trackArray[i].channel = i;
+                    trackArray[i].instrument = 0;
+                    trackArray[i].addNote({
+                        midi: (60+i),
+                        duration: 1,
+                        time: (1+i)
+                    })
+                }
+
+                createMidi(tempMidi, "channelTest");
+            }
+
+            async function createMidi(midiData, name){
+                console.log("creating midi file with name: "+name);
+                console.log("midi data being sent:");
+                console.log(midiData);
+                let data = JSON.stringify(midiData.toArray()); // Sender dataet i en string til serveren
+                try {
+                    const response = await fetch ("newMidiFile", {
+                        headers:{
+                            "content-type":"application/json; charset=UTF-8",
+                            "song-name":name,
+                            "owner-name":"mads"
+                        },
+                        body: data,
+                        method:"POST"
+                    })
+
+                } catch (e) {
+                    console.log(e);
+
+                }
             }
 
             /* Knap events.

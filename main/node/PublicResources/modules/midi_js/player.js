@@ -159,6 +159,8 @@ midi.loadFile = function(file, onsuccess, onprogress, onerror) {
 midi.getFileInstruments = function() {
 	var instruments = {};
 	var programs = {};
+    //console.log("hej");
+    //console.log(midi.data);
 	for (var n = 0; n < midi.data.length; n ++) {
 		var event = midi.data[n][0].event;
 		if (event.type !== 'channel') {

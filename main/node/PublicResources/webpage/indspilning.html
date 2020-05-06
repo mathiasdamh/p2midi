@@ -99,18 +99,20 @@
     </div>
 
     <script type="text/javascript">
-    /* Global varible
-    *  Regner med at login systemet bestemmer hvem currentUser er.
-    */
-    // Bliver brugt til at gemme tracks.
-    let currentUser = "mads"
-    // Brugt til at få tiden startet ved 0, i stedet for det første time stamp
-    let startTime = 0;
+    /*  ###############################################
+     *  ###############################################
+     *  #########   Variable og classes     ###########
+     * Global varible
+     *  Regner med at login systemet bestemmer hvem currentUser er.
+     */
+
+    let currentUser = "mads" // Bliver brugt til at gemme tracks.
+    let startTime = 0; // Brugt til at få tiden startet ved 0, i stedet for det første time stamp
 
     // Timer når man spiller musik, counter er variable som timeren bruger.
     let timer;
     let counter = 0;
-    let countStartRecord = 0;
+    let countStartRecord = 0; // når man spiller samtidigt med at man spiller et track
     let extraTime = 1;
     let recording = false;
 
@@ -239,7 +241,7 @@
     function newNote(message, noteArray){ // make a new note (duration will be defined in function endNote)
         let note = {
             midi: message.data[1],
-            time: (message.timeStamp+countStartRecord-(startTime)), // {mads} Satte startTime ind
+            time: (message.timeStamp+countStartRecord-(startTime)), // {mads} Satte startTime og countStartRecord ind
             duration: undefined
         }
         activeNotes.push(note);
@@ -251,7 +253,7 @@
         for (let i = 0; i < activeNotes.length; i++){ // loop through activeNotes
             if (message.data[1] === activeNotes[i].midi){
                 console.log("starttime: "+activeNotes[i].time);
-                activeNotes[i].duration = (message.timeStamp+countStartRecord-(startTime)) - activeNotes[i].time; // {mads} Satte startTime ind
+                activeNotes[i].duration = (message.timeStamp+countStartRecord-(startTime)) - activeNotes[i].time; // {mads} Satte startTime og countStartRecord ind
                 noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
             }
         }
@@ -260,28 +262,6 @@
 
         updateCurrentTrackData(noteArray.length, (message.timeStamp+countStartRecord-(startTime)));
         //console.log(noteArray.length);
-    }
-
-    function startRecordTimer(time){
-        counter = 0;
-        if(time !== undefined) startTime = time;
-        console.log(startTime);
-        recording = true;
-        console.log("starting record timer");
-        timer = setInterval(()=>{
-            counter += 100;
-
-            document.getElementById('currentTime').innerHTML = "Current time: "+counter;
-        } , 100);
-    }
-
-    function stopRecordTimer(){
-        console.log("stopping record timer");
-        clearInterval(timer);
-        recording = false;
-        startTime = 0;
-        counter = 0;
-        countStartRecord = 0;
     }
 
     async function sendTrack(track){ // !!!NEEDS REVAMPING!!! for sending the track/file (undecided which) to a server
@@ -357,16 +337,45 @@
         p.innerHTML = "Notes: "+amountOfNotes+", duration: "+duration;
     }
 
-    function main(){
-        /*  Her indlæses MIDI.js plugin.
-         *  Det hele er sat i en funktion for at sørge for at AudioContext ikke
-         *  bliver forhindret i at starte, hvis browseren forlanger at en bruger
-         *  skal starte handlingen.
-         */
+    /*  ##########################################################
+     *  ##########################################################
+     *  ################### MADS KODE ############################
+     */
 
-         //fjerner start knappen så man ikke kan starte flere af gangen.
+    /* Til at starte timeren der tæller op og kooridnere det med optagning af noder
+    */
+    function startRecordTimer(time){
+        counter = 0;
+        if(time !== undefined) startTime = time;
+        console.log(startTime);
+        recording = true;
+        console.log("starting record timer");
+        timer = setInterval(()=>{
+            counter += 100;
+
+            document.getElementById('currentTime').innerHTML = "Current time: "+counter;
+        } , 100);
+    }
+
+    function stopRecordTimer(){
+        console.log("stopping record timer");
+        clearInterval(timer);
+        recording = false;
+        startTime = 0;
+        counter = 0;
+        countStartRecord = 0;
+    }
+
+    /*  Her indlæses MIDI.js plugin.
+     *  Det hele er sat i en funktion for at sørge for at AudioContext ikke
+     *  bliver forhindret i at starte, hvis browseren forlanger at en bruger
+     *  skal starte handlingen.
+     */
+    function main(){
+         // Fjerner start knappen så man ikke kan starte flere af gangen.
         document.getElementById('btnStart').parentNode.removeChild(document.getElementById('btnStart'));
 
+        // Plugin inlæsning
         MIDI.loadPlugin({
             soundfontUrl: "./FluidR3_GM/",
             instrument: 0,
@@ -390,10 +399,6 @@
                 input.onmidimessage = getMIDIMessage;
             }
 
-            console.log(midiAccess);
-            console.log(midiAccess.inputs);
-            console.log(midiAccess.outpus);
-
             var inputs = midiAccess.inputs;   // Input controllere
             var outputs = midiAccess.outputs; // Output controllere
         }
@@ -401,13 +406,7 @@
         /* Denne funktion agere på beskeder fra controlleren, og bruger MIDI.js
         *  til at afspille lyd.
         */
-
         function getMIDIMessage(midiMessage) {
-            //console.log(midiMessage);
-            /*let a1 = midiMessage.timeStamp;
-            let a2 = MIDI.getContext().currentTime;
-            console.log("timestamp: "+a1+", context time: "+a2);
-            console.log("divided: "+(a1 / a2));*/
             switch (midiMessage.data[0]) {
                 case 144: // note On channel 1
                     if(noteArray.length === 0) {
@@ -441,14 +440,29 @@
         }
     }
 
+    /* Tilføjer noder til et miditrack fra trackData JSON
+    */
+    async function addNotesFromTrack(midiTrack, trackData){
+        const data = JSON.parse(trackData);
+
+        for (let i = 0; i < data.midiNotes.length; i++) {
+            midiTrack.addNote({
+                midi: data.midiNotes[i].midi,
+                time: (data.midiNotes[i].time/1000)+extraTime,
+                duration: (data.midiNotes[i].duration/1000)+extraTime
+            });
+        }
+    }
+
     /* Funktion til at sende POST request til serveren.
     *  Denne vil sende track information til serveren,
     *  og derefter vil serveren lave midi filen.
     */
     async function createMidi(midiData, name){
-        console.log("createMidi() track: ");
+        console.log("creating midi file with name: "+name);
+        console.log("midi data being sent:");
         console.log(midiData);
-        let data = JSON.stringify(midiData.toArray());
+        let data = JSON.stringify(midiData.toArray()); // Sender dataet i en string til serveren
         try {
             const response = await fetch ("newMidiFile", {
                 headers:{
@@ -493,13 +507,17 @@
             }
             return -1;
         } catch (e) {
+            console.log("error getMidiTrackById");
             console.log(e);
         }
     }
 
+    /* Stort set det samme som getMidiTrackById men med en sang fil i stedet.
+     */
     async function getSongByName(owner, songName){
         try {
             userCheck(owner);
+
             const response = await fetch ("SavedFiles/users/"+owner+"/songs/"+songName+".txt", {
                 headers:{
                     "content-type":"application/json; charset=UTF-8"
@@ -513,16 +531,22 @@
             }
             return -1;
         } catch (e) {
+            console.log("error getSongByName");
             console.log(e);
         };
     }
 
+    /* Når man har fået en sang, vil man også gerne have tracks derfra
+     * Funktioner loopen igennem newlines og fjerner alt der ikke er tracks
+     * (normaltvis de første tre linjer, men også tomme strings "")
+     */
     async function getTracksFromSong(songData){
         let data = await songData;
         let dataArray = data.split('\n');
         console.log(dataArray);
-        //remove all empty/unessecary strings strings
+        // Remove all empty/unessecary strings strings
         for (let i = 0; i < dataArray.length; i++) {
+            // Tracks in a song will start with {
             if (dataArray[i].charAt(0) != "{" || dataArray[i] === "" || dataArray[i] === undefined) {
                 dataArray.splice(i, 1);
                 i--;
@@ -555,18 +579,9 @@
         createMidi(tempMidi, name);
     }
 
-    async function addNotesFromTrack(midiTrack, trackData){
-        const data = JSON.parse(trackData);
-
-        for (let i = 0; i < data.midiNotes.length; i++) {
-            midiTrack.addNote({
-                midi: data.midiNotes[i].midi,
-                time: (data.midiNotes[i].time/1000)+extraTime,
-                duration: (data.midiNotes[i].duration/1000)+extraTime
-            });
-        }
-    }
-
+    /* Lave en midifil ud fra en sang fil.
+     * Tager alle tracks fra sangen og lægger dem i samme midi fil track.
+     */
     async function createMidiFromSong(owner, songName){
         // tonejs/midi funktioner
         const tempMidi = new Midi();
@@ -588,11 +603,13 @@
         createMidi(tempMidi, songName);
     }
 
+    
 
-
-    /* Knapper
-    */
-    function btnSendTrack(){ // Laver midi fil
+    /* ###################################################
+     * ###################################################
+     * #################  KNAPPER  #######################
+     */
+    function btnSendTrack(){ // Sender en track
         sendTrack(noteArray);
     }
 
@@ -602,7 +619,7 @@
             document.getElementById('trackName').value);
     }
 
-    function btnResetRecord(){ // resetter start tid, og note arrays
+    function btnResetRecord(){ // Resetter start tid, og note arrays
         startTime = 0;
         noteArray = [];
         activeNotes = [];
@@ -617,8 +634,11 @@
         let p = document.getElementById('trackOwner');
         let s = document.getElementById('songName');
         let r = document.getElementById('songOwner');
+
         const data = await getMidiTrackById(p.value, q.value);
+
         let trackData = JSON.parse(data);
+
         appendTrack({owner:trackData.owner,id:trackData.id}, {owner:r.value,name:s.value});
         console.log("appended "+trackData.name+"(id: "+trackData.id+") to "+r.value+"\'s song: "+s.value);
     }
@@ -667,8 +687,12 @@
         MIDI.Player.stop();
         stopRecordTimer();
     }
-    /* Viser track information når man skriver Id i feltet.
-    */
+
+    /* #######################################################
+     * #######################################################
+     * ###############    NICE TO HAVES    ###################
+     */
+    // Viser track information når man skriver Id i feltet.
     document.getElementById('trackId').onchange = async function(){
         let p = document.getElementById('trackIdValue');
         let q = document.getElementById('trackId');
@@ -683,7 +707,7 @@
         }
     }
 
-    // til sange
+    // Viser sang data hvis der er en sang med den songOwner og songName
     document.getElementById('songName').onchange = async function(){
         let p = document.getElementById('songNameValue');
         let q = document.getElementById('songName');
