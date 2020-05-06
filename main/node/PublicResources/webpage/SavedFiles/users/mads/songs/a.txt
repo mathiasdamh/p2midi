@@ -1,0 +1,5 @@
+Date created: Tue May 05 2020 14:58:06 GMT+0200 (GMT+02:00)
+Created by: mads
+Other contributors: 
+{"id":0,"midiNotes":[{"midi":48,"time":0,"duration":145.00000000043656},{"midi":48,"time":1185.9999999978754,"duration":134.00000000183354},{"midi":48,"time":2305.000000000291,"duration":126.99999999676947},{"midi":48,"time":3370.999999999185,"duration":127.00000000040745},{"midi":48,"time":4433.999999997468,"duration":119.00000000241562}],"name":"a1","owner":"mads"}
+{"id":1,"midiNotes":[{"midi":50,"time":200,"duration":87.00000000317232},{"midi":50,"time":1409.0000000025611,"duration":56.99999999706051},{"midi":50,"time":2509.000000001106,"duration":47.99999999886495},{"midi":50,"time":3579.000000000815,"duration":28.000000002066372},{"midi":50,"time":4681.999999999971,"duration":25.00000000145519}],"name":"a2","owner":"mads"}

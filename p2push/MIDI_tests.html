@@ -111,7 +111,8 @@ async function createNewSong(userName){
         headers: {
             "Content-Type": "text"
         }
-    }).then(createNewSongOnFulfilled(songName), createNewSongOnRejected);
+    }).then(response => {response.json
+    }).then(data => console.log(data));
 }
 
 function createNewSongOnFulfilled(songName){
@@ -160,7 +161,7 @@ function endNote(message, activeNotes, noteArray){
 async function sendTrack(track){ // !!!NEEDS REVAMPING!!! include ID/name to the track
     console.log("sending track");
     console.log("track length: " + track.length);
-    await fetch('musicData', {
+    await fetch('trackData', {
         method: "POST",
         body: JSON.stringify(track),
         headers: {
@@ -178,10 +179,10 @@ function sendTrackOnRejected(error){
     alert("COULD NOT SEND TRACK!!11!!1");
 }
 
-async function appendTrack(track, songInfo){ //NEEDS UPDATING - what is 'songInfo'?
+async function appendTrack(trackInfo, songInfo){ //NEEDS UPDATING - what is 'songInfo'?
     await fetch('appendTrack', {
         method: "POST",
-        body: JSON.stringify({track: track, song: song})
+        body: JSON.stringify({track: trackInfo, song: songInfo})
     })
 }
     </script>

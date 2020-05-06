@@ -1,0 +1,5 @@
+Date created: Wed May 06 2020 13:09:34 GMT+0200 (GMT+02:00)
+Created by: mads
+Other contributors: 
+{"id":6,"midiNotes":[{"midi":72,"time":0,"duration":1841.0000000003492}],"name":"test1","owner":"mads"}
+{"id":7,"midiNotes":[{"midi":74,"time":1900,"duration":2017.005000001518}],"name":"test2","owner":"mads"}
