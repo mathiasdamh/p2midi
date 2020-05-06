@@ -67,9 +67,8 @@
 
         <br>
 
-        <p id="BPM">BPM: NaN</p>
         <p id="PPQ">PPQ: NaN</p>
-        <p id="timer"> 0/???</p>
+        <p id="timer"> 0/0</p>
 
         <script type="text/javascript">
             let playerBPM = 0;
@@ -78,12 +77,40 @@
             let playerEnd = 0;
 
             let midi;
+            let timer;
+            let timerPause = false;
 
             // Indlæser
             MIDI.loadPlugin({
                 soundfontUrl: "FluidR3_GM/",
-                onsuccess: function() {console.log("ready");}
+                onsuccess: function() {console.log("ready");},
             });
+
+            function startTimer(){
+                if(playerEnd.toFixed(1) == playerTime.toFixed(1)) playerTime = 0;
+                timer = setInterval(function(){
+                    if(MIDI.Player.playing) {
+                        playerTime += 0.005;
+
+                        document.getElementById('timer').innerHTML =
+                        playerTime.toFixed(2) + " / " + playerEnd.toFixed(2)
+
+                    }
+
+                } , 10);
+
+
+            };
+
+            function stopTimer(){
+                clearInterval(timer);
+                playerTime = playerEnd;
+            };
+
+            function pauseTimer(){
+                clearInterval(timer);
+                playerTime = (MIDI.Player.currentTime/1000);
+            };
 
             /* Læser en fil fra file_path parameteren
             *  console.logger nogle data for sjov
@@ -96,39 +123,41 @@
 
                 console.log(midi);
 
-                MIDI.Player.BPM = 0;
+                MIDI.Player.BPM = 0; // skal være nul for at spille ordentligt tempo
 
-                playerBPM = MIDI.Player.BPM;
                 midiPPQ = midi.header.ppq;
                 playerTime = 0;
                 playerEnd = midi.duration;
 
-                document.getElementById('BPM').innerHTML = "BPM: "+playerBPM;
+                // Giver alle channels de rigtige start instrumenter
+                for (let i = 0; i < midi.tracks.length; i++) {
+                    console.log("channel: "+midi.tracks[i].channel+", program: "+midi.tracks[i].instrument.number);
+                    MIDI.loadResource({
+                        instrument: midi.tracks[i].instrument.number,
+                        onsuccess: function(){
+                            console.log("loaded instrument: "+midi.tracks[i].instrument.number);
+                        }
+                    });
+
+                    MIDI.programChange(midi.tracks[i].channel, midi.tracks[i].instrument.number);
+                }
+
                 document.getElementById('PPQ').innerHTML = "PPQ: "+midiPPQ;
 
                 MIDI.Player.loadFile(file_path, () => {
-                    MIDI.Player.getFileInstruments();
                     MIDI.Player.addListener(function(data) {
                         console.log(data.now +"/"+data.end+" "+data.channel);
 
 
                         if(data.now === data.end) {
                             MIDI.Player.stop();
+                            stopTimer();
                             console.log("end of song, stopping player");
                         };
                     });
                 })
 
-                let time = setInterval(()=>{
-                    if(MIDI.Player.playing) {
-                        playerTime += 0.010;
-
-                    }
-                    document.getElementById('timer').innerHTML =
-                    Math.max(playerTime.toFixed(2), (MIDI.Player.currentTime/1000).toFixed(2)) +
-                    " / " + playerEnd.toFixed(2);
-
-                } , 10);
+                startTimer();
             };
 
             async function getMidiData(filePath){
@@ -146,10 +175,12 @@
                 console.log(MIDI.Player.playing + " start btn_play()");
                 switch (MIDI.Player.playing) {
                     case true:  MIDI.Player.stop();
+                                stopTimer();
 
                         break;
 
                     case false: MIDI.Player.start();
+                                startTimer();
 
                         break;
                     default: console.log("error in btn_play switch");
@@ -163,10 +194,12 @@
                 console.log(MIDI.Player.playing + " start btn_pause()");
                 switch (MIDI.Player.playing) {
                     case true: MIDI.Player.pause();
+                               pauseTimer();
 
                         break;
 
                     case false: MIDI.Player.resume();
+                                startTimer();
 
                         break;
                     default: console.log("error in btn_pause switch");
@@ -181,6 +214,7 @@
                 load_file(file_name);
             }
 
+            // ### test
             function makeTestMidi(){
                 const tempMidi = new Midi();
                 let trackArray = [];
@@ -188,7 +222,7 @@
                 for (let i = 0; i < 16; i++) {
                     trackArray.push(tempMidi.addTrack());
                     trackArray[i].channel = i;
-                    trackArray[i].instrument = 0;
+                    trackArray[i].instrument.number = 0;
                     trackArray[i].addNote({
                         midi: (60+i),
                         duration: 1,
