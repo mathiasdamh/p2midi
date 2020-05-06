@@ -12,7 +12,7 @@ const verbose = true;
 //https://blog.todotnet.com/2018/11/simple-static-file-webserver-in-node-js/
 //https://stackoverflow.com/questions/16333790/node-js-quick-file-server-static-files-over-http
 
-const publicResources="PublicResources/";
+const publicResources="PublicResources/webpage/";
 //secture file system access as described on
 //https://nodejs.org/en/knowledge/file-system/security/introduction/
 const rootFileSystem=process.cwd();

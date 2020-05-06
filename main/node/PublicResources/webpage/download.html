@@ -27,6 +27,33 @@
           </form>
         </div>
     </div>
+    <br>
+    <!-- Download knap-->
+    <button type="button" id="download-btn">
+      Download
+    </button>
+    <script>
+      // Funktionen skal registrere filnavnet og at det er en fil
+      function download(filename, file){
+        var element = document.createElement('a');
+        element.style.display = 'none';
+        element.setAttribute('href');
+        // Tilføj download attributten af det gemte link
+        element.setAttribute('download', filename);
+        }
+      // Når brugeren klikker på download knappen,
+      // skal den valgte fil blive downloadet
+      document.getElementById("download-btn")
+              .addEventListener("click",function(){
+        // Generer download af valgt fil med indhold
+        var file = document.getElementById("file").value;
+        var filename = document.getElementById("filename").value;
+
+        download(filename, file);
+      }, false);
+    </script>
+    
+    <a href="SavedFiles/tracks/mads.txt" download>download file</a>
 
 </body>
 </html>
