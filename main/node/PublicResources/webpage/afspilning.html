@@ -67,9 +67,13 @@
 
         <br>
 
-        <p id="BPM">BPM: NaN</p>
-        <p id="PPQ">PPQ: NaN</p>
-        <p id="timer"> 0/???</p>
+        <p>Change BPM (need to reload file)</p>
+        <input type="number" id="inputBPM" value="120">
+        <input type="button" id="btnChangeBPM" value="Change">
+
+        <p id="BPM">BPM: 0</p>
+        <p id="PPQ">PPQ: 0</p>
+        <p id="timer">0 / 0</p>
 
         <script type="text/javascript">
             let playerBPM = 0;
@@ -78,12 +82,71 @@
             let playerEnd = 0;
 
             let midi;
+            let timer;
+            let timerRunning = false;
 
             // Indlæser
             MIDI.loadPlugin({
                 soundfontUrl: "FluidR3_GM/",
-                onsuccess: function() {console.log("ready");}
+                onsuccess: function() {console.log("ready");},
             });
+
+            function startTimer(){
+                if(!timerRunning){
+                    if(playerEnd.toFixed(1) == playerTime.toFixed(1)) playerTime = 0;
+                    console.log("started timer");
+                    timer = setInterval(function(){
+                        if(MIDI.Player.playing) {
+                            playerTime += 0.01;
+                            updateTime(playerTime, playerEnd);
+                        }
+
+                    } , 10);
+                    timerRunning = !timerRunning;
+                }
+            };
+
+            function stopTimer(){
+                console.log("stopped timer");
+                clearInterval(timer);
+                playerTime = 0;
+                updateTime(playerTime, playerEnd);
+                if(timerRunning) timerRunning = !timerRunning;
+            };
+
+            function pauseTimer(){
+                console.log("paused timer");
+                clearInterval(timer);
+                playerTime = (MIDI.Player.currentTime/1000);
+                if(timerRunning) timerRunning = !timerRunning;
+            };
+
+            function updateTime(current, end){
+                document.getElementById('timer').innerHTML =
+                current.toFixed(2) + " / " + end.toFixed(2)
+            }
+
+            function updateBpmPpq(){
+                document.getElementById('PPQ').innerHTML = "PPQ: "+midiPPQ;
+                document.getElementById('BPM').innerHTML = "BPM: "+playerBPM;
+            }
+
+            function loadInstruments(midiData){
+                console.log("indlæser instrumenter");
+                for (let i = 0; i < midi.tracks.length; i++) {
+                    console.log("channel: "+midi.tracks[i].channel+", program: "+midi.tracks[i].instrument.number);
+                    MIDI.loadResource({
+                        instrument: midi.tracks[i].instrument.number,
+                        onsuccess: function(){
+                            console.log("loaded instrument: "+midi.tracks[i].instrument.number);
+                        }
+                    });
+
+                    // Sørger for at channels har et rigtigt start instrument
+                    MIDI.programChange(midi.tracks[i].channel, midi.tracks[i].instrument.number);
+                }
+                console.log("instruments loaded");
+            }
 
             /* Læser en fil fra file_path parameteren
             *  console.logger nogle data for sjov
@@ -96,39 +159,33 @@
 
                 console.log(midi);
 
-                MIDI.Player.BPM = 0;
-
-                playerBPM = MIDI.Player.BPM;
                 midiPPQ = midi.header.ppq;
                 playerTime = 0;
                 playerEnd = midi.duration;
+                playerBPM = MIDI.Player.BPM;
 
-                document.getElementById('BPM').innerHTML = "BPM: "+playerBPM;
-                document.getElementById('PPQ').innerHTML = "PPQ: "+midiPPQ;
+                // Giver alle channels de rigtige start instrumenter
+                loadInstruments(midi);
+
+
 
                 MIDI.Player.loadFile(file_path, () => {
-                    MIDI.Player.getFileInstruments();
+                    playerEnd = (MIDI.Player.endTime/1000);
+
+                    updateBpmPpq()
+                    updateTime(playerTime, playerEnd);
+
                     MIDI.Player.addListener(function(data) {
                         console.log(data.now +"/"+data.end+" "+data.channel);
 
 
                         if(data.now === data.end) {
                             MIDI.Player.stop();
+                            stopTimer();
                             console.log("end of song, stopping player");
                         };
                     });
                 })
-
-                let time = setInterval(()=>{
-                    if(MIDI.Player.playing) {
-                        playerTime += 0.010;
-
-                    }
-                    document.getElementById('timer').innerHTML =
-                    Math.max(playerTime.toFixed(2), (MIDI.Player.currentTime/1000).toFixed(2)) +
-                    " / " + playerEnd.toFixed(2);
-
-                } , 10);
             };
 
             async function getMidiData(filePath){
@@ -144,34 +201,27 @@
                 playerBPM = MIDI.Player.BPM
 
                 console.log(MIDI.Player.playing + " start btn_play()");
-                switch (MIDI.Player.playing) {
-                    case true:  MIDI.Player.stop();
-
-                        break;
-
-                    case false: MIDI.Player.start();
-
-                        break;
-                    default: console.log("error in btn_play switch");
-
-                }
+                if (MIDI.Player.playing) {
+                    MIDI.Player.stop();
+                    stopTimer();
+                } else {
+                    MIDI.Player.stop();
+                    MIDI.Player.start();
+                    startTimer();
+                };
             };
 
             /* Ligesom btn_play, men i stedet afspiller den fra der man pausede.
             */
             function btn_pause(){
                 console.log(MIDI.Player.playing + " start btn_pause()");
-                switch (MIDI.Player.playing) {
-                    case true: MIDI.Player.pause();
-
-                        break;
-
-                    case false: MIDI.Player.resume();
-
-                        break;
-                    default: console.log("error in btn_pause switch");
-
-                }
+                if (MIDI.Player.playing) {
+                    MIDI.Player.pause();
+                    pauseTimer();
+                } else {
+                    MIDI.Player.resume();
+                    startTimer();
+                };
             }
 
             /* Knap til at loade en fil.
@@ -181,6 +231,13 @@
                 load_file(file_name);
             }
 
+            function btnChangeBPM(){
+                console.log("changed BPM");
+                MIDI.Player.BPM = document.getElementById('inputBPM').value;
+                updateBpmPpq();
+            }
+
+            // ### test
             function makeTestMidi(){
                 const tempMidi = new Midi();
                 let trackArray = [];
@@ -188,7 +245,7 @@
                 for (let i = 0; i < 16; i++) {
                     trackArray.push(tempMidi.addTrack());
                     trackArray[i].channel = i;
-                    trackArray[i].instrument = 0;
+                    trackArray[i].instrument.number = 0;
                     trackArray[i].addNote({
                         midi: (60+i),
                         duration: 1,
@@ -226,6 +283,7 @@
             document.getElementById('btn_play').addEventListener("click", btn_play);
             document.getElementById('btn_load').addEventListener("click", btn_load);
             document.getElementById('btn_pause').addEventListener("click", btn_pause);
+            document.getElementById('btnChangeBPM').addEventListener("click", btnChangeBPM);
         </script>
     </div>
 

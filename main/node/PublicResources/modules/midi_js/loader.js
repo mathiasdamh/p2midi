@@ -147,7 +147,7 @@ MIDI.Player = MIDI.Player || {};
 		for (var i = 0; i < length; i ++) {
 
 			var instrumentId = instruments[i];
-			console.log(instrumentId);
+			//console.log(instrumentId);
 			if (MIDI.Soundfont[instrumentId]) { // already loaded
 				waitForEnd();
 			} else { // needs to be requested
