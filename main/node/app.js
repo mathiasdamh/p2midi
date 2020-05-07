@@ -3,6 +3,7 @@ const fs=require("fs");
 const path=require("path");
 const { Midi } = require('@tonejs/midi')
 const { parse } = require('querystring');
+const formidable = require('formidable');
 
 const hostname = '127.0.0.1';
 const port = 8080;
@@ -233,10 +234,41 @@ const server = http.createServer((req, res) => {
                     }
                 });
                 break;
+            case '/webpage/upload.html':
+                let uploadForm = new formidable.IncomingForm();
+                uploadForm.parse(req, function(err, fields, files){
+                    //console.log(files.filetoupload);
+                    console.log(files.filetoupload.type);
+                    let fileType;
+                    switch (files.filetoupload.type) {
+                        case 'audio/mid':
+                            fileType = 'mid/';
+                            break;
+                        case 'text/txt':
+                        case 'text/plain':
+                            fileType = 'txt/';
+                            break;
+                        case 'image/png':
+                        case 'image/jpeg':
+                            fileType = 'img/';
+                            break;
+                        default:
+                    }
+                    let oldpath = files.filetoupload.path;
+                    let newpath = 'PublicResources/webpage/SavedFiles/uploads/'+fileType+files.filetoupload.name;
+
+                    fs.rename(oldpath, newpath, function (err){
+                        if (err) throw err;
+                        res.write("file uploaded");
+                        console.log("file uploaded");
+                        res.end();
+                    });
+                });
+                break;
             default:
                 res.end('unknown POST request');
                 console.log("unknown POST request");
-            break;
+                break;
         }
     }else if (req.method === "PUT"){
         switch (req.url){
@@ -289,7 +321,8 @@ function guessMimeType(fileName){
     "svg": 'image/svg+xml',
     "pdf": 'application/pdf',
     "doc": 'application/msword',
-    "docx": 'application/msword'
+    "docx": 'application/msword',
+    "mid": 'audio/mid'
    };
     //incomplete
   return (ext2Mime[fileExtension]||"text/plain");
