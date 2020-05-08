@@ -92,6 +92,24 @@ const server = http.createServer((req, res) => {
         }
     }else if(req.method=="POST"){ // Tager sig af POST requests
         switch(req.url){
+            case "/webpage/songFilesDir":
+                body = '';
+                req.on('data', chunk =>{
+                    body += chunk.toString();
+                });
+                req.on('end', ()=>{
+                    let songDirArr = fs.readdirSync("PublicResources/webpage/SavedFiles/users/"+body+"/songs");
+                    console.log(songDirArr);
+                    res.write(JSON.stringify(songDirArr));
+                    res.end();
+                });
+                break;
+            case "/webpage/midiFilesDir":
+                let dirArr = fs.readdirSync("PublicResources/webpage/SavedFiles/midi");
+                console.log(dirArr);
+                res.write(JSON.stringify(dirArr))
+                res.end();
+                break;
             case "/webpage/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
                                                // Specificeret under Indspilning.html
 
@@ -116,7 +134,7 @@ const server = http.createServer((req, res) => {
                     if(verbose)console.log("after parse: "+typeof body);
 
                     // Skriver dataet ud til en MIDI fil
-                    fs.writeFileSync("PublicResources/webpage/SavedFiles/midi/track_"+req.headers["song-name"]+".mid",
+                    fs.writeFileSync("PublicResources/webpage/SavedFiles/midi/"+req.headers["owner-name"]+"_"+req.headers["song-name"]+".mid",
                     new Buffer(Object.values(body)));
 
                     console.log("end write midi file");
@@ -154,6 +172,7 @@ const server = http.createServer((req, res) => {
                                 }
 
                             }
+                            newId = "owner"+newId;
                             body = JSON.parse(body);
                             body.id = newId;
 
@@ -299,8 +318,54 @@ const server = http.createServer((req, res) => {
                 });
                 break;
             default: console.log("yooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
+        }// end switch
+    }else if(req.method === "DELETE"){
+        switch (req.url) {
+            case '/webpage/deleteSong':
+                let deleteSongBody = '';
+                req.on('data', (chunk) =>{
+                    deleteSongBody += chunk.toString();
+                });
+                req.on('end', ()=>{
+                    fs.unlink(
+                        publicResources+"webpage/SavedFiles/users/"+req.headers["owner-name"]+"/songs/"+deleteSongBody+".txt",
+                        function(err){
+                            if(err) console.log(err);
+                            res.end("ended");
+                    });
+                });
+                break;
+            case '/webpage/deleteTrack':
+                let deleteTrackBody = '';
+                let deleteTrackPath = '';
+                req.on('data', (chunk) =>{
+                    deleteTrackBody += chunk.toString();
+                });
+                req.on('end', ()=>{
+                    let deleteTrackPath = publicResources+"webpage/SavedFiles/users/"+deleteTrackBody+"/tracks.txt";
+                    fs.readFile(deleteTrackPath, "utf-8", (err, data) => {
+                        if (err) console.log(err)
+
+                        let trackDataArr = data.split('\n');
+                        console.log(trackDataArr);
+                        trackDataArr.splice(0,1);
+                        let newDataString = "";
+                        for (let i = 0; i < trackDataArr.length; i++) {
+                            if(trackDataArr[i] !== undefined || trackDataArr[i] === "") newDataString+=trackDataArr[i];
+                        }
+                        console.log(newDataString);
+                        fs.writeFileSync(deleteTrackPath, newDataString, function(err){
+                            if(err)console.log(err);
+                            res.writeHead(200);
+                            res.end();
+                        })
+                    });
+                });
+            default:
+                console.log("default switch case, DELETE request: "+req.url);
+                break;
         }
-    } // end switch
+    }
 }); // end request handler
 
 //better alternative: use require('mmmagic') library
