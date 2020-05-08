@@ -27,6 +27,60 @@
           </form>
         </div>
     </div>
+    <div id="body">
 
+        <ul id="midiFiles">
+        </ul>
+    </div>
+<script type="text/javascript">
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+    element.innerHTML = filename;
+
+    document.getElementById('body').appendChild(element);
+
+}
+
+function downloadMidi(filename) {
+    var element = document.createElement('a');
+    let path = "SavedFiles/midi/"+filename+".mid";
+
+    element.setAttribute('href', path);
+    element.setAttribute('download', filename+".mid");
+    element.innerHTML = filename;
+
+    document.getElementById('body').appendChild(element);
+
+}
+
+async function displayFiles(){
+    const res = await fetch("midiFilesDir",{
+        method:"POST"
+    })
+    const data = await res.text();
+    let fileDir = JSON.parse(data);
+
+    let element;
+    let dlPath;
+
+    for (let i = 0; i < fileDir.length; i++) {
+        element = document.createElement('a');
+        dlPath = "SavedFiles/midi/"+fileDir[i];
+
+        element.setAttribute('href', dlPath);
+        element.setAttribute('download', fileDir[i]);
+        element.innerHTML = fileDir[i];
+
+        elementLI = document.createElement('li');
+        elementLI.appendChild(element);
+
+        document.getElementById('midiFiles').appendChild(elementLI);
+    }
+}
+
+displayFiles();
+</script>
 </body>
 </html>

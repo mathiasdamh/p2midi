@@ -92,6 +92,12 @@ const server = http.createServer((req, res) => {
         }
     }else if(req.method=="POST"){ // Tager sig af POST requests
         switch(req.url){
+            case "/webpage/midiFilesDir":
+                let dirArr = fs.readdirSync("PublicResources/webpage/SavedFiles/midi");
+                console.log(dirArr);
+                res.write(JSON.stringify(dirArr))
+                res.end();
+                break;
             case "/webpage/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
                                                // Specificeret under Indspilning.html
 
@@ -154,6 +160,7 @@ const server = http.createServer((req, res) => {
                                 }
 
                             }
+                            newId = "owner"+newId;
                             body = JSON.parse(body);
                             body.id = newId;
 
