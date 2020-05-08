@@ -57,45 +57,48 @@
     </div>
 
     <div class="main">
-        <input type="button" id="btnStart" value="start">
-        <input type="button" id="btnResetRecord" value="reset">
+        <input type="button" id="btnStart" value="Start MIDI Plugin">
 
-        <p id="currentTime">Current time: 0</p>
+        <div class="wrapper">
+            <p id="currentTime">Current time: 0</p>
+            <p id="currentTrackData">Notes: 0, duration: 0</p>
+            <input type="button" id="btnResetRecord" value="Reset Notes and Recording Time">
+            <p>Track Name:<input type="text" name="30" id="trackName" value="Track Name">
+            <input type="button" id="btnSendTrack" value="Create Track"></p>
 
-        <br><br>
+        </div>
 
-        <input type="button" id="btnSendTrack" value="send">
-        <p id="currentTrackData">Notes: 0, duration: 0</p>
+        <div class="wrapper">
 
-        <br>
+            <p>Track ID:<input type="text" width="50" name="15" id="trackId" value=""></p>
 
-        <input type="button" id="btnCreateMidi" value="create">
+            <input type="button" id="btnPlayTrack" value="Play Track">
+            <input type="button" id="btnStop" value="Stop Playing">
+            <input type="button" id="btnCreateMidi" value="Create MIDI for Track">
 
-        <br>
+            <p id="trackIdValue"></p>
+        </div>
 
-        <input type="text" name="30" id="trackName" value="Track Name">
+        <div id="songWrapper" class="wrapper">
+            <div class="left">
+                <p>Song Name:<input type="text" id="songName" value="name"></p>
+                <p id="songNameValue"></p>
+                <p>Song Owner:<input type="text" id="songOwner" value=""></p>
+                <p>Track Owner:<input type="text" id="trackOwner" value="track owner"></p>
 
-        <br>
-        <br>
+                <p><input type="button" id="btnAppendTrack" value="Append Track to Song">
+                <input type="button" id="btnCreateMidiSong" value="Create MIDI for Song"></p>
+                <p><input type="button" id="btnCreateSong" value="Create New Song">
+                <input type="button" id="btnDeleteSong" value="Delete Song"></p>
 
-        <input type="text" name="15" id="trackId" value="">
-        <input type="button" id="btnPlayTrack" value="play">
-        <input type="button" id="btnStop" value="stop">
-        <p id="trackIdValue"></p>
+            </div>
 
-        <br>
-        <br>
-
-        songName<input type="text" id="songName" value="name">
-        songOwner<input type="text" id="songOwner" value="owner">
-        trackOwner:<input type="text" id="trackOwner" value="track owner">
-
-        <input type="button" id="btnAppendTrack" value="append">
-        <p id="songNameValue"></p>
-
-        <br>
-
-        <input type="button" id="btnCreateSong" value="create song">
+            <div class="right">
+                <input type="button" id="btnShowSongs" value="Show all your Songs">
+                <ul id="songFiles">
+                </ul>
+            </div>
+        </div>
     </div>
 
     <script type="text/javascript">
@@ -115,6 +118,8 @@
     let countStartRecord = 0; // når man spiller samtidigt med at man spiller et track
     let extraTime = 1;
     let recording = false;
+
+    let songDisplay = false; // til at vise sange
 
     // Class til tracks. Gør det muligt at skrive flere egenskaber end bare midi notes.
     class midiTrack {
@@ -603,7 +608,7 @@
         createMidi(tempMidi, songName);
     }
 
-    
+
 
     /* ###################################################
      * ###################################################
@@ -613,10 +618,16 @@
         sendTrack(noteArray);
     }
 
-    function btnCreateMidi(){ // Laver midi fil
-        createMidiFromTrack(currentUser,
-            document.getElementById('trackId').value,
-            document.getElementById('trackName').value);
+    async function btnCreateMidi(){ // Laver midi fil
+        let trackID = document.getElementById('trackId').value;
+
+        const data = await getMidiTrackById(currentUser, trackID)
+
+        console.log(data);
+
+        let trackName = JSON.parse(data).name;
+
+        createMidiFromTrack(currentUser, trackID, trackName);
     }
 
     function btnResetRecord(){ // Resetter start tid, og note arrays
@@ -645,12 +656,41 @@
 
     function btnCreateSong(){
         createNewSong(currentUser);
+        console.log(songDisplay);
+        if(songDisplay) displaySongFiles();
     };
+
+    function btnDeleteSong(){
+        let p = document.getElementById('songName');
+        fetch("deleteSong", {
+            method:"DELETE",
+            headers:{
+                "owner-name":currentUser
+            },
+            body:p.value
+        }).then(res=>{
+            displaySongFiles();
+        })
+        console.log("deleted song: "+p.value);
+    }
 
     function btnCreateMidiSong(){
         let p = document.getElementById('songName');
         let q = document.getElementById('songOwner');
         createMidiFromSong(q, p);
+    }
+
+    function btnShowSongs(){
+        let list = document.getElementById('songFiles');
+        if(songDisplay){
+            while (list.hasChildNodes()) {
+                list.removeChild(list.childNodes[0]);
+            }
+            songDisplay = !songDisplay;
+        }else {
+            displaySongFiles();
+            songDisplay = !songDisplay;
+        }
     }
 
     async function btnPlayTrack(){
@@ -663,9 +703,9 @@
 
         const tData = await getMidiTrackById(currentUser, q.value);
 
-        createMidiFromTrack(currentUser, q.value, tData.name).then(()=>{
+        createMidiFromTrack(currentUser, q.value, "tempmidi").then(()=>{
 
-        MIDI.Player.loadFile("SavedFiles/midi/track_"+tData.name+".mid", () => {
+        MIDI.Player.loadFile("SavedFiles/midi/track_tempmidi.mid", () => {
             MIDI.Player.addListener(function(data) {
                 console.log(data.now +"/"+data.end+" "+data.channel);
 
@@ -717,7 +757,34 @@
         if (typeof data !== "string"){
             p.innerHTML = "not a song";
         }else{
-            p.innerHTML = data;
+            //p.innerHTML = data;
+        }
+    }
+
+    // Skriver noget html
+    document.getElementById('songOwner').value = currentUser;
+    document.getElementById('trackOwner').value = currentUser;
+
+    // viser sang filer
+    async function displaySongFiles(){
+        const res = await fetch("songFilesDir",{
+            method:"POST",
+            body:currentUser
+        })
+        const data = await res.text();
+        console.log(data);
+        let fileDir = JSON.parse(data);
+
+        let element;
+        let dlPath;
+        let songFilesElement = document.getElementById('songFiles');
+        songFilesElement.innerHTML = ""
+
+        for (let i = 0; i < fileDir.length; i++) {
+            elementLI = document.createElement('li');
+            elementLI.innerHTML = fileDir[i].slice(0, -4);
+
+            songFilesElement.appendChild(elementLI);
         }
     }
 
@@ -728,8 +795,11 @@
     document.getElementById('btnResetRecord').addEventListener("click", btnResetRecord);
     document.getElementById('btnAppendTrack').addEventListener("click", btnAppendTrack);
     document.getElementById('btnCreateSong').addEventListener("click", btnCreateSong);
+    document.getElementById('btnCreateMidiSong').addEventListener("click", btnCreateMidiSong);
     document.getElementById('btnPlayTrack').addEventListener("click", btnPlayTrack);
     document.getElementById('btnStop').addEventListener("click", btnStop);
+    document.getElementById('btnShowSongs').addEventListener("click", btnShowSongs);
+    document.getElementById('btnDeleteSong').addEventListener("click", btnDeleteSong);
 
     </script>
 </body>

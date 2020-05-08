@@ -8,6 +8,46 @@ h1{
 
 * {box-sizing: border-box;}
 
+/* indspilning */
+.recordInfo {
+    border: 2px black solid;
+    width: 60%;
+    display: flex;
+    justify-content: flex;
+    align-items: flex;
+}
+
+.wrapper {
+    border: 2px black solid;
+    border-radius: 5px;
+    width: 60%;
+    margin: 5px;
+    margin-top: 30px;
+    padding: 5px;
+}
+
+#songWrapper {
+    display: inline-flex;
+}
+
+#songWrapper .right{
+
+}
+
+#songWrapper .left{
+
+}
+
+#btnStart {
+    border: 2px black solid;
+    border-radius: 5px;
+    margin: 20px;
+    width: 500px;
+    height: 80px;
+    font-size: 48px;
+}
+
+
 /* Style the navbar */
 .topnav {
   overflow: hidden;
