@@ -68,15 +68,21 @@
 
         </div>
 
-        <div class="wrapper">
+        <div id="trackWrapper" class="wrapper">
+            <div class="left">
+                <p>Track ID:<input type="text" width="50" name="15" id="trackId" value=""></p>
 
-            <p>Track ID:<input type="text" width="50" name="15" id="trackId" value=""></p>
+                <input type="button" id="btnPlayTrack" value="Play Track">
+                <input type="button" id="btnStop" value="Stop Playing">
+                <input type="button" id="btnCreateMidi" value="Create MIDI for Track">
 
-            <input type="button" id="btnPlayTrack" value="Play Track">
-            <input type="button" id="btnStop" value="Stop Playing">
-            <input type="button" id="btnCreateMidi" value="Create MIDI for Track">
-
-            <p id="trackIdValue"></p>
+                <p id="trackIdValue"></p>
+            </div>
+            <div class="right">
+                <input type="button" id="btnShowTracks" value="Show all your Tracks">
+                <ul id="trackList">
+                </ul>
+            </div>
         </div>
 
         <div id="songWrapper" class="wrapper">
@@ -120,6 +126,7 @@
     let recording = false;
 
     let songDisplay = false; // til at vise sange
+    let trackDisplay = false; // til at vise tracks
 
     // Class til tracks. Gør det muligt at skrive flere egenskaber end bare midi notes.
     class midiTrack {
@@ -485,10 +492,7 @@
         }
     }
 
-    /* Opdateret version af getMidiTrack
-    *  Denne bruger searchId til at finde tracken med det id, i owner's track fil
-    */
-    async function getMidiTrackById(owner, searchId){
+    async function getMidiTrackData(owner){
         try {
             userCheck(owner);
 
@@ -498,14 +502,26 @@
                 },
                 method: "GET"
             });
-            const data = await response.text(); // await fordi skal bruge værdi fra promise
+            const data = await response.text();
+            return data;
+        } catch (e) {
+
+        };
+    }
+
+    /* Opdateret version af getMidiTrack
+    *  Denne bruger searchId til at finde tracken med det id, i owner's track fil
+    */
+    async function getMidiTrackById(owner, searchId){
+        try {
+            const data = await getMidiTrackData(owner) // await fordi skal bruge værdi fra promise
 
             let dataSet = data.split("\n");
             for (let i = 0; i < (dataSet.length-2); i++) { //To tomme data set pga \n derfor -2
                 //console.log(i +"# data set: "+dataSet[i]);
                 let tempParse = JSON.parse(dataSet[i])
                 // Sammenlignings tjek, hvis searchId matcher et i tekstfilen
-                if( Number.parseInt(tempParse.id) === Number.parseInt(searchId) ){
+                if( tempParse.id === searchId ){
                     return dataSet[i];
 
                 }
@@ -614,8 +630,12 @@
      * ###################################################
      * #################  KNAPPER  #######################
      */
-    function btnSendTrack(){ // Sender en track
-        sendTrack(noteArray);
+    async function btnSendTrack(){ // Sender en track
+        await sendTrack(noteArray)
+        .then(res=>{
+            if(trackDisplay) displayTracks();
+            updateTrackData();
+        })
     }
 
     async function btnCreateMidi(){ // Laver midi fil
@@ -646,12 +666,16 @@
         let s = document.getElementById('songName');
         let r = document.getElementById('songOwner');
 
-        const data = await getMidiTrackById(p.value, q.value);
+        const data = await getMidiTrackById(p.value, p.value+q.value);
 
         let trackData = JSON.parse(data);
 
-        appendTrack({owner:trackData.owner,id:trackData.id}, {owner:r.value,name:s.value});
-        console.log("appended "+trackData.name+"(id: "+trackData.id+") to "+r.value+"\'s song: "+s.value);
+        await appendTrack({owner:trackData.owner,id:trackData.id}, {owner:r.value,name:s.value})
+        .then(res=>{
+            console.log("appended "+trackData.name+"(id: "+trackData.id+") to "+r.value+"\'s song: "+s.value);
+
+            updateSongData();
+        });
     }
 
     function btnCreateSong(){
@@ -690,6 +714,19 @@
         }else {
             displaySongFiles();
             songDisplay = !songDisplay;
+        }
+    }
+
+    function btnShowTracks(){
+        let list = document.getElementById('trackList');
+        if(trackDisplay){
+            while (list.hasChildNodes()) {
+                list.removeChild(list.childNodes[0]);
+            }
+            trackDisplay = !trackDisplay;
+        }else {
+            displayTracks();
+            trackDisplay = !trackDisplay;
         }
     }
 
@@ -733,10 +770,12 @@
      * ###############    NICE TO HAVES    ###################
      */
     // Viser track information når man skriver Id i feltet.
-    document.getElementById('trackId').onchange = async function(){
+    document.getElementById('trackId').onchange = updateTrackData;
+
+    async function updateTrackData(){
         let p = document.getElementById('trackIdValue');
         let q = document.getElementById('trackId');
-        const data = await getMidiTrackById(currentUser, q.value);
+        const data = await getMidiTrackById(currentUser, currentUser+q.value);
 
         if (data === undefined){
             p.innerHTML = "not a track";
@@ -747,8 +786,7 @@
         }
     }
 
-    // Viser sang data hvis der er en sang med den songOwner og songName
-    document.getElementById('songName').onchange = async function(){
+    async function updateSongData(){
         let p = document.getElementById('songNameValue');
         let q = document.getElementById('songName');
         let s = document.getElementById('songOwner');
@@ -757,9 +795,28 @@
         if (typeof data !== "string"){
             p.innerHTML = "not a song";
         }else{
-            //p.innerHTML = data;
+            let dataSplit = data.split('\n');
+
+            let topData = data.split('\n').splice(0, 3);
+            console.log(topData);
+
+            let trackData = data.split('\n').splice(3, dataSplit.length-5); // -5 fordi to tomme strenge og tre info
+            console.log(trackData);
+
+            p.innerHTML = "";
+
+            for (var i = 0; i < 4; i++) {
+                if(i>2){
+                    p.innerHTML += "tracks: "+trackData.length;
+                }else{
+                    p.innerHTML += topData[i] +", ";
+                }
+            }
         }
     }
+
+    // Viser sang data hvis der er en sang med den songOwner og songName
+    document.getElementById('songName').onchange = updateSongData;
 
     // Skriver noget html
     document.getElementById('songOwner').value = currentUser;
@@ -788,6 +845,35 @@
         }
     }
 
+    async function displayTracks(){
+        const data = await getMidiTrackData(currentUser);
+
+        console.log(trackDisplay);
+
+        let LIelement;
+        let ULelement = document.getElementById('trackList');
+        let parsedData;
+
+        ULelement.innerHTML = "";
+
+        let trackArr = data.split('\n');
+        for (var i = 0; i < trackArr.length; i++) {
+            if(trackArr[i] !== undefined && trackArr[i] !== ""){
+                LIelement = document.createElement('li');
+
+                parsedData = JSON.parse(trackArr[i]);
+
+                LIelement.innerHTML = parsedData.name;
+                LIelement.innerHTML += ", notes: "+parsedData.midiNotes.length;
+                LIelement.innerHTML += ", ID: "+parsedData.id;
+
+                ULelement.appendChild(LIelement);
+            };
+            console.log("one loop in trackDisplay");
+        }
+        console.log("end trackDisplay");
+    }
+
     // Tilføjelse af event listerners
     document.getElementById('btnStart').addEventListener("click", main);
     document.getElementById('btnSendTrack').addEventListener("click", btnSendTrack);
@@ -799,6 +885,7 @@
     document.getElementById('btnPlayTrack').addEventListener("click", btnPlayTrack);
     document.getElementById('btnStop').addEventListener("click", btnStop);
     document.getElementById('btnShowSongs').addEventListener("click", btnShowSongs);
+    document.getElementById('btnShowTracks').addEventListener("click", btnShowTracks);
     document.getElementById('btnDeleteSong').addEventListener("click", btnDeleteSong);
 
     </script>

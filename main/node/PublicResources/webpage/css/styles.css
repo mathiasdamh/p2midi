@@ -30,6 +30,10 @@ h1{
     display: inline-flex;
 }
 
+#trackWrapper {
+    display: inline-flex;
+}
+
 #songWrapper .right{
 
 }

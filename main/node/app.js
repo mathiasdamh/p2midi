@@ -37,11 +37,11 @@ let host = "C:/Users/m4dsw/git-main/p2midi/main/node/PublicResources/webpage/Sav
 
 function getTrack(user, id){
     let tracks = (fs.readFileSync(host + 'users/' + user + '/tracks.txt', "utf-8")).split('\n');
-    let re = RegExp("\"id\":"+id);
+    let re = RegExp("\"id\":\""+id+"\"");
     let i = 0;
     let flag = false;
 
-    console.log("\"id\":"+id);
+    console.log("\"id\":\""+id+"\"");
 
     while (i < tracks.length && flag === false){
         if (re.test(tracks[i])){
@@ -172,7 +172,7 @@ const server = http.createServer((req, res) => {
                                 }
 
                             }
-                            newId = "owner"+newId;
+                            newId = owner+newId;
                             body = JSON.parse(body);
                             body.id = newId;
 
@@ -250,6 +250,8 @@ const server = http.createServer((req, res) => {
                     if (usersArr.includes(obj.song.owner) && fs.readdirSync(host + 'users/' + obj.song.owner + '/songs/').includes(obj.song.name + '.txt')){ // MANGLER ERROR HANDLING
                         fs.appendFileSync(songPath, track + '\n');
                         console.log('boh');
+                        res.writeHead(200);
+                        res.end();
                     }
                 });
                 break;
