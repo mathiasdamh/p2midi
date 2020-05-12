@@ -1,0 +1,4 @@
+Date created: Tue May 12 2020 10:47:15 GMT+0200 (GMT+02:00)
+Created by: mads
+Other contributors: 
+{"id":"mads0","midiNotes":[{"midi":40,"time":0,"duration":140.00000001396984}],"name":"abc","owner":"mads"}
