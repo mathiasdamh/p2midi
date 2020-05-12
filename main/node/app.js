@@ -58,6 +58,15 @@ function getTrack(user, id){
     else return false;
 }
 
+function removeEmptyLines(array){
+    for (i = 0; i < array.length; i++) {
+        if(array[i] === ""){
+            array.splice(i, 1);
+        }
+    }
+    return array;
+}
+
 function fileResponse(filename,res){
   const sPath=securePath(filename);
   console.log("Reading:"+sPath);
@@ -130,7 +139,6 @@ const server = http.createServer((req, res) => {
 
                     body = JSON.parse(body); // Dataet er blevet sendt som en streng, og
                                              // her bliver det omdannet til et object
-
                     if(verbose)console.log("after parse: "+typeof body);
 
                     // Skriver dataet ud til en MIDI fil
@@ -154,48 +162,55 @@ const server = http.createServer((req, res) => {
                     owner = JSON.parse(body).owner;
                     newId = 0;
                     path = ("PublicResources/webpage/SavedFiles/users/"+owner+"/tracks.txt");
-
-                    if(fs.existsSync(path)){
-                        fs.readFile(path, "utf-8", (err, data) => {
-                            if (err) console.log(err)
-                            if(data === undefined){
-                                console.log("creating txt for " + owner);
-                            }else{
-                                let dataSet = data.split("\n")
-                                if (dataSet.length === 0) {
-                                    newId = 0;
-                                } else if( dataSet.length > 0) {
-                                    console.log("dataset length: "+dataSet.length);
-                                    console.log("id: "+newId);
-                                    newId = dataSet.length-1;
-                                    console.log("id: "+newId);
-                                }
-
-                            }
-                            newId = owner+newId;
-                            body = JSON.parse(body);
-                            body.id = newId;
-
-                            console.log(body.id+ ", "+newId);
-
-                            fs.appendFile("PublicResources/webpage/SavedFiles/users/"+owner+"/tracks.txt", JSON.stringify(body) + "\n", (err) => {
+                    let testPromise = new Promise(function(res, rej){
+                        console.log("promise entered");
+                        if(fs.existsSync(path)){
+                            console.log("if entered");
+                            fs.readFile(path, "utf-8", (err, data) => {
                                 if (err) console.log(err)
-                            });
-                            res.writeHead(200);
-                            res.end();
-                        });
-                    }else {
-                        body = JSON.parse(body);
-                        body.id = newId;
+                                if(data === undefined){
+                                    console.log("Creating tracks.txt for " + owner);
+                                }else{
+                                    let dataSet = removeEmptyLines(data.split("\n"));
+                                    console.log(dataSet);
 
-                        console.log(body.id+ ", "+newId);
+                                    if (dataSet.length === 0) {
+                                        newId = 0;
+                                    } else if( dataSet.length > 0) {
+                                        let i = 0;
+                                        let parsedData;
+                                        let parsedId;
+                                        for (i = 0; i < dataSet.length; i++) {
+                                            parsedData = JSON.parse(dataSet[i]);
+                                            console.log("parsed data:");
+                                            console.log(parsedData);
+                                            parsedId = parsedData.id.slice(owner.length, parsedData.id.length);
+                                            console.log("parsed id: "+parsedId);
+                                            if (newId < parsedId) {
+                                                newId = parsedId;
+                                            }
+                                            newId++;
+                                            console.log("newId: "+newId);
+                                        } // for
+                                    } // else if
+                                } // else
+                                res();
+                            }); // fs.readFileSync
+                        }; // if
+                    })
+                    .then(()=>{
+                        body = JSON.parse(body);
+                        console.log("newId: "+newId);
+                        body.id = owner+newId;
+                        console.log("body.id: "+body.id);
 
                         fs.appendFile("PublicResources/webpage/SavedFiles/users/"+owner+"/tracks.txt", JSON.stringify(body) + "\n", (err) => {
                             if (err) console.log(err)
+                            console.log("appending file");
+                            res.writeHead(200);
+                            res.end();
                         });
-                        res.writeHead(200);
-                        res.end();
-                    }
+                    });
                 });
 
                 break;
@@ -253,6 +268,83 @@ const server = http.createServer((req, res) => {
                         res.writeHead(200);
                         res.end();
                     }
+                });
+                break;
+            case '/webpage/updateTrack':
+                let updateData = '';
+                let updateTrackPath = '';
+                let updateObj;
+                req.on("data", (chunk) => {
+                    updateData += chunk.toString();
+                }).on("end", () => {
+                    updateObj = JSON.parse(updateData);
+                    updateTrackPath = "PublicResources/webpage/SavedFiles/users/"+updateObj.owner+"/tracks.txt";
+
+                    fs.readFile(updateTrackPath, "utf-8", (err, data) => {
+                        if(err) throw err;
+
+                        let trackDataArr = removeEmptyLines(data.split('\n'));
+
+                        let lineToUpdate = 0;
+
+                        let i = 0;
+                        let updateParsedData;
+                        let updateParsedId;
+                        let updateIds = []
+                        for (i = 0; i < trackDataArr.length; i++) {
+                            console.log(i+" for loop");
+                            updateParsedData = JSON.parse(trackDataArr[i]);
+                            console.log(updateParsedData);
+                            updateParsedId = updateParsedData.id.slice(updateObj.owner.length, updateParsedData.id.length);
+                            console.log(updateParsedId);
+                            updateIds.push(updateParsedId);
+                        }
+                        if(verbose) console.log(updateIds);
+
+
+                        let endResponse = false;
+                        i = 0;
+                        let currentId = updateObj.id.slice(updateObj.owner.length, updateObj.id.length);
+                        while (currentId != updateIds[i]) {
+                            if(verbose) console.log("while loop iteration "+i);
+                            if(i > updateIds.length){
+                                console.log("Not a valid id to update");
+                                endResponse = true;
+                                break;
+                            }
+                            i++;
+                        }
+
+                        if(endResponse){
+                            console.log("Response ended");
+                            res.writeHead(404);
+                            res.end("Not a valid id to update")
+                        }
+
+                        lineToUpdate = i;
+                        console.log("lineToUpdate: "+lineToUpdate);
+                        updateParsedData = JSON.parse(trackDataArr[lineToUpdate]);
+                        for (i = 0; i < updateParsedData.midiNotes.length; i++) {
+                            updateParsedData.midiNotes[i].time += updateObj.delay;
+                        }
+                        trackDataArr[lineToUpdate] = JSON.stringify(updateParsedData);
+
+                        let newDataString = "";
+                        for (i = 0; i < trackDataArr.length; i++) {
+                            if(trackDataArr[i] !== undefined){
+                                console.log("trackDataArr: ");
+                                console.log(trackDataArr[i]);
+                                newDataString += trackDataArr[i] + "\n";
+                            }
+                        }
+                        console.log("newDataString: ");
+                        console.log(newDataString);
+                        fs.writeFileSync(updateTrackPath, newDataString);
+                        res.writeHead(200);
+                        console.log("Response ended");
+                        res.end();
+                    });
+
                 });
                 break;
             case '/webpage/upload.html':
@@ -340,29 +432,68 @@ const server = http.createServer((req, res) => {
             case '/webpage/deleteTrack':
                 let deleteTrackBody = '';
                 let deleteTrackPath = '';
+                let deleteOwner = req.headers["owner-name"];
                 req.on('data', (chunk) =>{
                     deleteTrackBody += chunk.toString();
                 });
                 req.on('end', ()=>{
-                    let deleteTrackPath = publicResources+"webpage/SavedFiles/users/"+deleteTrackBody+"/tracks.txt";
+                    deleteTrackPath = publicResources+"webpage/SavedFiles/users/"+deleteOwner+"/tracks.txt";
+                    deleteTrackBody = deleteTrackBody.slice(deleteOwner.length, deleteTrackBody.length);
+                    let i = 0;
                     fs.readFile(deleteTrackPath, "utf-8", (err, data) => {
                         if (err) console.log(err)
 
-                        let trackDataArr = data.split('\n');
-                        console.log(trackDataArr);
-                        trackDataArr.splice(0,1);
+                        let trackDataArr = removeEmptyLines(data.split('\n'));
+
+                        if(verbose) console.log(trackDataArr);
+
+                        let lineToDelete = 0;
+
+                        let deleteParsedData;
+                        let deleteParsedId;
+                        let deleteIds = []
+                        for (i = 0; i < trackDataArr.length; i++) {
+                            deleteParsedData = JSON.parse(trackDataArr[i]);
+                            deleteParsedId = deleteParsedData.id.slice(deleteOwner.length, deleteParsedData.id.length);
+                            deleteIds.push(deleteParsedId);
+                        }
+                        if(verbose) console.log(deleteIds);
+
+                        i = 0;
+                        let endResponse = false;
+                        while (deleteTrackBody != deleteIds[i]) {
+                            if(verbose) console.log(deleteTrackBody+ " , "+deleteIds[i]);
+                            if(verbose) console.log("while loop iteration "+i);
+                            if(i > deleteIds.length){
+                                console.log("Not a valid id to delete");
+                                endResponse = true;
+                                break;
+                            }
+                            i++;
+                        }
+
+                        if(endResponse){
+                            console.log("Response ended");
+                            res.writeHead(404);
+                            res.end("Not a valid id to delete")
+                        }
+
+                        lineToDelete = i;
+                        trackDataArr.splice(lineToDelete,1);
+
                         let newDataString = "";
                         for (let i = 0; i < trackDataArr.length; i++) {
-                            if(trackDataArr[i] !== undefined || trackDataArr[i] === "") newDataString+=trackDataArr[i];
+                            if(trackDataArr[i] !== undefined){
+                                newDataString += trackDataArr[i] + "\n";
+                            }
                         }
-                        console.log(newDataString);
-                        fs.writeFileSync(deleteTrackPath, newDataString, function(err){
-                            if(err)console.log(err);
-                            res.writeHead(200);
-                            res.end();
-                        })
+                        fs.writeFileSync(deleteTrackPath, newDataString)
+                        res.writeHead(200);
+                        console.log("Response ended");
+                        res.end();
                     });
                 });
+                break;
             default:
                 console.log("default switch case, DELETE request: "+req.url);
                 break;

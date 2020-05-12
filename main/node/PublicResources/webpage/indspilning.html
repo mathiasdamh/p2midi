@@ -70,11 +70,14 @@
 
         <div id="trackWrapper" class="wrapper">
             <div class="left">
-                <p>Track ID:<input type="text" width="50" name="15" id="trackId" value=""></p>
+                <p>Track ID:<input type="text" width="50" id="trackId" value=""></p>
 
                 <input type="button" id="btnPlayTrack" value="Play Track">
                 <input type="button" id="btnStop" value="Stop Playing">
                 <input type="button" id="btnCreateMidi" value="Create MIDI for Track">
+                <p><input type="button" id="btnDeleteTrack" value="Delete Track">
+                <input type="button" id="btnDelayTrack" value="Delay Track">
+                <input type="number" style="width:70px" id="delayDuration" value=""></p>
 
                 <p id="trackIdValue"></p>
             </div>
@@ -456,6 +459,7 @@
     */
     async function addNotesFromTrack(midiTrack, trackData){
         const data = JSON.parse(trackData);
+        console.log(data);
 
         for (let i = 0; i < data.midiNotes.length; i++) {
             midiTrack.addNote({
@@ -465,6 +469,22 @@
             });
         }
     }
+
+    function changeTime(trackData, delay){
+        for (var i = 0; i < trackData.midiNotes.length; i++) {
+            trackData.midiNotes[i].time += delay;
+        }
+    };
+
+    async function addDelayToTrack(owner, id, delay){
+        const res = await fetch("updateTrack", {
+            method:"POST",
+            body:JSON.stringify({owner:owner,id:id,delay:delay})
+        })
+        .then(()=>{
+
+        });
+    };
 
     /* Funktion til at sende POST request til serveren.
     *  Denne vil sende track information til serveren,
@@ -514,13 +534,16 @@
     */
     async function getMidiTrackById(owner, searchId){
         try {
+            console.log("enter getMidiTrackById");
             const data = await getMidiTrackData(owner) // await fordi skal bruge værdi fra promise
 
             let dataSet = data.split("\n");
+            console.log(dataSet.length);
             for (let i = 0; i < (dataSet.length-2); i++) { //To tomme data set pga \n derfor -2
-                //console.log(i +"# data set: "+dataSet[i]);
+                console.log(i +"# data set: "+dataSet[i]);
                 let tempParse = JSON.parse(dataSet[i])
                 // Sammenlignings tjek, hvis searchId matcher et i tekstfilen
+                console.log(tempParse.id + " === " + searchId);
                 if( tempParse.id === searchId ){
                     return dataSet[i];
 
@@ -589,12 +612,12 @@
 
         //console.log("owner: "+owner+"\nid: "+id+"\nname: "+name);
 
-        const data = await getMidiTrackById(owner, id); // await fordi skal bruge værdi fra promise
+        const data = await getMidiTrackById(owner, currentUser+id); // await fordi skal bruge værdi fra promise
 
         // Tilføjer noderne fra den valgte track
-        addNotesFromTrack(tempTrack, data);
+        await addNotesFromTrack(tempTrack, data);
 
-        tempTrack.name = name;
+        tempMidi.name = name;
 
         // Sender midi data til create midi funktion.
         createMidi(tempMidi, name);
@@ -624,6 +647,23 @@
         createMidi(tempMidi, songName);
     }
 
+    async function deleteTrack(owner, id){
+        try {
+            const res = await fetch ("deleteTrack", {
+                method: "DELETE",
+                headers:{
+                    "owner-name":owner
+                },
+                body: id,
+            });
+            console.log(res.status);
+            return res;
+        } catch (e) {
+            console.log(e);
+            return -1;
+        }
+    }
+
 
 
     /* ###################################################
@@ -641,7 +681,7 @@
     async function btnCreateMidi(){ // Laver midi fil
         let trackID = document.getElementById('trackId').value;
 
-        const data = await getMidiTrackById(currentUser, trackID)
+        const data = await getMidiTrackById(currentUser, currentUser+trackID)
 
         console.log(data);
 
@@ -658,6 +698,24 @@
         document.getElementById('currentTime').innerHTML = "Current time: 0";
         updateCurrentTrackData(noteArray.length, 0)
         console.log("note arrays and startTime reset");
+    }
+
+    async function btnAppendTrack(){
+        let q = document.getElementById('trackId');
+        let p = document.getElementById('trackOwner');
+        let s = document.getElementById('songName');
+        let r = document.getElementById('songOwner');
+
+        const data = await getMidiTrackById(p.value, p.value+q.value);
+
+        let trackData = JSON.parse(data);
+
+        await appendTrack({owner:trackData.owner,id:trackData.id}, {owner:r.value,name:s.value})
+        .then(res=>{
+            console.log("appended "+trackData.name+"(id: "+trackData.id+") to "+r.value+"\'s song: "+s.value);
+
+            updateSongData();
+        });
     }
 
     async function btnAppendTrack(){
@@ -742,7 +800,7 @@
 
         createMidiFromTrack(currentUser, q.value, "tempmidi").then(()=>{
 
-        MIDI.Player.loadFile("SavedFiles/midi/track_tempmidi.mid", () => {
+        MIDI.Player.loadFile("SavedFiles/midi/"+currentUser+"_tempmidi.mid", () => {
             MIDI.Player.addListener(function(data) {
                 console.log(data.now +"/"+data.end+" "+data.channel);
 
@@ -765,6 +823,26 @@
         stopRecordTimer();
     }
 
+    function btnDeleteTrack(){
+        let q = document.getElementById('trackId');
+
+        deleteTrack(currentUser, currentUser+q.value)
+        .then( ()=>{
+            displayTracks();
+            updateTrackData();
+        });
+    }
+
+    function btnDelayTrack(){
+        let q = document.getElementById('trackId');
+        let p = document.getElementById('delayDuration');
+
+        addDelayToTrack(currentUser, currentUser+q.value, Number.parseFloat(p.value))
+        .then(()=>{
+            updateTrackData();
+            console.log("Delayed track "+q.value+" by "+p.value+" miliseconds");
+        });
+    }
     /* #######################################################
      * #######################################################
      * ###############    NICE TO HAVES    ###################
@@ -775,15 +853,28 @@
     async function updateTrackData(){
         let p = document.getElementById('trackIdValue');
         let q = document.getElementById('trackId');
-        const data = await getMidiTrackById(currentUser, currentUser+q.value);
+        if(q.value !== undefined && q.value !== ""){
+            const data = await getMidiTrackById(currentUser, currentUser+q.value);
 
-        if (data === undefined){
-            p.innerHTML = "not a track";
-        }else{
-            const trackData = JSON.parse(data);
-            p.innerHTML = ("Name: "+trackData.name);
-            p.innerHTML += ("\rDuration: "+JSON.parse(data).n)
+            if (data === undefined || data === -1){
+                p.innerHTML = "No track found with Id: "+currentUser+q.value;
+            }else{
+                const trackData = JSON.parse(data);
+                p.innerHTML = ("Name: "+trackData.name);
+                p.innerHTML += ("\rDuration: "+ getTrackDuration(trackData));
+            }
         }
+    }
+
+    function getTrackDuration(track){
+        if(track.midiNotes !== undefined && track.midiNotes.length > 0){
+            let tLength = track.midiNotes.length;
+            let tTime = track.midiNotes[tLength-1].time;
+            let tDuration = track.midiNotes[tLength-1].duration;
+
+            return tTime + tDuration;
+        }
+        return -1;
     }
 
     async function updateSongData(){
@@ -887,6 +978,8 @@
     document.getElementById('btnShowSongs').addEventListener("click", btnShowSongs);
     document.getElementById('btnShowTracks').addEventListener("click", btnShowTracks);
     document.getElementById('btnDeleteSong').addEventListener("click", btnDeleteSong);
+    document.getElementById('btnDeleteTrack').addEventListener("click", btnDeleteTrack);
+    document.getElementById('btnDelayTrack').addEventListener("click", btnDelayTrack);
 
     </script>
 </body>
