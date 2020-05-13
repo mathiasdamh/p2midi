@@ -8,17 +8,17 @@
 </head>
 <body>
     <header>
-        <h1>WebMusik - P2</h1>
+        <h1>WebMusic - P2</h1>
     </header>
     <div class="topnav">
         <a href="index.html">Home</a>
-        <a href="indspilning.html">Indspilning</a>
+        <a href="indspilning.html">Recording</a>
         <a href="download.html">Download</a>
         <a class="active" href="upload.html">Upload</a>
-        <a href="afspilning.html">Afspilning</a>
-        <a href="redigering.html">Redigering</a>
-        <a href="sammensaetning.html">Sammensætning</a>
-        <a href="om.html">Om</a>
+        <a href="afspilning.html">Playing</a>
+        <a href="redigering.html">Edit</a>
+        <a href="sammensaetning.html">Composition</a>
+        <a href="om.html">About</a>
         <a href="login.html">Login</a>
         <div class="search-container">
           <form action="server.js">
@@ -27,13 +27,18 @@
           </form>
         </div>
     </div>
-
+    <h2>Upload your MIDI files here!</h2>
     <div class="main">
-        <form novalidate="novalidate" method="post" target="resp" enctype="multipart/form-data">
-            <input type="file" name="filetoupload"><br>
-            <input type="submit">
-        </form>
-        <iframe name="resp" src="fileupload.html" width="200" height="50"></iframe>
+        <div class="uploadForm" id="uploader">
+            <h3 class="uploadText">Upload Form</h3>
+            <form novalidate="novalidate" method="post" target="resp" enctype="multipart/form-data">
+                <input type="file" class="button" id="pickFiles" name="filetoupload" value="Select">
+                <input type="submit" class="button" id="uploadFiles" value="Upload">
+            <div id="filelist" class="list">
+                <iframe name="resp" src="fileupload.html" width="400"></iframe>
+            </div>
+            </form>
+        </div>
     </div>
 
     <script>

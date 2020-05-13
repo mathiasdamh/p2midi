@@ -255,7 +255,7 @@ const server = http.createServer((req, res) => {
                     }
                 });
                 break;
-            case '/webpage/upload.html':
+            case '/upload.html':
                 let uploadForm = new formidable.IncomingForm();
                 uploadForm.parse(req, function(err, fields, files){
                     //console.log(files.filetoupload);

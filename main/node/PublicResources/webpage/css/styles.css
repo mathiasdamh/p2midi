@@ -8,6 +8,133 @@ h1{
 
 * {box-sizing: border-box;}
 
+body {
+    background-color: rgb(15, 84, 173);
+}
+
+/* Index, signup, login */
+h2 {
+    font: italic 1em 'trebuchet MS', Arial, Helvetica;
+    font-size: 25px;
+    color: white;
+    border-bottom: 2px rgb(158, 25, 25) solid;
+    text-align: left;
+}
+
+.txt {
+    color: white;
+}
+
+#signup, #login {
+    width: 500px;
+    height: 300px;
+    margin: 100px auto 50px auto;
+    padding: 15px;
+    position: relative;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+#signup::before, #login::before,
+#signup::after, #login::after {
+    content: "";
+    position: absolute;
+    bottom: -3px;
+    left: 2px;
+    right: 2px;
+    top: 0;
+    z-index: -1;
+    background: #fff;
+    border: 1px solid #ccc;
+}
+
+#signup::after, #login::after {
+    left: 4px;
+    right: 4px;
+    bottom: -5px;
+    z-index: -2;
+    box-shadow: 0 8px 8px -5px rgba(0,0,0,.3);
+}
+
+#signup h1, #login h1 {
+    position: relative;
+    font: italic 1em/3.5em 'trebuchet MS', Arial, Helvetica;
+    color: #999;
+    text-align: center;
+    margin: 0 0 20px;
+}
+
+#signup::before, #login h1::before,
+#signup::after, #login h1::after {
+    content: "";
+    position: absolute;
+    border: 1px solid rgba(0,0,0,.15);
+    margin: 10px 0;
+}
+
+#signup h1::after, #login h1::after {
+    margin: 0 10px;
+}
+
+::-webkit-input-placeholder {
+    color: #bbb;
+}
+
+:-moz-placeholder {
+    color: #bbb;
+}
+
+.placeholder {
+    color: #bbb;
+}
+
+#signup input, #login input {
+    margin: 5px 0;
+    padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+#signup button, #login button {
+    margin: 20px 0 0 0;
+    padding: 15px 8px;
+    width: 100%;
+    border: 1px solid #2493ff;
+    overflow: visible;
+    display: inline-block;
+    color: #fff;
+    font: bold 1.4em arial, helvetica;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 4);
+    background-color: #2493ff;
+    background-image: linear-gradient(top, rgba(255,255,255,.5), 
+    rgba(255,255,255,0));
+    transition: background-color .2s ease-out;
+    border-radius: 3px;
+    box-shadow: 0 2px 1px rgba(0,0,0,.3), 
+    0 1px 0 rgba(255,255,255,.5) inset;
+}
+
+#signup button:hover, #login button:hover {
+    background-color: #7cbfff;;
+    border-color: #7cbfff;
+}
+
+#signup button:active, #login button:active {
+    position: relative;
+    top: 3px;
+    text-shadow: none;
+    box-shadow: 0 1px 0 rgba(255,255,255,.3) inset;
+}
+
+#signup input:focus, #login input:focus {
+    outline: 0;
+    border-color: #aaa;
+    box-shadow: 0 2px 1px rgba(0, 0, 0, .3) inset;
+}
+
 /* indspilning */
 .recordInfo {
     border: 2px black solid;
@@ -20,10 +147,35 @@ h1{
 .wrapper {
     border: 2px black solid;
     border-radius: 5px;
-    width: 60%;
+    width: 50%;
     margin: 5px;
     margin-top: 30px;
     padding: 5px;
+    background-color: #2493ff;
+    font-family: sans-serif;
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+}
+
+.wrapper .button {
+    display: inline-block;
+    height: 30px;
+    margin: 5px 5px;
+
+    font-family: sans-serif;
+    font-size: 14px;
+    color: black;
+
+    text-transform: capitalize;
+    text-align: center;
+    line-height: 30px;
+
+    background: #ffffff;
+    background: -webkit-linear-gradient(top, #ffffff 0%, #f6f6f6 100%);
+    background: -moz-linear-gradient(top, #ffffff 0%, #f6f6f6 100%);
+    background: -o-linear-gradient(top, #ffffff 0%, #f6f6f6 100%);
+    background: linear-gradient(top, #ffffff 0%, #f6f6f6 100%);
 }
 
 #songWrapper {
@@ -35,11 +187,13 @@ h1{
 }
 
 #songWrapper .right{
-
+    position: relative;
+    margin: 0 auto;
 }
 
-#songWrapper .left{
-
+#trackWrapper .right{
+    position: relative;
+    margin: 0 auto;
 }
 
 #btnStart {
@@ -51,6 +205,225 @@ h1{
     font-size: 48px;
 }
 
+/* Download */
+h3 {
+    color: white;
+    font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+}
+.tagWrapper{
+    max-width: 340px;
+    margin: 5px auto 50px auto;
+}
+
+.tag{
+    float: left;
+    margin: 0 0 7px 20px;
+    position: relative;
+
+    font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    font-size: 0.75em;
+    font-weight: bold;
+    
+    color: #996633;
+    text-shadow: 0px 1px 0px rgba(255,255,255,.4);
+    padding: 0.417em 0.417em 0.417em 0.917em;
+
+    border-top: 1px solid #d99d38;
+    border-right: 1px solid #d99d38;
+    border-bottom: 1px solid #d99d38;
+
+    border-radius: 0 0.25em 0.25em 0.25em;
+    -webkit-border-radius: 0 0.25em 0.25em 0.25em;
+    -moz-border-radius: 0 0.25em 0.25em 0.25em;
+
+    background-image: -webkit-linear-gradient(top, rgba(254,218,113), rgba(254,186,71));
+    background-image: -moz-linear-gradient(top, rgba(254,218,113), rgba(254,186,71));
+    background-image: -o-linear-gradient(top, rgba(254,218,113), rgba(254,186,71));
+    background-image: linear-gradient(top, rgba(254,218,113), rgba(254,186,71));
+    
+    box-shadow: inset 0 1px 0 #faeaba, 0 1px 1px rgba(0,0,0,.1);
+    -webkit-box-shadow: inset 0 1px 0 #faeaba, 0 1px 1px rgba(0,0,0,.1);
+    -moz-box-shadow: inset 0 1px 0 #faeaba, 0 1px 1px rgba(0,0,0,.1);
+
+    z-index: 100;
+}
+
+.tag:before {
+    content:'';
+    width: 1.30em;
+    height: 1.358em;
+
+    background-image: -webkit-linear-gradient(top, rgba(254,218,113), rgba(254,186,71));
+    background-image: -moz-linear-gradient(top, rgba(254,218,113), rgba(254,186,71));
+    background-image: -o-linear-gradient(top, rgba(254,218,113), rgba(254,186,71));
+    background-image: linear-gradient(top, rgba(254,218,113), rgba(254,186,71));
+    
+    position: absolute;
+    left: -0.69em;
+    top: .2em;
+
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+
+    border-left: 1px solid #d99d38;
+    border-bottom: 1px solid #d99d38;
+
+    border-radius: 0 0 0 0.25em;
+    -webkit-border-radius: 0 0 0 0.25em;
+    -moz-border-radius: 0 0 0 0.25em;
+
+    z-index: 1;
+}
+
+.tag:after {
+  content: '';
+
+  width: 0.5em;
+  height: 0.5em;
+
+  background: #fff;
+
+  border-radius: 4.167em;
+  -webkit-border-radius: 4.167em;
+  -moz-border-radius: 4.167em;
+
+  border: 1px solid #d99d38;
+
+  box-shadow: 0 1px 0 #faeaba;
+  -webkit-box-shadow: 0 1px 0 #faeaba;
+  -moz-box-shadow: 0 1px 0 #faeaba;
+
+  position: absolute;
+  top: 0.667em;
+  left: -0.083em;
+  z-index: 9999;
+}
+
+#midiFiles {
+    position: relative;
+    display: block;
+    padding: .4em .4em .4em .8em;
+    margin: .5em 0 .5em 2.5em;
+    background: #ddd;
+    color: #444;
+    text-decoration: none;
+    transition: all .3s ease-out;
+}
+
+#midiFiles:hover {
+    background: #eee;
+}
+
+#midiFiles:before {
+    content: counter(li);
+    counter-increment: li;
+    position: absolute;
+    left: -2.5em;
+    top: 50%;
+    margin-top: -1em;
+    background: #fa8072;
+    height: 2em;
+    width: 2em;
+    line-height: 2em;
+    text-align: center;
+    font-weight: bold;
+}
+
+#midiFiles:after {
+    position: absolute;
+    content: '';
+    border: .5em solid transparent;
+    left: -1em;
+    top: 50%;
+    margin-top: -.5em;
+    transition: all .3s ease-out;
+}
+
+#midiFiles:hover:after {
+    left: -.5em;
+    border-left-color: #fa8072;
+}
+
+/* Upload */
+.uploadForm,
+.uploadForm div,
+.uploadForm a,
+.uploadForm h3 {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+}
+
+
+/* Container */
+.uploadForm {
+    position: relative;
+    margin: 100px auto 50px auto;
+    z-index: 100;
+    width: 450px;
+    min-height: 250px;
+    padding: 25px 25px 65px 25px;
+    
+    background: url(../SavedFiles/uploads/img/grey.png);
+    background: -webkit-linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%), url(../SavedFiles/uploads/img/grey.png);
+    background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0.1) 100%), url(../SavedFiles/uploads/img/grey.png);
+    background: -o-linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%), url(../SavedFiles/uploads/img/grey.png);
+    background: linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%), url(../SavedFiles/uploads/img/grey.png);
+}
+
+.uploadForm h3 {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 18px;
+    color: #f6f6f6;
+    text-shadow: 0px 1px 1px rgba(0,0,0,.65);
+    padding-bottom: 2px;
+    border-bottom: 1px solid #7a7b80;
+}
+
+.uploadForm .button {
+    display: inline-block;
+    height: 30px;
+    margin: 15px 0;
+
+    font-family: sans-serif;
+    font-size: 14px;
+    color: #777;
+
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 30px;
+
+    background: #ffffff;
+    background: -webkit-linear-gradient(top, #ffffff 0%, #f6f6f6 100%);
+    background: -moz-linear-gradient(top, #ffffff 0%, #f6f6f6 100%);
+    background: -o-linear-gradient(top, #ffffff 0%, #f6f6f6 100%);
+    background: linear-gradient(top, #ffffff 0%, #f6f6f6 100%);
+}
+
+.uploadForm .button:hover {
+    background: #f2f2f2;
+    background: -webkit-linear-gradient(top, #f2f2f2 0%, #eaeaea 100%);
+    background: -moz-linear-gradient(top, #f2f2f2 0%, #eaeaea 100%);
+    background: -o-linear-gradient(top, #f2f2f2 0%, #eaeaea 100%);
+    background: linear-gradient(top, #f2f2f2 0%, #eaeaea 100%);
+}
+
+.uploadForm #pickFiles {
+    width: 250px;
+    float: left;
+    border-right: 1px solid #999;
+}
+
+.uploadForm #uploadFiles {
+    width: 100px;
+    float: right;
+}
 
 /* Style the navbar */
 .topnav {

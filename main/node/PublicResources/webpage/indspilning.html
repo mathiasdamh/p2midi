@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Indspilning</title>
+    <title>Recording</title>
     <link rel="stylesheet" href="css/styles.css">
 
     <!-- shim -->
@@ -36,16 +36,16 @@
 </head>
 <body>
     <header>
-        <h1>WebMusik - P2</h1>
+        <h1>WebMusic - P2</h1>
     </header>
     <div class="topnav">
         <a href="index.html">Home</a>
-        <a class="active" href="indspilning.html">Indspilning</a>
+        <a class="active" href="indspilning.html">Recording</a>
         <a href="download.html">Download</a>
         <a href="upload.html">Upload</a>
-        <a href="afspilning.html">Afspilning</a>
-        <a href="redigering.html">Redigering</a>
-        <a href="sammensaetning.html">Sammensætning</a>
+        <a href="afspilning.html">Playing</a>
+        <a href="redigering.html">Edit</a>
+        <a href="sammensaetning.html">Composition</a>
         <a href="om.html">Om</a>
         <a href="login.html">Login</a>
         <div class="search-container">
@@ -55,16 +55,16 @@
           </form>
         </div>
     </div>
-
+    <h2>Start recording your own MIDI files. Nothing but your imagination limits you!</h2>
     <div class="main">
         <input type="button" id="btnStart" value="Start MIDI Plugin">
 
         <div class="wrapper">
             <p id="currentTime">Current time: 0</p>
             <p id="currentTrackData">Notes: 0, duration: 0</p>
-            <input type="button" id="btnResetRecord" value="Reset Notes and Recording Time">
+            <input type="button" class="button" id="btnResetRecord" value="Reset Notes and Recording Time">
             <p>Track Name:<input type="text" name="30" id="trackName" value="Track Name">
-            <input type="button" id="btnSendTrack" value="Create Track"></p>
+            <input type="button" class="button" id="btnSendTrack" value="Create Track"></p>
 
         </div>
 
@@ -72,14 +72,14 @@
             <div class="left">
                 <p>Track ID:<input type="text" width="50" name="15" id="trackId" value=""></p>
 
-                <input type="button" id="btnPlayTrack" value="Play Track">
-                <input type="button" id="btnStop" value="Stop Playing">
-                <input type="button" id="btnCreateMidi" value="Create MIDI for Track">
+                <input type="button" class="button" id="btnPlayTrack" value="Play Track">
+                <input type="button" class="button" id="btnStop" value="Stop Playing">
+                <input type="button" class="button" id="btnCreateMidi" value="Create MIDI for Track">
 
                 <p id="trackIdValue"></p>
             </div>
             <div class="right">
-                <input type="button" id="btnShowTracks" value="Show all your Tracks">
+                <input type="button" class="button" id="btnShowTracks" value="Show all your Tracks">
                 <ul id="trackList">
                 </ul>
             </div>
@@ -92,15 +92,15 @@
                 <p>Song Owner:<input type="text" id="songOwner" value=""></p>
                 <p>Track Owner:<input type="text" id="trackOwner" value="track owner"></p>
 
-                <p><input type="button" id="btnAppendTrack" value="Append Track to Song">
-                <input type="button" id="btnCreateMidiSong" value="Create MIDI for Song"></p>
-                <p><input type="button" id="btnCreateSong" value="Create New Song">
-                <input type="button" id="btnDeleteSong" value="Delete Song"></p>
+                <p><input type="button" class="button" id="btnAppendTrack" value="Append Track to Song">
+                <input type="button" class="button" id="btnCreateMidiSong" value="Create MIDI for Song"></p>
+                <p><input type="button" class="button" id="btnCreateSong" value="Create New Song">
+                <input type="button" class="button" id="btnDeleteSong" value="Delete Song"></p>
 
             </div>
 
             <div class="right">
-                <input type="button" id="btnShowSongs" value="Show all your Songs">
+                <input type="button" class="button" id="btnShowSongs" value="Show all your Songs">
                 <ul id="songFiles">
                 </ul>
             </div>
