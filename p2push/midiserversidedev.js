@@ -1,7 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 
-const host = 'C:/Users/Lenovo/P2_midi/p2midi/p2push/';
+const host = 'C:/Users/m4dsw/git-main/p2midi/p2push/';
 const port = 8000;
 
 const trackTest = '{"id":adam5,"midiNotes":[{"midi":52,"time":2000,"duration":90.00000000014552},{"midi":52,"time":2433.999999999971,"duration":91.00000000012369},{"midi":52,"time":2913.9999999999927,"duration":113.00000000005093},{"midi":50,"time":3389.0000000001237,"duration":133.00000000004366},{"midi":48,"time":3921.000000000051,"duration":130.00499999998283}],"name":"c2","owner":"adam"}'
@@ -28,7 +28,7 @@ test('if the track was appended successfully, return {error: "none"}, else retur
 */
 function trackExistsInFile(trackID, filePath){ // this function must only be called when it is certain the file exists
     let fileLines = fs.readFileSync(filePath, "utf-8").split('\n');
-    let re = RegExp('"id":' + trackID);
+    let re = RegExp("\"id\":\""+trackID+"\"");
     let flag = false;
     let i = 0;
     do {
@@ -120,7 +120,7 @@ function appendContributor(contributor, songPath){
     contributorsArray.pop(); // getting rid of the excess space, which is left behind by the .split action on line 2 of this function
     if (!(contributorsArray.includes(contributor))){
         contributorsArray.push(contributor);
-        fs.writeFileSync(songPath, 
+        fs.writeFileSync(songPath,
             fileLines[0] + '\n'+ fileLines[1] + "\nContributors: ");
         for (cont of contributorsArray){
             fs.appendFileSync(songPath, cont + ' ');
@@ -139,7 +139,7 @@ function rejectSuggestion(songOwner, trackID){
         return "Error 1";
     }
     else if (trackExistsInFile(trackID, suggestionsFilePath) === false){
-        return "Error 2";<
+        return "Error 2";
     }
     else {
         suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8').split('\n')[line].split('|');
@@ -155,7 +155,7 @@ function createSong(songPath){
     let creationDate = new Date();
     let separatedPath = songPath.split('/');
     let userName = separatedPath[separatedPath.length - 3];
-    fs.writeFileSync(songPath, 
+    fs.writeFileSync(songPath,
         "Date created: " + creationDate + "\nCreated by: " + userName + "\nContributors: \n");
 }
 
@@ -194,7 +194,7 @@ function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester
     if (!userExists(trackOwner)){
         return "Error 1";
     }
-    else if (!trackExistsInFile(trackID, tracksFilePath)){
+    else if (trackExistsInFile(trackID, tracksFilePath) === false){
         return "Error 2";
     }
     else if (!userExists(songOwner)){
@@ -235,7 +235,7 @@ const server = http.createServer((req, res) => {
                     res.end();
                 });
                 break;
-            
+
             default:
         }
     }
@@ -262,7 +262,7 @@ const server = http.createServer((req, res) => {
                 req.on("data", (chunk) => {
                     input.push(chunk);
                 }).on("end", () => {
-                    user = Buffer.concat(input).toString();                    
+                    user = Buffer.concat(input).toString();
                     if (users.includes(user)){
                         res.writeHead(200, {
                             "Content-type": "text/javascript"

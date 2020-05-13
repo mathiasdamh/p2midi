@@ -10,6 +10,9 @@ const port = 8080;
 
 const verbose = true;
 
+let testS = "abvxdf3252"
+console.log(testS.replace(/\D/g, ''));
+
 //https://blog.todotnet.com/2018/11/simple-static-file-webserver-in-node-js/
 //https://stackoverflow.com/questions/16333790/node-js-quick-file-server-static-files-over-http
 
@@ -29,35 +32,214 @@ function securePath(userPath){
   //console.log("The path is:"+p);
   return p;
 }
-
 /* more accurate error codes should be sent to client */
 
-/**/
-let host = "C:/Users/m4dsw/git-main/p2midi/main/node/PublicResources/webpage/SavedFiles/";
+/* For finding stuff */
+const SavedFilesDir = path.resolve(__dirname)+"/PublicResources/webpage/SavedFiles/";
+const WebpageDir = path.resolve(__dirname)+"/PublicResources/webpage/";
 
-function getTrack(user, id){
-    let tracks = (fs.readFileSync(host + 'users/' + user + '/tracks.txt', "utf-8")).split('\n');
-    let re = RegExp("\"id\":\""+id+"\"");
-    let i = 0;
+// ################## NICHOLAS
+function trackExistsInFile(trackID, filePath){ // this function must only be called when it is certain the file exists
+    let fileLines = fs.readFileSync(filePath, "utf-8").split('\n');
+    let re = RegExp("\"id\":\""+trackID+"\"");
+
     let flag = false;
-
-    console.log("\"id\":\""+id+"\"");
-
-    while (i < tracks.length && flag === false){
-        if (re.test(tracks[i])){
+    let i = 0;
+    do {
+        if (re.test(fileLines[i])){
             flag = true;
         }
-        console.log(tracks[i]);
-        console.log(re);
-        i++;
-    }
-    if (flag){
-        console.log(tracks[i-1] + ", hej med dig");
-        return tracks[i-1];
+        else i++;
+    } while (flag === false && i < fileLines.length);
+    if (flag === true){
+        return i;
     }
     else return false;
 }
 
+function acceptSuggestion(songOwner, trackID){
+    let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
+    let suggestionInfo = []; // suggestionInfo will contain info about which song the track is suggested to, which user suggested it, and the track
+    let suggester;
+    let track;
+    let trackOwner;
+    let songPath;
+    let songsFolderPath = SavedFilesDir + 'users/' + songOwner + '/songs/';
+    let trackLine;
+    let songName;
+
+    if (!userExists(songOwner)){
+        return "Error 1";
+    }
+    else if (trackExistsInFile(trackID, suggestionsFilePath) === false){
+        return "Error 2";
+    }
+    else {
+        trackLine = trackExistsInFile(trackID, suggestionsFilePath);
+        suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8').split('\n')[trackLine].split('|');
+        songName = suggestionInfo[0];
+        songPath = songsFolderPath + songName + '.txt';
+        trackOwner = suggestionInfo[1];
+        suggester = suggestionInfo[2];
+        track = suggestionInfo[3];
+        if (!(fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
+            return "Error 3";
+        }
+        else if (trackExistsInFile(trackID, songPath)){
+            deleteLineFromFile()
+            return "Error 4";
+        }
+        else{
+            appendTrack(track, trackOwner, songPath);
+            deleteLineFromFile(trackLine, suggestionsFilePath);
+            if (userExists(trackOwner)){
+                console.log("notifying trackOwner");
+                appendContribution(trackOwner, trackID, songOwner, songName);
+                appendNotification(songOwner + ' included your track "' + trackID + '" into their song "' + songName + '" (suggested by ' + suggester + ')\n', trackOwner);
+            }
+            if (userExists(suggester)){
+                console.log("notifying suggester");
+                appendContributor(suggester, songPath);
+                appendNotification(songOwner + ' accepted your suggestion to their song ' + songName + '\n', suggester);
+            }
+            return "Success";
+        }
+    }
+}
+
+function appendContribution(contributor, trackID, songOwner, songName){
+    let contributionsFilePath = SavedFilesDir + 'users/' + contributor + '/contributions.txt';
+    fs.appendFileSync(contributionsFilePath, songOwner + '|' + songName + '|' + trackID + '\n');
+}
+
+function appendNotification(notification, user){
+    let notificationsFilePath = SavedFilesDir + 'users/' + user + "/notifications.txt";
+    fs.appendFileSync(notificationsFilePath, notification);
+}
+
+function deleteLineFromFile(line, filePath){
+    let linesArr = fs.readFileSync(filePath, 'utf-8').split('\n');
+    linesArr.splice(line, 1);
+    fs.writeFileSync(filePath, "");
+    for (line of linesArr){
+        fs.appendFileSync(suggestionsFilePath, suggestion + '\n');
+    }
+}
+
+function appendContributor(contributor, songPath){
+    let fileLines = (fs.readFileSync(songPath, "utf-8")).split('\n')
+    let contributorsArray = fileLines[2].split(' ');
+    let i = 3;
+    contributorsArray.splice(0, 1); // getting rid of the word 'Contributors:'
+    contributorsArray.pop(); // getting rid of the excess space, which is left behind by the .split action on line 2 of this function
+    if (!(contributorsArray.includes(contributor))){
+        contributorsArray.push(contributor);
+        fs.writeFileSync(songPath,
+            fileLines[0] + '\n'+ fileLines[1] + "\nContributors: ");
+        for (cont of contributorsArray){
+            fs.appendFileSync(songPath, cont + ' ');
+        }
+        for (i; i < fileLines.length; i++){
+            fs.appendFileSync(songPath, '\n' + fileLines[i]);
+        }
+    }
+}
+
+function rejectSuggestion(songOwner, trackID){
+    let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
+    let suggestionInfo;
+    let suggester;
+    if (!userExists(songOwner)){
+        return "Error 1";
+    }
+    else if (trackExistsInFile(trackID, suggestionsFilePath) === false){
+        return "Error 2";
+    }
+    else {
+        suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8').split('\n')[line].split('|');
+        suggester = suggestionInfo[2];
+        deleteLineFromFile(trackExistsInFile(trackID, suggestionsFilePath));
+        if (userExists(suggester)){
+            appendNotification(songOwner + ' rejected your suggestion to their song ' + songName)
+        }
+    }
+}
+
+function createSong(songPath){
+    let creationDate = new Date();
+    let separatedPath = songPath.split('/');
+    let userName = separatedPath[separatedPath.length - 3];
+    fs.writeFileSync(songPath,
+        "Date created: " + creationDate + "\nCreated by: " + userName + "\nContributors: \n");
+}
+
+function createUser(userName){
+    let userPath = SavedFilesDir + '/users/' + userName
+    fs.mkdirSync(userPath);
+    fs.mkdirSync(userPath + '/songs');
+    fs.writeFileSync(userPath + '/tracks.txt', "");
+    fs.writeFileSync(userPath + '/suggestions.txt', "");
+    fs.writeFileSync(userPath + "/contributions.txt", "");
+    fs.writeFileSync(userPath + "/notifications.txt", "");
+}
+
+function getLineFromFile(filePath, line = "integer|0 index"){
+    return fs.readFileSync(filePath, 'utf-8').split('\n')[line]
+}
+
+function userExists(userName){
+    return fs.readdirSync(SavedFilesDir + 'users').includes(userName);
+}
+
+function suggestTrack(trackOwner, track, songOwner, songName, suggester){ // this function must only be called when it is known that all four values given as parameters exist
+    let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
+    fs.appendFileSync(suggestionsFilePath, songName + '|' + trackOwner + '|' + suggester + '|' + track);
+}
+
+function appendTrack(track, trackOwner, songPath){
+    console.log("track: "+track+", trackOwner: "+trackOwner+", songPath: "+songPath);
+    fs.appendFileSync(songPath, track + '\n');
+    appendContributor(trackOwner, songPath);
+}
+
+function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester){
+    let songsFolderPath = SavedFilesDir + 'users/' + songOwner + '/songs/';
+    let tracksFilePath = SavedFilesDir + 'users/' + trackOwner + '/tracks.txt';
+    let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
+    let line;
+    if (!userExists(trackOwner)){
+        return "Error 1";
+    }
+    else if (trackExistsInFile(trackID, tracksFilePath) === false){
+        return "Error 2";
+    }
+    else if (!userExists(songOwner)){
+        return "Error 3";
+    }
+    else if (!(fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
+        return "Error 4";
+    }
+    else if (trackExistsInFile(trackID, songsFolderPath + songName + '.txt')){
+        return "Error 5";
+    }
+    else if (songOwner !== requester){
+        if ((trackExistsInFile(trackID, suggestionsFilePath) === false)){
+            line = trackExistsInFile(trackID, tracksFilePath);
+            suggestTrack(trackOwner, getLineFromFile(tracksFilePath, line), songOwner, songName, requester);
+            return "Track suggested";
+        }
+        else {
+            return "Error 6";
+        }
+    }
+    else {
+        line = trackExistsInFile(trackID, tracksFilePath);
+        appendTrack(getLineFromFile(tracksFilePath, line), trackOwner, songsFolderPath+songName+".txt");
+        return "Track appended";
+    }
+}
+
+// #################### MADS
 function removeEmptyLines(array){
     for (i = 0; i < array.length; i++) {
         if(array[i] === ""){
@@ -67,6 +249,29 @@ function removeEmptyLines(array){
     return array;
 }
 
+function decideTrackId(tracks){
+    let id = 0;
+    if (tracks.length === 0) {
+        return id;
+    } else if( tracks.length > 0) {
+        let parsedData;
+        let parsedId;
+        for (let i = 0; i < tracks.length; i++) {
+            parsedData = JSON.parse(tracks[i]);
+            parsedId = parsedData.id.replace(/\D/g, '');
+            console.log("parsedId: "+parsedId);
+            if (id < parsedId) {
+                id = parsedId;
+            }
+            id++;
+        } // for
+        return id;
+    } // else if
+}
+/* ############################################################################
+   ############################################################################
+    FROM HERE REQUESTS GET HANDLED
+*/
 function fileResponse(filename,res){
   const sPath=securePath(filename);
   console.log("Reading:"+sPath);
@@ -85,7 +290,6 @@ function fileResponse(filename,res){
     }
   })
 }
-let body = '';
 
 const server = http.createServer((req, res) => {
     let date=new Date();
@@ -100,14 +304,17 @@ const server = http.createServer((req, res) => {
             break;
         }
     }else if(req.method=="POST"){ // Tager sig af POST requests
+        let data = [];
+        let obj;
+        let status = "";
         switch(req.url){
             case "/webpage/songFilesDir":
-                body = '';
+                let songDirBody = '';
                 req.on('data', chunk =>{
-                    body += chunk.toString();
+                    songDirBody += chunk.toString();
                 });
                 req.on('end', ()=>{
-                    let songDirArr = fs.readdirSync("PublicResources/webpage/SavedFiles/users/"+body+"/songs");
+                    let songDirArr = fs.readdirSync(SavedFilesDir+"users/"+songDirBody+"/songs");
                     console.log(songDirArr);
                     res.write(JSON.stringify(songDirArr));
                     res.end();
@@ -121,153 +328,102 @@ const server = http.createServer((req, res) => {
                 break;
             case "/webpage/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
                                                // Specificeret under Indspilning.html
-
-                body = ''; // En tom string til at holde den data som
+                let midiBody = ''; // En tom string til at holde den data som
                                // Bliver sendt med POST requesten
-
-                console.log("start write midi file");
+                let midiOwner = req.headers["owner-name"];
+                let midiName = req.headers["song-name"];
+                let midiPath = SavedFilesDir + "midi/" + midiOwner + "_" + midiName + ".mid";
                 req.on('data', chunk =>{ // Samler dataet sendt i POST requesten og
-                                         // samler det sammen i body
-                    if(verbose)console.log("chunk: "+chunk);
-
-                    body += chunk.toString();
-
-                    if(verbose)console.log("body: "+body);
+                                         // samler det sammen i midiBody
+                    midiBody += chunk.toString();
                 });
                 req.on('end', ()=>{
-                    if(verbose)console.log("before parse: "+typeof body);
 
-                    body = JSON.parse(body); // Dataet er blevet sendt som en streng, og
+                    midiBody = JSON.parse(midiBody); // Dataet er blevet sendt som en streng, og
                                              // her bliver det omdannet til et object
-                    if(verbose)console.log("after parse: "+typeof body);
-
                     // Skriver dataet ud til en MIDI fil
-                    fs.writeFileSync("PublicResources/webpage/SavedFiles/midi/"+req.headers["owner-name"]+"_"+req.headers["song-name"]+".mid",
-                    new Buffer(Object.values(body)));
+                    fs.writeFileSync(midiPath, new Buffer(Object.values(midiBody)));
 
-                    console.log("end write midi file");
+                    res.writeHead(200);
                     res.end('end write midi file');
                 });
                 res.end('unexpected ending ' + req.url);
                 break;
             case '/webpage/musicData':
-                body = '';
-                let owner;
-                let newId;
-                let path;
+                let trackBody = '';
+                let trackOwner;
+                let trackPath;
                 req.on("data", chunk => {
-                    body += chunk.toString();
+                    trackBody += chunk.toString();
 
                 }).on("end", () => {
-                    owner = JSON.parse(body).owner;
-                    newId = 0;
-                    path = ("PublicResources/webpage/SavedFiles/users/"+owner+"/tracks.txt");
-                    let testPromise = new Promise(function(res, rej){
-                        console.log("promise entered");
-                        if(fs.existsSync(path)){
-                            console.log("if entered");
-                            fs.readFile(path, "utf-8", (err, data) => {
-                                if (err) console.log(err)
-                                if(data === undefined){
-                                    console.log("Creating tracks.txt for " + owner);
-                                }else{
-                                    let dataSet = removeEmptyLines(data.split("\n"));
-                                    console.log(dataSet);
+                    trackOwner = JSON.parse(trackBody).owner;
+                    trackPath = (SavedFilesDir+ "users/"+trackOwner+"/tracks.txt");
+                    let trackIdDecided = new Promise(function(res, rej){
+                        res(fs.existsSync(trackPath))})
+                    .then(value => {
+                        let newId = 0;
+                        if(value){
+                            let data = fs.readFileSync(trackPath, "utf-8")
+                            if(data === undefined){
+                                console.log("No tracks.txt found for " + trackOwner + ", creating new file");
+                            }else{
+                                let dataSet = removeEmptyLines(data.split("\n"));
 
-                                    if (dataSet.length === 0) {
-                                        newId = 0;
-                                    } else if( dataSet.length > 0) {
-                                        let i = 0;
-                                        let parsedData;
-                                        let parsedId;
-                                        for (i = 0; i < dataSet.length; i++) {
-                                            parsedData = JSON.parse(dataSet[i]);
-                                            console.log("parsed data:");
-                                            console.log(parsedData);
-                                            parsedId = parsedData.id.slice(owner.length, parsedData.id.length);
-                                            console.log("parsed id: "+parsedId);
-                                            if (newId < parsedId) {
-                                                newId = parsedId;
-                                            }
-                                            newId++;
-                                            console.log("newId: "+newId);
-                                        } // for
-                                    } // else if
-                                } // else
-                                res();
-                            }); // fs.readFileSync
-                        }; // if
+                                newId = decideTrackId(dataSet);
+                            } // else
+                        }
+                        return newId;
                     })
-                    .then(()=>{
-                        body = JSON.parse(body);
-                        console.log("newId: "+newId);
-                        body.id = owner+newId;
-                        console.log("body.id: "+body.id);
-
-                        fs.appendFile("PublicResources/webpage/SavedFiles/users/"+owner+"/tracks.txt", JSON.stringify(body) + "\n", (err) => {
-                            if (err) console.log(err)
-                            console.log("appending file");
+                    .then((newId)=>{
+                        trackBody = JSON.parse(trackBody);
+                        trackBody.id = trackOwner+newId;
+                        return trackBody;
+                    })
+                    .then((data)=>{
+                        fs.appendFile(trackPath, JSON.stringify(data) + "\n", (err) => {
+                            if (err) throw err;
                             res.writeHead(200);
                             res.end();
                         });
-                    });
-                });
+                    })
+                }); //.on(end)
 
                 break;
             case '/webpage/userCheck':
                 let user;
                 let input = [];
-                let users = fs.readdirSync(host +"users");
+                let users = fs.readdirSync(SavedFilesDir + '/users');
                 req.on("data", (chunk) => {
                     input.push(chunk);
                 }).on("end", () => {
-
-                    user = input.toString();
-                        if (users.includes(user)){
-                        console.log("faulty uname req");
-                        res.writeHead(200);
-                        console.log("wrote header");
-                        res.write("name taken");
-                        console.log("wrote appropriate res");
-                        res.end("name takeen");
-                        console.log("ended res");
+                    user = Buffer.concat(input).toString();
+                    if (users.includes(user)){
+                        res.writeHead(200, {
+                            "Content-type": "text/javascript"
+                        });
+                        res.end(JSON.stringify({error: "User already exists"}));
                     }
                     else {
-                        fs.mkdirSync(host + "users/" + user);
-                        fs.mkdirSync(host + "users/" + user + '/songs');
-                        fs.writeFile(host + "users/" + user + "/tracks.txt","",function(err){
-                            console.log(err);
+                        createUser(user);
+                        res.writeHead(200, {
+                            "Content-type": "text/javascript"
                         });
-                        res.writeHead(201);
-                        res.end();
+                        res.end(JSON.stringify({error: "No error"}));
                     }
                 });
                 break;
             case '/webpage/appendTrack':
-                let data = [];
-                let usersArr = [];
-                let track;
                 req.on("data", (chunk) => {
                     data.push(chunk);
                 }).on("end", () => {
-                    obj = JSON.parse(data.toString());
-                    console.log(obj);
-                    if (fs.readdirSync(host + 'users').includes(obj.track.owner)){ // MANGLER ERROR HANDLING
-                        track = getTrack(obj.track.owner, obj.track.id); //HVIS DENNE ER FALSE
-                    console.log(track);
-                    }
-                    else {
-                        res.writeHead(400);
-                        res.end();
-                    }
-                    usersArr = fs.readdirSync(host + 'users');
-                    songPath = host + 'users/' + obj.song.owner + '/songs/' + obj.song.name + '.txt';
-                    if (usersArr.includes(obj.song.owner) && fs.readdirSync(host + 'users/' + obj.song.owner + '/songs/').includes(obj.song.name + '.txt')){ // MANGLER ERROR HANDLING
-                        fs.appendFileSync(songPath, track + '\n');
-                        console.log('boh');
-                        res.writeHead(200);
-                        res.end();
-                    }
+                    data = Buffer.concat(data).toString();
+                    obj = JSON.parse(data);
+                    status = handleAppendRequest(obj.trackOwner, obj.trackID, obj.songOwner, obj.songName, obj.requester);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
+                    res.end(status);
                 });
                 break;
             case '/webpage/updateTrack':
@@ -278,7 +434,7 @@ const server = http.createServer((req, res) => {
                     updateData += chunk.toString();
                 }).on("end", () => {
                     updateObj = JSON.parse(updateData);
-                    updateTrackPath = "PublicResources/webpage/SavedFiles/users/"+updateObj.owner+"/tracks.txt";
+                    updateTrackPath = SavedFilesDir+"users/"+updateObj.owner+"/tracks.txt";
 
                     fs.readFile(updateTrackPath, "utf-8", (err, data) => {
                         if(err) throw err;
@@ -366,6 +522,7 @@ const server = http.createServer((req, res) => {
                             fileType = 'img/';
                             break;
                         default:
+                        fileType = "txt/";
                     }
                     let oldpath = files.filetoupload.path;
                     let newpath = 'PublicResources/webpage/SavedFiles/uploads/'+fileType+files.filetoupload.name;
@@ -378,6 +535,32 @@ const server = http.createServer((req, res) => {
                     });
                 });
                 break;
+            case '/acceptSuggestion':
+                req.on("data", (chunk) => {
+                    data.push(chunk);
+                }).on("end", () => {
+                    data = Buffer.concat(data).toString();
+                    obj = JSON.parse(data);
+                    status = acceptSuggestion(obj.songOwner, obj.trackID);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
+                    res.end(status);
+                });
+                break;
+            case '/rejectSuggestion':
+                req.on("data", chunk => {
+                    data.push(chunk);
+                }).on("end", () => {
+                    data = Buffer.concat(data).toString();
+                    obj = JSON.parse(data);
+                    status = rejectSuggestion(obj.songOwner, obj.trackID);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
+                    res.end(status);
+                })
+                break;
             default:
                 res.end('unknown POST request');
                 console.log("unknown POST request");
@@ -385,29 +568,39 @@ const server = http.createServer((req, res) => {
         }
     }else if (req.method === "PUT"){
         switch (req.url){
-            case '/webpage/songs':
+            case '/songs':
                 console.log("new song PUT request");
                 let data = [];
                 req.on("data", chunk => {
                     data.push(chunk);
                 }).on("end", () => {
-                    console.log("ended " + data);
                     obj = JSON.parse(data);
-                    let creationDate = new Date();
-                    let songs = fs.readdirSync(host + '/users/' + obj.user + '/songs/');
-                    if (songs.includes(obj.song)){
+                    let songs = fs.readdirSync(SavedFilesDir + '/users/' + obj.user + '/songs/');
+                    if (songs.includes(obj.song + '.txt')){
                         res.writeHead(200, {'Content-Type': 'text'});
-                        res.write("You have already created a song by that name!");
+                        res.write(JSON.stringify({error: "song already exists"}));
                         res.end();
                     }
                     else {
-                        fs.writeFile(host + "/users/" + obj.user + "/songs/" + obj.song + '.txt', "Date created: " + creationDate +
-                        "\nCreated by: " + obj.user + "\nOther contributors: \n", (error) => {
-                            if (error) throw error;
-                            console.log("file created succesfully");
+                        createSong(SavedFilesDir + "/users/" + obj.user + "/songs/" + obj.song + '.txt', obj.user);
+                        res.writeHead(200, {
+                            "Content-type": "text/javascript"
                         });
+                        res.end(JSON.stringify({error: "none"}));
                     }
-                    res.writeHead(201);
+                });
+                break;
+            case "/overwritesong":
+                let fileinfo = [];
+                let songPath = "";
+                req.on("data", (chunk) => {
+                    fileinfo.push(chunk);
+                }).on("end", () => {
+                    fileinfo = Buffer.concat(fileinfo).toString();
+                    fileinfo = JSON.parse(fileinfo);
+                    songPath = SavedFilesDir + "users/" + fileinfo.user + '/songs/' + fileinfo.song + '.txt';
+                    createSong(songPath);
+                    res.writeHead(200);
                     res.end();
                 });
                 break;
