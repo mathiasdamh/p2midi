@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI</title>
+</head>
+<body>
+    
+
+
+    <script type="text/javascript">
+const user = "adam";
+
+/* ACTUAL PROGRAM */
+checkMIDIAPI();
+getMIDIAccess();
+//createNewUser();
+let activeNotes = []; //notes which have yet to be ended 
+let noteArray = []; //notes which have been ended
+
+/*GENERAL*/
+function checkMIDIAPI(){
+    if (navigator.requestMIDIAccess){
+        console.log("This browser supports MIDIAccess");
+    }
+    else {
+        alert("This browser does not support MIDIAccess");
+    }
+}
+
+function getMIDIAccess(){
+    navigator.requestMIDIAccess()
+        .then(MIDIAccessSuccess, MIDIAccessFailure);
+}
+/* CASES SKAL ÆNDRES!!1!!1!!!!11! */
+function MIDIAccessSuccess(MIDIAccessObj){
+    console.log(MIDIAccessObj.inputs);
+    for (let input of MIDIAccessObj.inputs.values()){
+        //input.onmidimessage = sendData;
+        input.onmidimessage = (message) => {
+            switch (message.data[0]){
+                case 144: newNote(message, activeNotes); break; //if message.data is 144, a key was pressed
+                case 128: endNote(message, activeNotes, noteArray); break; // if it is 128, a key was released
+                default: console.log(message.data[0]); // ??? what ???
+            }
+        }
+    }
+}
+
+function MIDIAccessFailure(error){
+    console.log(error);
+}
+
+async function clearFile(userName, songName){
+    await fetch('/overwritesong', {
+        method: "PUT",
+        body: JSON.stringify({user: userName, song: songName}),
+        headers: {
+            "Content-Type": "text"
+        }
+    })
+}
+/* CREATING A USER */
+
+function overwritePrompt(){
+    let ans = ""
+    while (ans !== 'y' && ans !== 'n' && ans !== null){
+        ans = prompt("You already have a song by this name! Do you wish to overwrite it? (y/n)", "n");
+        if (ans !== 'y' && ans !== 'n' && ans !== null){
+            alert("invalid input! simply write 'y' or 'n'");
+        }
+    }
+    if (ans === 'y'){
+        return true;
+    }
+    else return false;
+}
+
+async function createNewUser(){
+    let desiredName = prompt("Please enter your user name: ");
+    let isNameTaken = await checkIfNameIsTaken(desiredName)
+    .then(status => {
+        if (status === true){
+            alert("Name is already taken");
+        }
+        else console.log("user created");
+    })
+    .catch(err => {
+        console.log(err);
+    })
+}
+
+async function checkIfNameIsTaken(name){
+    let res = await fetch("userCheck", {
+        method: "POST",
+        body: name.toLowerCase()
+    })
+    .then(response => {
+        return response.json(); 
+    })
+    .then(data => {
+        if (data.error === "user already exists"){
+            return true;
+        }
+        else return false;
+    })
+    .catch(err => {
+        console.log(err);
+    });
+    return res;
+}
+
+function onCheckIfNameIsTakenSuccess(statusCode){ //cases skal ændres
+    console.log("yoooo");
+    switch (statusCode){
+        case 409:
+            alert("Username is already taken!");
+            break;
+        case 201:
+            console.log("Succesfully created new user");
+            break;
+        default: console.log(statusCode);
+    }
+}
+
+/*CREATE A NEW SONG*/
+
+async function createNewSong(userName){
+    songName = prompt("What would you like to call the song?");
+    console.log("creating new song...");
+    await fetch('/songs', {
+        method: "PUT",
+        body: JSON.stringify({user: userName, song: songName}),
+        headers: {
+            "Content-Type": "text"
+        }
+    }).then(response => {
+        return response.json();
+    }).then(data => {
+        console.log(data);
+    });
+}
+
+function createNewSongOnFulfilled(songName){
+    console.log("Succesfully created a new song with name " + songName);
+}
+
+function createNewSongOnRejected(error){
+    console.log("Could not create a new song!\n\n" + error);
+}
+
+/*MAKING A TRACK*/
+
+function newNote(message, noteArray){ // make a new note (duration will be defined in function endNote)
+    let note = {
+        midi: message.data[1],
+        time: message.timeStamp,
+        duration: undefined
+    }
+    activeNotes.push(note);
+    console.log(activeNotes[activeNotes.length - 1]);
+}
+
+function endNote(message, activeNotes, noteArray){
+    for (let i = 0; i < activeNotes.length; i++){ // loop through activeNotes
+        if (message.data[1] === activeNotes[i].midi){
+            activeNotes[i].duration = message.timeStamp - activeNotes[i].time;
+            noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
+        }
+    }
+    console.log(noteArray.length);
+}
+/*function noteEnder(midi, noteStart){
+    let result;
+    console.log("in noteEnder");
+    return new Promise(resolve => {
+        window.addEventListener("MIDIMessageEvent", (event) => {
+            if (event.data[1] === midi && event.data[0] === 128){
+                console.log("terminated");
+                result = event.timeStamp - noteStart;
+            }
+        });
+        console.log("resolving");
+        resolve(result);
+    });
+}*/
+async function sendTrack(track){ // !!!NEEDS REVAMPING!!! include ID/name to the track
+    console.log("sending track");
+    console.log("track length: " + track.length);
+    await fetch('trackData', {
+        method: "POST",
+        body: JSON.stringify(track),
+        headers: {
+            "Content-Type": "text/javascript"
+        }
+    }).then(sendTrackOnFulfilled(track), sendTrackOnRejected);
+}
+
+function sendTrackOnFulfilled(track){
+    console.log("sent track succesfully");
+    track.length = 0;
+}
+
+function sendTrackOnRejected(error){
+    alert("COULD NOT SEND TRACK!!11!!1");
+}
+
+async function appendTrack(trackOwner, trackID, songOwner, songName, user){ //Append a track to a song. trackInfo = {owner: "userName", id: "ID"}, songInfo = {owner: "userName2", name: "songName"}
+    await fetch('appendTrack', {
+        method: "POST",
+        body: JSON.stringify({
+            trackOwner: trackOwner,
+            trackID: trackID,
+            songOwner: songOwner,
+            songName: songName,
+            requester: user
+            })
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        console.log(data);
+    });/*.then(data => {
+        switch(data.error){
+            case "none":
+                console.log("successfully appended track");
+                break;
+            case "error 1":
+                console.log("no such track exists!");
+                break;
+            case "error 2":
+                console.log("no such user exists! (could not find the specified track owner)");
+                break;
+            case "error 3":
+                console.log("no such user exists! (could not find the specified song owner)");
+                break;
+            case "error 4":
+                console.log("the specified user has no such song!");
+                break;
+            case "error 5":
+                console.log("track already exists in song");
+                break;
+            default: console.log("an unknown error occurred in function appendTrack! " + data.error);
+        }
+    }).catch(err => {
+        console.log(err);
+    });
+    */
+}
+
+async function acceptSuggestion(songOwner, trackID){
+    await fetch('acceptSuggestion', {
+        method: "POST",
+        body: JSON.stringify({songOwner: songOwner, trackID: trackID})
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        console.log(data);
+    });
+}
+
+async function rejectSuggestion(songOwner, trackID){
+    await fetch('acceptSuggestion', {
+        method: "POST",
+        body: JSON.stringify({songOwner: songOwner, trackID: trackID})
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        console.log(data);
+    });
+}
+    </script>
+
+</body>
+</html>}
