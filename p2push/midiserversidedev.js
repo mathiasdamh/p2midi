@@ -28,11 +28,7 @@ test('if the track was appended successfully, return {error: "none"}, else retur
 */
 function trackExistsInFile(trackID, filePath){ // this function must only be called when it is certain the file exists
     let fileLines = fs.readFileSync(filePath, "utf-8").split('\n');
-<<<<<<< HEAD
-    let re = RegExp("\"id\":\""+trackID+"\"");
-=======
     let re = RegExp('"id":"' + trackID + '"');
->>>>>>> prototype
     let flag = false;
     let i = 0;
     do {
@@ -49,7 +45,7 @@ function trackExistsInFile(trackID, filePath){ // this function must only be cal
 
 function trackIDToName(trackID, tracksFilePath){
     let line = trackExistsInFile(trackID, tracksFilePath);
-    let trackInfo = fs.readFileSync(tracksFilePath, 'utf-8').split('\n')[line]; 
+    let trackInfo = fs.readFileSync(tracksFilePath, 'utf-8').split('\n')[line];
     let trackName = JSON.parse(trackInfo).name;
     return trackName;
 }
@@ -215,11 +211,7 @@ function rejectSuggestion(songOwner, songName, trackID){
     if (!userExists(songOwner)){
         return "Error 1";
     }
-<<<<<<< HEAD
-    else if (trackExistsInFile(trackID, suggestionsFilePath) === false){
-=======
     else if (isSuggested(trackID, songName, suggestionsFilePath) === false){
->>>>>>> prototype
         return "Error 2";
     }
     else {
@@ -345,9 +337,6 @@ const server = http.createServer((req, res) => {
                     res.end();
                 });
                 break;
-<<<<<<< HEAD
-
-=======
             case '/notifications':
                 req.on("data", chunk => {
                     data.push(chunk);
@@ -358,7 +347,6 @@ const server = http.createServer((req, res) => {
                     res.write(notifications);
                 });
                 break;
->>>>>>> prototype
             default:
         }
     }
@@ -501,9 +489,6 @@ const server = http.createServer((req, res) => {
             default: console.log("yooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
         }
     }
-<<<<<<< HEAD
-}).listen(port);
-=======
     else if (req.method === "DELETE"){
         switch (req.url){
             case '/deleteUser':
@@ -526,4 +511,3 @@ const server = http.createServer((req, res) => {
         }
     }
 }).listen(port);
->>>>>>> prototype
