@@ -272,7 +272,7 @@ async function btnPlayTrack(){
 }
 
 function playMidiFile(filePath){
-    MIDI.Player.loadFile("SavedFiles/midi/"+user+"_tempmidi.mid", () => {
+    MIDI.Player.loadFile(filePath, () => {
         MIDI.Player.addListener(function(data) {
             console.log(data.now +"/"+data.end+" "+data.channel);
 

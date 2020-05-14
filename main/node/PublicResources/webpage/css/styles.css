@@ -10,6 +10,7 @@ h1{
 
 body {
     background-color: rgb(15, 84, 173);
+    counter-reset: (li);
 }
 
 /* Index, signup, login */
@@ -302,7 +303,7 @@ h3 {
     z-index: 9999;
 }
 
-#midiFiles .liClass{
+#midiFiles .yourClass {
     position: relative;
     display: block;
     padding: .4em .4em .4em .8em;
@@ -313,11 +314,11 @@ h3 {
     transition: all .3s ease-out;
 }
 
-#midiFiles .liClass:hover {
+#midiFiles .yourClass:hover {
     background: #eee;
 }
 
-#midiFiles .liClass:before {
+#midiFiles .yourClass::before {
     content: counter(li);
     counter-increment: li;
     position: absolute;
@@ -332,7 +333,7 @@ h3 {
     font-weight: bold;
 }
 
-#midiFiles .liClass:after {
+#midiFiles .yourClass:after {
     position: absolute;
     content: '';
     border: .5em solid transparent;
@@ -342,7 +343,7 @@ h3 {
     transition: all .3s ease-out;
 }
 
-#midiFiles .liClass:hover:after {
+#midiFiles .yourClass:hover:after {
     left: -.5em;
     border-left-color: #fa8072;
 }
