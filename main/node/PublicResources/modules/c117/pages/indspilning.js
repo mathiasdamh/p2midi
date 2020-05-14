@@ -1,3 +1,6 @@
+let trackDisplay = false; // For displaying tracks
+let trackOtherDisplay = false; // For displaying other tracks
+let songDisplay = false; // For displaying songs
 /* Updates information about the current entered track
 */
 async function updateTrackData(){
@@ -5,7 +8,6 @@ async function updateTrackData(){
     let trackId = document.getElementById('trackId').value;
     let otherUsername = document.getElementById('otherUsername').value;
     let user;
-    console.log("hej");
     if(trackId !== undefined && trackId !== ""){
         user = await getValidUser(currentUser, otherUsername, trackId);
         const data = await getMidiTrackById(user, trackId);
@@ -114,7 +116,6 @@ async function displaySongFiles(){
         body:currentUser
     })
     const data = await res.text();
-    console.log(data);
     let fileDir = JSON.parse(data);
 
     let element;
@@ -141,6 +142,20 @@ function switchUser(newUser){
 async function getValidUser(current, other, trackId){
     let currentRes = await getMidiTrackById(current, trackId);
     let otherRes = await getMidiTrackById(other, trackId);
+
+    if( (currentRes+otherRes) === -2){
+        console.log("Not valid user: "+current+", "+other);
+        return -1;
+    }else if(currentRes === -1){
+        return other;
+    }else{
+        return current;
+    }
+}
+
+async function getValidSongUser(current, other, songOwner, songName){
+    let currentRes = await getSongByName(songOwner, songName);
+    let otherRes = await getSongByName(songOwner, songName);
 
     if( (currentRes+otherRes) === -2){
         console.log("Not valid user: "+current+", "+other);
@@ -256,6 +271,19 @@ function btnShowTracks(){
     }
 }
 
+function btnShowOtherTracks(){
+    let list = document.getElementById('trackListOther');
+    if(trackOtherDisplay){
+        while (list.hasChildNodes()) {
+            list.removeChild(list.childNodes[0]);
+        }
+        trackOtherDisplay = !trackOtherDisplay;
+    }else {
+        displayOtherTracks();
+        trackOtherDisplay = !trackOtherDisplay;
+    }
+}
+
 async function btnPlayTrack(){
     const tempMidi = new Midi();
     const tempTrack = tempMidi.addTrack();
@@ -271,8 +299,23 @@ async function btnPlayTrack(){
     }); //.then
 }
 
+async function btnPlaySong(){
+    const tempMidi = new Midi();
+    const tempTrack = tempMidi.addTrack();
+
+    let songName = document.getElementById('songName').value;
+    let songOwner = document.getElementById('songOwner').value;
+    let otherUsername = document.getElementById('otherUsername').value;
+    let user = await getValidSongUser(songOwner, otherUsername, songOwner, songName);
+
+    createMidiFromSong(user, songName, "tempsong").then(()=>{
+
+        playMidiFile("SavedFiles/midi/"+user+"_tempsong.mid");
+    });
+}
+
 function playMidiFile(filePath){
-    MIDI.Player.loadFile("SavedFiles/midi/"+user+"_tempmidi.mid", () => {
+    MIDI.Player.loadFile(filePath, () => {
         MIDI.Player.addListener(function(data) {
             console.log(data.now +"/"+data.end+" "+data.channel);
 
@@ -330,4 +373,5 @@ document.getElementById('btnShowTracks').addEventListener("click", btnShowTracks
 document.getElementById('btnDeleteSong').addEventListener("click", btnDeleteSong);
 document.getElementById('btnDeleteTrack').addEventListener("click", btnDeleteTrack);
 document.getElementById('btnDelayTrack').addEventListener("click", btnDelayTrack);
-document.getElementById('btnShowOtherTracks').addEventListener("click", displayOtherTracks);
+document.getElementById('btnShowOtherTracks').addEventListener("click", btnShowOtherTracks);
+document.getElementById('btnPlaySong').addEventListener("click", btnPlaySong);

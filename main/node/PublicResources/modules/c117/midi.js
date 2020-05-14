@@ -139,7 +139,7 @@ async function createMidiFromTrack(owner, id, name){
 
 /* Creates a midi from a song
  */
-async function createMidiFromSong(owner, songName){
+async function createMidiFromSong(owner, songName, otherName){
     // tonejs/midi funktioner
     const tempMidi = new Midi();
     const tempTrack = tempMidi.addTrack();
@@ -153,8 +153,15 @@ async function createMidiFromSong(owner, songName){
         addNotesFromTrack(tempTrack, dataArray[i]);
     }
 
-    tempTrack.name = songName;
-    createMidi(owner, tempMidi, songName);
+    console.log("song created");
+
+    tempMidi.name = songName;
+    if(typeof otherName === "string"){
+        createMidi(owner, tempMidi, otherName);
+    }else{
+        createMidi(owner, tempMidi, songName);
+    }
+
 }
 
 async function createMidi(owner, midiData, name){

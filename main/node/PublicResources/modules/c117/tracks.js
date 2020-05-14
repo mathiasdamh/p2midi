@@ -1,4 +1,3 @@
-let trackDisplay = false; // For displaying tracks
 /* Class for tracks
 */
 class midiTrack {
