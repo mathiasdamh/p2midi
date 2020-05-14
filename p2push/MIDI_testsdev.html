@@ -52,16 +52,23 @@ function MIDIAccessFailure(error){
     console.log(error);
 }
 
-async function getNotifications(userName){
-    await fetch('/notifications', {
-        method: "GET",
-        headers: {
-            "Content-Type": "text/javascript"
-        },
-        body: userName
+async function getContributions(userName){
+    await fetch('users/' + userName +  '/contributions.txt', {
     })
     .then(response => {
-        return response.json();
+        return response.text();
+    }).then(data => {
+        console.log(data);
+    }).catch(err => {
+        console.log(err);
+    });
+}
+
+async function getNotifications(userName){
+    await fetch('users/' + userName +  '/notifications.txt', {
+    })
+    .then(response => {
+        return response.text();
     }).then(data => {
         console.log(data);
     }).catch(err => {

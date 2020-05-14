@@ -1,1 +1,9 @@
 charles accepted your suggestion to their song charles1
+<<<<<<< HEAD
+=======
+charles accepted your suggestion to their song charles1
+charles accepted your suggestion to their song charles2
+charles accepted your suggestion to their song charles2
+charles rejected your suggestion to their song charles2
+charles rejected your suggestion to their song charles2
+>>>>>>> prototype
