@@ -64,7 +64,7 @@ function main(){
                 break;
             case 128: // note Off channel 1
                 //console.log("noteOff() "+midiMessage.data[1]);
-                MIDI.noteOff(0, midiMessage.data[1], midiMessage.data[2]);
+                MIDI.noteOff(0, midiMessage.data[1], 0);
                 endNote(midiMessage, activeNotes, noteArray);
 
                 break;
@@ -132,6 +132,7 @@ async function createMidiFromTrack(owner, id, name){
     await addNotesFromTrack(tempTrack, data);
 
     tempMidi.name = name;
+    tempTrack.instrument = JSON.parse(data).instrument || 0;
 
     // Sender midi data til create midi funktion.
     createMidi(owner, tempMidi, name);
@@ -139,7 +140,7 @@ async function createMidiFromTrack(owner, id, name){
 
 /* Creates a midi from a song
  */
-async function createMidiFromSong(owner, songName){
+async function createMidiFromSong(owner, songName, otherName){
     // tonejs/midi funktioner
     const tempMidi = new Midi();
     const tempTrack = tempMidi.addTrack();
@@ -153,8 +154,15 @@ async function createMidiFromSong(owner, songName){
         addNotesFromTrack(tempTrack, dataArray[i]);
     }
 
-    tempTrack.name = songName;
-    createMidi(owner, tempMidi, songName);
+    console.log("song created");
+
+    tempMidi.name = songName;
+    if(typeof otherName === "string"){
+        createMidi(owner, tempMidi, otherName);
+    }else{
+        createMidi(owner, tempMidi, songName);
+    }
+
 }
 
 async function createMidi(owner, midiData, name){

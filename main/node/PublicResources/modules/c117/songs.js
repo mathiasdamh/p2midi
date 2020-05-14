@@ -1,5 +1,3 @@
-let songDisplay = false; // For displaying songs
-
 async function createNewSong(userName){
     songName = prompt("What would you like to call the song?");
     console.log("creating new song...");

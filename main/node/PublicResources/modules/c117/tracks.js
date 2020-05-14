@@ -1,12 +1,12 @@
-let trackDisplay = false; // For displaying tracks
 /* Class for tracks
 */
 class midiTrack {
-    constructor(name, trackNotes, owner) {
+    constructor(name, trackNotes, owner, instrument) {
         this.id = -1;
         ( trackNotes !== undefined && trackNotes.length >= 0) ? this.midiNotes = trackNotes : this.midiNotes = [];
         this.name = name;
         this.owner = owner;
+        this.instrument = instrument || 0;
     };
 
     // Til at tilføje en eller flere noder
