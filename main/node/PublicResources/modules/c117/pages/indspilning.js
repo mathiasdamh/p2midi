@@ -1,3 +1,5 @@
+document.body.onload = main;
+
 let trackDisplay = false; // For displaying tracks
 let trackOtherDisplay = false; // For displaying other tracks
 let songDisplay = false; // For displaying songs
@@ -168,10 +170,18 @@ async function getValidSongUser(current, other, songOwner, songName){
 }
 
 
+
+
 // Viser track information når man skriver Id i feltet.
 document.getElementById('trackId').onchange = updateTrackData;
 // Viser sang data hvis der er en sang med den songOwner og songName
 document.getElementById('songName').onchange = updateSongData;
+
+function changeChannelInstrument(){
+    MIDI.programChange(0, document.getElementById('instrument').value);
+}
+
+document.getElementById('instrument').onchange = changeChannelInstrument;
 
 // Skriver noget html
 document.getElementById('songOwner').value = currentUser;
@@ -215,11 +225,11 @@ async function btnAppendTrack(){
     let songName = document.getElementById('songName').value;
     let songOwner = document.getElementById('songOwner').value;
 
-    const data = await getMidiTrackById(trackOwner, trackOwner+trackId);
+    const data = await getMidiTrackById(trackOwner, trackId);
 
     let trackData = JSON.parse(data);
 
-    await appendTrack(trackOwner, trackOwner+trackId, songOwner, songName, currentUser)
+    await appendTrack(trackOwner, trackId, songOwner, songName, currentUser)
     .then(res=>{
         console.log("Sent append request for "+trackData.name+"(id: "+trackData.id+") to "+songOwner+"\'s song: "+songName);
 
@@ -285,36 +295,36 @@ function btnShowOtherTracks(){
 }
 
 async function btnPlayTrack(){
-    const tempMidi = new Midi();
-    const tempTrack = tempMidi.addTrack();
-
     let trackId = document.getElementById('trackId').value;
     let otherUsername = document.getElementById('otherUsername').value;
     let user = await getValidUser(currentUser, otherUsername, trackId);
 
     console.log("user: "+user+", trackId: "+trackId);
+
     createMidiFromTrack(user, trackId, "tempmidi").then(()=>{
 
-    playMidiFile("SavedFiles/midi/"+user+"_tempmidi.mid");
+        load_file("SavedFiles/midi/"+user+"_tempmidi.mid")
+        .then(()=>{
+        })
     }); //.then
 }
 
 async function btnPlaySong(){
-    const tempMidi = new Midi();
-    const tempTrack = tempMidi.addTrack();
-
     let songName = document.getElementById('songName').value;
     let songOwner = document.getElementById('songOwner').value;
     let otherUsername = document.getElementById('otherUsername').value;
     let user = await getValidSongUser(songOwner, otherUsername, songOwner, songName);
 
-    createMidiFromSong(user, songName, "tempsong").then(()=>{
+    createMidiFromSong(user, songName, "tempmidi").then(()=>{
 
-        playMidiFile("SavedFiles/midi/"+user+"_tempsong.mid");
+        load_file("SavedFiles/midi/"+user+"_tempmidi.mid")
+        .then(()=>{
+            MIDI.Player.start();
+        })
     });
 }
 
-function playMidiFile(filePath){
+async function playMidiFile(filePath){
     MIDI.Player.loadFile(filePath, () => {
         MIDI.Player.addListener(function(data) {
             console.log(data.now +"/"+data.end+" "+data.channel);

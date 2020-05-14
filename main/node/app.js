@@ -203,6 +203,7 @@ function appendTrack(track, trackOwner, songPath){
 }
 
 function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester){
+    console.log(trackOwner+", "+trackID);
     let songsFolderPath = SavedFilesDir + 'users/' + songOwner + '/songs/';
     let tracksFilePath = SavedFilesDir + 'users/' + trackOwner + '/tracks.txt';
     let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
@@ -608,7 +609,7 @@ const server = http.createServer((req, res) => {
         }// end switch
     }else if(req.method === "DELETE"){
         switch (req.url) {
-            case '/deleteSong':
+            case '/webpage/deleteSong':
                 let deleteSongBody = '';
                 req.on('data', (chunk) =>{
                     deleteSongBody += chunk.toString();
@@ -622,7 +623,7 @@ const server = http.createServer((req, res) => {
                     });
                 });
                 break;
-            case '/deleteTrack':
+            case '/webpage/deleteTrack':
                 let deleteTrackBody = '';
                 let deleteTrackPath = '';
                 let deleteOwner = req.headers["owner-name"];

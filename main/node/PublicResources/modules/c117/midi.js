@@ -6,6 +6,28 @@ let countStartRecord = 0; // når man spiller samtidigt med at man spiller et tr
 let extraTime = 1;
 let recording = false;
 
+function startRecordTimer(time){
+    counter = 0;
+    if(time !== undefined) startTime = time;
+    console.log(startTime);
+    recording = true;
+    console.log("starting record timer");
+    timer = setInterval(()=>{
+        counter += 10;
+
+        document.getElementById('currentTime').innerHTML = "Current time: "+counter;
+    } , 10);
+}
+
+function stopRecordTimer(){
+    console.log("stopping record timer");
+    clearInterval(timer);
+    recording = false;
+    startTime = 0;
+    counter = 0;
+    countStartRecord = 0;
+}
+
 let activeNotes = []; //notes which have yet to be ended
 let noteArray = []; //notes which have been ended
 /*  Her indlæses MIDI.js plugin.
@@ -20,8 +42,10 @@ function main(){
     // Plugin inlæsning
     MIDI.loadPlugin({
         soundfontUrl: "./FluidR3_GM/",
-        instrument: 0,
-        onsuccess: function() { }
+        instruments: [0,24,56,73,118,107],
+        onsuccess: function() {
+
+        }
     });
 
     /* Web MIDI Api til at lede efter MIDI controllere.
@@ -49,36 +73,42 @@ function main(){
     *  til at afspille lyd.
     */
     function getMIDIMessage(midiMessage) {
-        switch (midiMessage.data[0]) {
-            case 144: // note On channel 1
-                if(noteArray.length === 0) {
-                    countStartRecord = counter;
-                    startTime = midiMessage.timeStamp;
-                    if(!recording) startRecordTimer(midiMessage.timeStamp);
-                }
-                //console.log("noteOn() "+midiMessage.data[1]+", "+midiMessgae.data[2]);
-                newNote(midiMessage, activeNotes);
-                MIDI.noteOn(0, midiMessage.data[1], midiMessage.data[2]);
-
-
-                break;
-            case 128: // note Off channel 1
-                //console.log("noteOff() "+midiMessage.data[1]);
-                MIDI.noteOff(0, midiMessage.data[1], 0);
-                endNote(midiMessage, activeNotes, noteArray);
-
-                break;
-            case 192: // switch program channel 1
-                console.log("switching instrument to "+ MIDI.GM.byId[midiMessage.data[1]].instrument);
-                MIDI.programChange(0, midiMessage.data[1]);
-                MIDI.loadPlugin({
-                    instrument: midiMessage.data[1]
-                });
-            default:
-                console.log("default reaction to midimessage\ngetMidiMessage(midiMessage)");
-                console.log(midiMessage);
-                break;
+        if(midiMessage.data[0] >= 128 && midiMessage.data[0] <= 207){
+            reactMidiMessage(midiMessage.data[0]%16, midiMessage);
         }
+    }
+}
+
+function reactMidiMessage(channel, midiMessage){
+    switch (midiMessage.data[0]) {
+        case 144+channel: // note On channel 1
+            if(noteArray.length === 0) {
+                countStartRecord = counter;
+                startTime = midiMessage.timeStamp;
+                if(!recording) startRecordTimer(midiMessage.timeStamp);
+            }
+            //console.log("noteOn() "+midiMessage.data[1]+", "+midiMessgae.data[2]);
+            newNote(midiMessage, activeNotes);
+            MIDI.noteOn(channel, midiMessage.data[1], midiMessage.data[2]);
+
+
+            break;
+        case 128+channel: // note Off channel 1
+            //console.log("noteOff() "+midiMessage.data[1]);
+            MIDI.noteOff(channel, midiMessage.data[1], 0);
+            endNote(midiMessage, activeNotes, noteArray);
+
+            break;
+        case 192+channel: // switch program channel 1
+            console.log("switching instrument to "+ MIDI.GM.byId[midiMessage.data[1]].instrument);
+            MIDI.programChange(channel, midiMessage.data[1]);
+            MIDI.loadPlugin({
+                instrument: midiMessage.data[1]
+            });
+        default:
+            console.log("default reaction to midimessage\ngetMidiMessage(midiMessage)");
+            console.log(midiMessage);
+            break;
     }
 }
 
@@ -132,10 +162,13 @@ async function createMidiFromTrack(owner, id, name){
     await addNotesFromTrack(tempTrack, data);
 
     tempMidi.name = name;
-    tempTrack.instrument = JSON.parse(data).instrument || 0;
+    tempTrack.instrument.number = JSON.parse(data).instrument || 0;
+    tempTrack.channel = 1;
 
     // Sender midi data til create midi funktion.
     createMidi(owner, tempMidi, name);
+
+    return 0;
 }
 
 /* Creates a midi from a song
@@ -143,18 +176,27 @@ async function createMidiFromTrack(owner, id, name){
 async function createMidiFromSong(owner, songName, otherName){
     // tonejs/midi funktioner
     const tempMidi = new Midi();
-    const tempTrack = tempMidi.addTrack();
+    let tempTrack;
+    let prevTrack = undefined;
 
     let dataArray = await getTracksFromSong( getSongByName(owner, songName) );
     let trackData;
+    let tChannel = 1;
 
     //add all notes
     for (let i = 3; i < dataArray.length; i++) {
+        tempTrack = tempMidi.addTrack();
         trackData = JSON.parse(dataArray[i]);
         addNotesFromTrack(tempTrack, dataArray[i]);
+        tempTrack.instrument.number = trackData.instrument || 0;
+        if( prevTrack ){
+            if( tempTrack.instrument.number != prevTrack.instrument.number ){
+                tChannel++;
+            }
+        }
+        tempTrack.channel = tChannel;
+        prevTrack = tempTrack;
     }
-
-    console.log("song created");
 
     tempMidi.name = songName;
     if(typeof otherName === "string"){
@@ -188,24 +230,68 @@ async function createMidi(owner, midiData, name){
     }
 }
 
-function startRecordTimer(time){
-    counter = 0;
-    if(time !== undefined) startTime = time;
-    console.log(startTime);
-    recording = true;
-    console.log("starting record timer");
-    timer = setInterval(()=>{
-        counter += 100;
+async function getMidiData(filePath){
+    const midiData = await Midi.fromUrl(filePath);
+    return midiData;
+};
 
-        document.getElementById('currentTime').innerHTML = "Current time: "+counter;
-    } , 100);
+// Indlæser alle instrumenter fra alle tracks
+async function loadInstruments(midiData){
+    console.log("loading instruments");
+    console.log(midiData);
+    try {
+        for (let i = 0; i < midiData.tracks.length; i++) {
+            console.log("channel: "+midiData.tracks[i].channel+", program: "+midiData.tracks[i].instrument.number);
+            // Indlæser selve instrumentet så det kan bruges af midi afspilleren
+            MIDI.loadResource({
+                instrument: midiData.tracks[i].instrument.number,
+                onsuccess: function(){
+                    console.log("loaded instrument: "+midiData.tracks[i].instrument.number);
+                }
+            });
+
+            // Sørger for at channels har et rigtigt start instrument
+            MIDI.programChange(midiData.tracks[i].channel, midiData.tracks[i].instrument.number);
+        }
+    } catch (e) {
+        console.log(e);
+        console.log("error in loadInstruments(midiData)");
+    } finally {
+        console.log("instruments loaded");
+        return 0;
+    }
 }
 
-function stopRecordTimer(){
-    console.log("stopping record timer");
-    clearInterval(timer);
-    recording = false;
-    startTime = 0;
-    counter = 0;
-    countStartRecord = 0;
-}
+/* Læser en fil fra file_path parameteren,
+ * så den er klar til at afspille sangen.
+ */
+async function load_file(file_path){
+    console.log(file_path);
+    console.log("start load_file()" + file_path);
+
+    let midi = await getMidiData(file_path);
+
+    console.log(midi);
+    loadInstruments(midi)
+    .then(()=>{
+        MIDI.Player.loadFile(file_path, () => {
+            console.log("file loaded "+file_path);
+            playerEnd = (MIDI.Player.endTime/1000);
+
+            MIDI.Player.addListener(function(data) {
+                console.log(data.now +"/"+data.end+" "+data.channel);
+                if(!recording) startRecordTimer();
+
+                if(data.now === data.end) {
+                    MIDI.Player.stop();
+                    console.log("end of song, stopping player");
+                };
+            });
+
+            MIDI.Player.start();
+
+
+        })
+        return 0;
+    })
+};

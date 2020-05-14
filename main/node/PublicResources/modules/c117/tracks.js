@@ -43,7 +43,7 @@ class midiTrack {
 /* Sends track data to the server
 */
 async function sendTrack(owner, trackName, notes){ // !!!NEEDS REVAMPING!!! for sending the track/file (undecided which) to a server
-    newTrack = new midiTrack(trackName, notes, owner); // Bruger midiTrack class
+    newTrack = new midiTrack(trackName, notes, owner, MIDI.getInstrument(0)); // Bruger midiTrack class
 
     await fetch('musicData', {
         method: "POST",
