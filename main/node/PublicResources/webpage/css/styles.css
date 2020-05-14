@@ -318,7 +318,7 @@ h3 {
     background: #eee;
 }
 
-#midiFiles .liClass::before {
+#midiFiles .yourClass::before {
     content: counter(li);
     counter-increment: li;
     position: absolute;
