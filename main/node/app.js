@@ -16,7 +16,7 @@ console.log(testS.replace(/\D/g, ''));
 //https://blog.todotnet.com/2018/11/simple-static-file-webserver-in-node-js/
 //https://stackoverflow.com/questions/16333790/node-js-quick-file-server-static-files-over-http
 
-const publicResources="PublicResources/webpage/";
+const publicResources="PublicResources/";
 //secture file system access as described on
 //https://nodejs.org/en/knowledge/file-system/security/introduction/
 const rootFileSystem=process.cwd();
@@ -321,7 +321,7 @@ const server = http.createServer((req, res) => {
                 });
                 break;
             case "/webpage/midiFilesDir":
-                let dirArr = fs.readdirSync("PublicResources/webpage/SavedFiles/midi");
+                let dirArr = fs.readdirSync(SavedFilesDir+"midi");
                 console.log(dirArr);
                 res.write(JSON.stringify(dirArr))
                 res.end();
@@ -525,7 +525,7 @@ const server = http.createServer((req, res) => {
                         fileType = "txt/";
                     }
                     let oldpath = files.filetoupload.path;
-                    let newpath = 'PublicResources/webpage/SavedFiles/uploads/'+fileType+files.filetoupload.name;
+                    let newpath = SavedFilesDir+'uploads/'+fileType+files.filetoupload.name;
 
                     fs.rename(oldpath, newpath, function (err){
                         if (err) throw err;
@@ -608,7 +608,7 @@ const server = http.createServer((req, res) => {
         }// end switch
     }else if(req.method === "DELETE"){
         switch (req.url) {
-            case '/webpage/deleteSong':
+            case '/deleteSong':
                 let deleteSongBody = '';
                 req.on('data', (chunk) =>{
                     deleteSongBody += chunk.toString();
@@ -622,7 +622,7 @@ const server = http.createServer((req, res) => {
                     });
                 });
                 break;
-            case '/webpage/deleteTrack':
+            case '/deleteTrack':
                 let deleteTrackBody = '';
                 let deleteTrackPath = '';
                 let deleteOwner = req.headers["owner-name"];

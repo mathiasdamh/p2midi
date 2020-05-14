@@ -267,6 +267,11 @@ async function btnPlayTrack(){
     console.log("user: "+user+", trackId: "+trackId);
     createMidiFromTrack(user, trackId, "tempmidi").then(()=>{
 
+    playMidiFile("SavedFiles/midi/"+user+"_tempmidi.mid");
+    }); //.then
+}
+
+function playMidiFile(filePath){
     MIDI.Player.loadFile("SavedFiles/midi/"+user+"_tempmidi.mid", () => {
         MIDI.Player.addListener(function(data) {
             console.log(data.now +"/"+data.end+" "+data.channel);
@@ -277,12 +282,11 @@ async function btnPlayTrack(){
 
             if(data.now === data.end) {
                 MIDI.Player.stop();
-                console.log("end of song, stopping player");
+                //console.log("End of song, stopping player");
             };
         });
         MIDI.Player.start();
-        });
-    }); //.then
+    });
 }
 
 function btnStop(){
