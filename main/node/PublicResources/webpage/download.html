@@ -40,6 +40,8 @@
         </ul>
     </div>
 <script type="text/javascript">
+let liClass = "yourClass";
+
 function download(filename, text) {
     var element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -81,6 +83,7 @@ async function displayFiles(){
         element.innerHTML = fileDir[i];
 
         elementLI = document.createElement('li');
+        element.setAttribute('class', liClass);
         elementLI.appendChild(element);
 
         document.getElementById('midiFiles').appendChild(elementLI);
