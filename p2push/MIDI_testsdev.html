@@ -52,6 +52,23 @@ function MIDIAccessFailure(error){
     console.log(error);
 }
 
+async function getNotifications(userName){
+    await fetch('/notifications', {
+        method: "GET",
+        headers: {
+            "Content-Type": "text/javascript"
+        },
+        body: userName
+    })
+    .then(response => {
+        return response.json();
+    }).then(data => {
+        console.log(data);
+    }).catch(err => {
+        console.log(err);
+    });
+}
+
 async function clearFile(userName, songName){
     await fetch('/overwritesong', {
         method: "PUT",
@@ -59,10 +76,18 @@ async function clearFile(userName, songName){
         headers: {
             "Content-Type": "text"
         }
-    })
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        console.log(data);
+    }).catch(err => {
+        console.log(err);
+    });
 }
 /* CREATING A USER */
 
+
+/* HOPEFULLY DEFUNCT*/
 function overwritePrompt(){
     let ans = ""
     while (ans !== 'y' && ans !== 'n' && ans !== null){
@@ -77,79 +102,55 @@ function overwritePrompt(){
     else return false;
 }
 
-async function createNewUser(){
-    let desiredName = prompt("Please enter your user name: ");
-    let isNameTaken = await checkIfNameIsTaken(desiredName)
-    .then(status => {
-        if (status === true){
-            alert("Name is already taken");
+async function createNewUser(desiredName){
+    await fetch('/newUser', {
+        method: 'PUT',
+        body: desiredName,
+        headers: {
+            "Content-Type": "text/javascript"
         }
-        else console.log("user created");
-    })
-    .catch(err => {
-        console.log(err);
-    })
-}
-
-async function checkIfNameIsTaken(name){
-    let res = await fetch("userCheck", {
-        method: "POST",
-        body: name.toLowerCase()
-    })
-    .then(response => {
-        return response.json(); 
-    })
-    .then(data => {
-        if (data.error === "user already exists"){
-            return true;
-        }
-        else return false;
-    })
-    .catch(err => {
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        console.log(data);
+    }).catch(err => {
         console.log(err);
     });
-    return res;
 }
 
-function onCheckIfNameIsTakenSuccess(statusCode){ //cases skal ændres
-    console.log("yoooo");
-    switch (statusCode){
-        case 409:
-            alert("Username is already taken!");
-            break;
-        case 201:
-            console.log("Succesfully created new user");
-            break;
-        default: console.log(statusCode);
-    }
+async function deleteUser(userName){
+    await fetch('deleteUser', {
+        method: "DELETE",
+        body: userName,
+        headers: {
+            "Content-Type": "text/javascript"
+        }
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        console.log(data);
+    }).catch(err => {
+        console.log(err);
+    });
 }
-
 /*CREATE A NEW SONG*/
 
-async function createNewSong(userName){
-    songName = prompt("What would you like to call the song?");
+async function createNewSong(userName, songName){
     console.log("creating new song...");
     await fetch('/songs', {
         method: "PUT",
         body: JSON.stringify({user: userName, song: songName}),
         headers: {
-            "Content-Type": "text"
+            "Content-Type": "text/javascript"
         }
     }).then(response => {
-        return response.json();
+        return response.text();
     }).then(data => {
         console.log(data);
+    }).catch(err => {
+        console.log(err);
     });
 }
-
-function createNewSongOnFulfilled(songName){
-    console.log("Succesfully created a new song with name " + songName);
-}
-
-function createNewSongOnRejected(error){
-    console.log("Could not create a new song!\n\n" + error);
-}
-
 /*MAKING A TRACK*/
 
 function newNote(message, noteArray){ // make a new note (duration will be defined in function endNote)
@@ -185,6 +186,8 @@ function endNote(message, activeNotes, noteArray){
         resolve(result);
     });
 }*/
+
+/* HOPEFULLY OBSOLETE */
 async function sendTrack(track){ // !!!NEEDS REVAMPING!!! include ID/name to the track
     console.log("sending track");
     console.log("track length: " + track.length);
@@ -215,58 +218,48 @@ async function appendTrack(trackOwner, trackID, songOwner, songName, user){ //Ap
             songOwner: songOwner,
             songName: songName,
             requester: user
-            })
+            }),
+        headers: {
+        "Content-Type": "text/javascript"
+        }
     }).then(response => {
         return response.text();
     }).then(data => {
         console.log(data);
-    });/*.then(data => {
-        switch(data.error){
-            case "none":
-                console.log("successfully appended track");
-                break;
-            case "error 1":
-                console.log("no such track exists!");
-                break;
-            case "error 2":
-                console.log("no such user exists! (could not find the specified track owner)");
-                break;
-            case "error 3":
-                console.log("no such user exists! (could not find the specified song owner)");
-                break;
-            case "error 4":
-                console.log("the specified user has no such song!");
-                break;
-            case "error 5":
-                console.log("track already exists in song");
-                break;
-            default: console.log("an unknown error occurred in function appendTrack! " + data.error);
-        }
     }).catch(err => {
         console.log(err);
     });
-    */
 }
 
-async function acceptSuggestion(songOwner, trackID){
+async function acceptSuggestion(songOwner, songName, trackID){
     await fetch('acceptSuggestion', {
         method: "POST",
-        body: JSON.stringify({songOwner: songOwner, trackID: trackID})
+        body: JSON.stringify({songOwner: songOwner, songName: songName, trackID: trackID}),
+        headers: {
+            "Content-Type": "text/javascript"
+        }
     }).then(response => {
         return response.text();
     }).then(data => {
         console.log(data);
+    }).catch(err => {
+        console.log(err);
     });
 }
 
-async function rejectSuggestion(songOwner, trackID){
-    await fetch('acceptSuggestion', {
+async function rejectSuggestion(songOwner, songName, trackID){
+    await fetch('rejectSuggestion', {
         method: "POST",
-        body: JSON.stringify({songOwner: songOwner, trackID: trackID})
+        body: JSON.stringify({songOwner: songOwner, songName: songName, trackID: trackID}),
+        headers: {
+            "Content-Type": "text/javascript"
+        }
     }).then(response => {
         return response.text();
     }).then(data => {
         console.log(data);
+    }).catch(err => {
+        console.log(err);
     });
 }
     </script>

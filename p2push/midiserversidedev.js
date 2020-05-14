@@ -28,7 +28,11 @@ test('if the track was appended successfully, return {error: "none"}, else retur
 */
 function trackExistsInFile(trackID, filePath){ // this function must only be called when it is certain the file exists
     let fileLines = fs.readFileSync(filePath, "utf-8").split('\n');
+<<<<<<< HEAD
     let re = RegExp("\"id\":\""+trackID+"\"");
+=======
+    let re = RegExp('"id":"' + trackID + '"');
+>>>>>>> prototype
     let flag = false;
     let i = 0;
     do {
@@ -43,7 +47,31 @@ function trackExistsInFile(trackID, filePath){ // this function must only be cal
     else return false;
 }
 
-function acceptSuggestion(songOwner, trackID){
+function trackIDToName(trackID, tracksFilePath){
+    let line = trackExistsInFile(trackID, tracksFilePath);
+    let trackInfo = fs.readFileSync(tracksFilePath, 'utf-8').split('\n')[line]; 
+    let trackName = JSON.parse(trackInfo).name;
+    return trackName;
+}
+
+function getNotifications(userName){
+    let notificationsFilePath = host + 'users/' + userName + 'notifications.txt';
+    let notifications = fs.readFileSync(notificationsFilePath, 'utf-8').split('\n');
+    console.log(notifications);
+    return notifications;
+}
+
+function handleNewUserRequest(requestedName){
+    if (userExists(requestedName)){
+        return "Error 1";
+    }
+    else {
+        createUser(requestedName);
+        return "Success";
+    }
+}
+
+function acceptSuggestion(songOwner, songName, trackID){
     let suggestionsFilePath = host + 'users/' + songOwner + '/suggestions.txt';
     let suggestionInfo = []; // suggestionInfo will contain info about which song the track is suggested to, which user suggested it, and the track
     let suggester;
@@ -52,22 +80,25 @@ function acceptSuggestion(songOwner, trackID){
     let songPath;
     let songsFolderPath = host + 'users/' + songOwner + '/songs/';
     let trackLine;
-    let songName;
+    let tracksFilePath;
 
     if (!userExists(songOwner)){
         return "Error 1";
     }
-    else if (trackExistsInFile(trackID, suggestionsFilePath) === false){
+    else if (isSuggested(trackID, songName, suggestionsFilePath) === false){
+        console.log("trackID: " + trackID + '\n\nsongName: ' + songName + '\n\nsuggestionsFIlePath: ' + suggestionsFilePath);
         return "Error 2";
     }
     else {
-        trackLine = trackExistsInFile(trackID, suggestionsFilePath);
-        suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8').split('\n')[trackLine].split('|');
-        songName = suggestionInfo[0];
+        trackLine = isSuggested(trackID, songName, suggestionsFilePath); // SKAL TESTES!!!
+        console.log("trackLine: " + trackLine);
+        suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8');//.split('\n')[trackLine].split('|');
+        console.log("suggestionINfo: " + suggestionInfo);
         songPath = songsFolderPath + songName + '.txt';
         trackOwner = suggestionInfo[1];
         suggester = suggestionInfo[2];
         track = suggestionInfo[3];
+        tracksFilePath = host + 'users/' + trackOwner + '/tracks.txt';
         if (!(fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
             return "Error 3";
         }
@@ -75,13 +106,14 @@ function acceptSuggestion(songOwner, trackID){
             deleteLineFromFile()
             return "Error 4";
         }
-        else{
-            appendTrack(track, trackOwner, songPath);
+        else {
+            console.log("trackowner: " + trackOwner);
+            appendTrack(track, trackID, trackOwner, songOwner, songName);
             deleteLineFromFile(trackLine, suggestionsFilePath);
             if (userExists(trackOwner)){
                 console.log("notifying trackOwner");
                 appendContribution(trackOwner, trackID, songOwner, songName);
-                appendNotification(songOwner + ' included your track "' + trackID + '" into their song "' + songName + '" (suggested by ' + suggester + ')\n', trackOwner);
+                appendNotification(songOwner + ' included your track "' + trackIDToName(trackID, tracksFilePath) + '" into their song "' + songName + '" (suggested by ' + suggester + ')\n', trackOwner);
             }
             if (userExists(suggester)){
                 console.log("notifying suggester");
@@ -108,7 +140,28 @@ function deleteLineFromFile(line, filePath){
     linesArr.splice(line, 1);
     fs.writeFileSync(filePath, "");
     for (line of linesArr){
-        fs.appendFileSync(suggestionsFilePath, suggestion + '\n');
+        fs.appendFileSync(FilePath, suggestion + '\n');
+    }
+}
+
+function clearFilesFromDirectory(directory){
+    let files = fs.readdirSync(directory);
+    for (file of files){
+        fs.unlinkSync(directory + file);
+    }
+}
+
+function deleteUser(userName){
+    let userPath = host + 'users/' + userName + '/';
+    if (!userExists(userName)){
+        return "Error 1";
+    }
+    else {
+        clearFilesFromDirectory(userPath + 'songs/');
+        fs.rmdirSync(userPath + 'songs/');
+        clearFilesFromDirectory(userPath);
+        fs.rmdirSync(userPath);
+        return "Success";
     }
 }
 
@@ -131,23 +184,68 @@ function appendContributor(contributor, songPath){
     }
 }
 
-function rejectSuggestion(songOwner, trackID){
+function isSuggested(suggestedTrackID, suggestedSongName, suggestionsFilePath){
+    let suggestions = fs.readFileSync(suggestionsFilePath, 'utf-8');
+    let suggestionsArr = suggestions.split('\n');
+    let suggestionInfo;
+    let re = RegExp('"id":"' + suggestedTrackID + '"');
+    let flag = false;
+    let i = 0;
+    console.log("suggestions: " + suggestions);
+    do {
+        suggestionInfo = suggestionsArr[i].split('|');
+        if (suggestionInfo[0] === suggestedSongName && re.test(suggestionInfo[3])){
+            flag = true;
+            console.log("flag set to true");
+        }
+        else i++;
+    }
+    while (i < suggestionsArr.length && flag === false);
+    if (flag === true){
+        return i;
+    }
+    else return false;
+}
+
+function rejectSuggestion(songOwner, songName, trackID){
     let suggestionsFilePath = host + 'users/' + songOwner + '/suggestions.txt';
     let suggestionInfo;
     let suggester;
+    let line;
     if (!userExists(songOwner)){
         return "Error 1";
     }
+<<<<<<< HEAD
     else if (trackExistsInFile(trackID, suggestionsFilePath) === false){
+=======
+    else if (isSuggested(trackID, songName, suggestionsFilePath) === false){
+>>>>>>> prototype
         return "Error 2";
     }
     else {
+        line = isSuggested(trackID, songName, suggestionsFilePath);
         suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8').split('\n')[line].split('|');
         suggester = suggestionInfo[2];
-        deleteLineFromFile(trackExistsInFile(trackID, suggestionsFilePath));
+        deleteLineFromFile(line, suggestionsFilePath);
         if (userExists(suggester)){
-            appendNotification(songOwner + ' rejected your suggestion to their song ' + songName)
+            appendNotification(songOwner + ' rejected your suggestion to their song ' + songName + '\n', suggester)
         }
+        return "Success";
+    }
+}
+
+function handleCreateSongRequest(songName, songOwner){
+    let songsFolderPath = host + 'users/' + songOwner + '/songs/';
+    console.log(songsFolderPath);
+    if (!userExists(songOwner)){
+        return "Error 1";
+    }
+    else if ((fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
+        return "Error 2";
+    }
+    else {
+        createSong(songsFolderPath + songName + '.txt');
+        return "Success";
     }
 }
 
@@ -160,7 +258,7 @@ function createSong(songPath){
 }
 
 function createUser(userName){
-    let userPath = host + '/users/' + userName
+    let userPath = host + 'users/' + userName
     fs.mkdirSync(userPath);
     fs.mkdirSync(userPath + '/songs');
     fs.writeFileSync(userPath + '/tracks.txt', "");
@@ -181,9 +279,11 @@ function suggestTrack(trackOwner, track, songOwner, songName, suggester){ // thi
     fs.appendFileSync(suggestionsFilePath, songName + '|' + trackOwner + '|' + suggester + '|' + track);
 }
 
-function appendTrack(track, trackOwner, songPath){
+function appendTrack(track, trackID, trackOwner, songOwner, songName){
+    let songPath = host + 'users/' + songOwner + '/songs/' + songName + '.txt'
     fs.appendFileSync(songPath, track + '\n');
     appendContributor(trackOwner, songPath);
+    appendContribution(trackOwner, trackID, songOwner, songName);
 }
 
 function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester){
@@ -191,6 +291,7 @@ function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester
     let tracksFilePath = host + 'users/' + trackOwner + '/tracks.txt';
     let suggestionsFilePath = host + 'users/' + songOwner + '/suggestions.txt';
     let line;
+    let songPath;
     if (!userExists(trackOwner)){
         return "Error 1";
     }
@@ -206,19 +307,26 @@ function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester
     else if (trackExistsInFile(trackID, songsFolderPath + songName + '.txt')){
         return "Error 5";
     }
+    else if (!userExists(requester)){
+        return "Error 6";
+    }
     else if (songOwner !== requester){
-        if ((trackExistsInFile(trackID, suggestionsFilePath) === false)){
-            line = trackExistsInFile(trackID, tracksFilePath);
+        if (isSuggested(trackID, songName, suggestionsFilePath) === false){ // SKAL TESTES
+            line = trackExistsInFile(trackID, tracksFilePath); // SKAL TESTES
+            console.log(getLineFromFile(tracksFilePath, line));
             suggestTrack(trackOwner, getLineFromFile(tracksFilePath, line), songOwner, songName, requester);
+            console.log(line);
             return "Track suggested";
         }
         else {
-            return "Error 6";
+            return "Error 7";
         }
     }
     else {
+        songPath = songsFolderPath + songName + '.txt';
         line = trackExistsInFile(trackID, tracksFilePath);
-        appendTrack(getLineFromFile(tracksFilePath, line));
+        appendTrack(getLineFromFile(tracksFilePath, line), trackID, trackOwner, songOwner, songName);
+        appendNotification(songOwner + ' appended your track ' + trackIDToName(trackID, tracksFilePath) + ' to their song ' + songName + '\n', trackOwner);
         return "Track appended";
     }
 }
@@ -226,6 +334,8 @@ function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester
 console.log("server running...")
 const server = http.createServer((req, res) => {
     if (req.method === "GET"){
+        let userName = "";
+        let data = [];
         switch (req.url){
             case '/index':
                 fs.readFile('MIDI_testsdev.html', (err, data) => {
@@ -235,7 +345,20 @@ const server = http.createServer((req, res) => {
                     res.end();
                 });
                 break;
+<<<<<<< HEAD
 
+=======
+            case '/notifications':
+                req.on("data", chunk => {
+                    data.push(chunk);
+                }).on("end", () => {
+                    userName = Buffer.concat(data).toString();
+                    notifications = getNotifications(userName);
+                    res.writeHead(200, {'Content-Type': 'text/html'});
+                    res.write(notifications);
+                });
+                break;
+>>>>>>> prototype
             default:
         }
     }
@@ -297,7 +420,7 @@ const server = http.createServer((req, res) => {
                 }).on("end", () => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    status = acceptSuggestion(obj.songOwner, obj.trackID);
+                    status = acceptSuggestion(obj.songOwner, obj.songName, obj.trackID);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
@@ -310,54 +433,97 @@ const server = http.createServer((req, res) => {
                 }).on("end", () => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    status = rejectSuggestion(obj.songOwner, obj.trackID);
+                    status = rejectSuggestion(obj.songOwner, obj.songName, obj.trackID);
+                    console.log(status);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
                     res.end(status);
                 })
+                break;
             default: console.log('unhandled POST request: ' + req.url);
         }
     }
     else if (req.method === "PUT"){
+        let result;
+        let data = [];
         switch (req.url){
             case '/songs':
                 console.log("new song PUT request");
-                let data = [];
                 req.on("data", chunk => {
                     data.push(chunk);
                 }).on("end", () => {
+                    data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    let songs = fs.readdirSync(host + '/users/' + obj.user + '/songs/');
-                    if (songs.includes(obj.song + '.txt')){
-                        res.writeHead(200, {'Content-Type': 'text'});
-                        res.write(JSON.stringify({error: "song already exists"}));
-                        res.end();
-                    }
-                    else {
-                        createSong(host + "/users/" + obj.user + "/songs/" + obj.song + '.txt', obj.user);
-                        res.writeHead(200, {
-                            "Content-type": "text/javascript"
-                        });
-                        res.end(JSON.stringify({error: "none"}));
-                    }
+                    result = handleCreateSongRequest(obj.song, obj.user);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
+                    res.end(result);
                 });
                 break;
             case "/overwritesong":
                 let fileinfo = [];
-                let songPath = "";
                 req.on("data", (chunk) => {
                     fileinfo.push(chunk);
                 }).on("end", () => {
                     fileinfo = Buffer.concat(fileinfo).toString();
                     fileinfo = JSON.parse(fileinfo);
-                    songPath = host + "users/" + fileinfo.user + '/songs/' + fileinfo.song + '.txt';
-                    createSong(songPath);
-                    res.writeHead(200);
-                    res.end();
+                    if (!userExists(fileinfo.user)){
+                        res.writeHead(200, {
+                            "Content-type": "text/javascript"
+                        });
+                        res.end("Error 1");
+                    }
+                    else {
+                        createSong(host + 'users/' + fileinfo.user + fileinfo.song + '.txt');
+                        res.writeHead(200, {
+                            "Content-type": "text/javascript"
+                        });
+                        res.end("Success");
+                    }
+                });
+                break;
+            case "/newUser":
+                let userName;
+                req.on("data", chunk => {
+                    data.push(chunk);
+                }).on("end", () => {
+                    userName = Buffer.concat(data).toString();
+                    console.log(userName);
+                    result = handleNewUserRequest(userName);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
+                    res.end(result);
                 });
                 break;
             default: console.log("yooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
         }
     }
+<<<<<<< HEAD
 }).listen(port);
+=======
+    else if (req.method === "DELETE"){
+        switch (req.url){
+            case '/deleteUser':
+                let userName;
+                let result;
+                let data = [];
+                req.on("data", chunk => {
+                    data.push(chunk);
+                }).on("end", () => {
+                    userName = Buffer.concat(data).toString();
+                    console.log("userName: " + userName);
+                    result = deleteUser(userName);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
+                    res.end(result);
+                });
+                break;
+            default: console.log("unhandled DELETE request: " + req.url);
+        }
+    }
+}).listen(port);
+>>>>>>> prototype
