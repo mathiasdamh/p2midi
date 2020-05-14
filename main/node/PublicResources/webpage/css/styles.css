@@ -279,30 +279,30 @@ h3 {
 }
 
 .tag:after {
-  content: '';
+    content: '';
 
-  width: 0.5em;
-  height: 0.5em;
+    width: 0.5em;
+    height: 0.5em;
 
-  background: #fff;
+    background: #fff;
 
-  border-radius: 4.167em;
-  -webkit-border-radius: 4.167em;
-  -moz-border-radius: 4.167em;
+    border-radius: 4.167em;
+    -webkit-border-radius: 4.167em;
+    -moz-border-radius: 4.167em;
 
-  border: 1px solid #d99d38;
+    border: 1px solid #d99d38;
 
-  box-shadow: 0 1px 0 #faeaba;
-  -webkit-box-shadow: 0 1px 0 #faeaba;
-  -moz-box-shadow: 0 1px 0 #faeaba;
+    box-shadow: 0 1px 0 #faeaba;
+    -webkit-box-shadow: 0 1px 0 #faeaba;
+    -moz-box-shadow: 0 1px 0 #faeaba;
 
-  position: absolute;
-  top: 0.667em;
-  left: -0.083em;
-  z-index: 9999;
+    position: absolute;
+    top: 0.667em;
+    left: -0.083em;
+    z-index: 9999;
 }
 
-#midiFiles {
+#midiFiles .liClass{
     position: relative;
     display: block;
     padding: .4em .4em .4em .8em;
@@ -313,11 +313,11 @@ h3 {
     transition: all .3s ease-out;
 }
 
-#midiFiles:hover {
+#midiFiles .liClass:hover {
     background: #eee;
 }
 
-#midiFiles:before {
+#midiFiles .liClass:before {
     content: counter(li);
     counter-increment: li;
     position: absolute;
@@ -332,7 +332,7 @@ h3 {
     font-weight: bold;
 }
 
-#midiFiles:after {
+#midiFiles .liClass:after {
     position: absolute;
     content: '';
     border: .5em solid transparent;
@@ -342,7 +342,7 @@ h3 {
     transition: all .3s ease-out;
 }
 
-#midiFiles:hover:after {
+#midiFiles .liClass:hover:after {
     left: -.5em;
     border-left-color: #fa8072;
 }
