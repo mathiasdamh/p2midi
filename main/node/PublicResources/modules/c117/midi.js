@@ -64,7 +64,7 @@ function main(){
                 break;
             case 128: // note Off channel 1
                 //console.log("noteOff() "+midiMessage.data[1]);
-                MIDI.noteOff(0, midiMessage.data[1], midiMessage.data[2]);
+                MIDI.noteOff(0, midiMessage.data[1], 0);
                 endNote(midiMessage, activeNotes, noteArray);
 
                 break;
@@ -132,6 +132,7 @@ async function createMidiFromTrack(owner, id, name){
     await addNotesFromTrack(tempTrack, data);
 
     tempMidi.name = name;
+    tempTrack.instrument = JSON.parse(data).instrument || 0;
 
     // Sender midi data til create midi funktion.
     createMidi(owner, tempMidi, name);
