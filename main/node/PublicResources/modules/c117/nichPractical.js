@@ -1,4 +1,6 @@
-function deleteLineFromFile(line, filePath){
+const fs=require("fs");
+
+exports.deleteLineFromFile = function(line, filePath){
     let linesArr = fs.readFileSync(filePath, 'utf-8').split('\n');
     linesArr.splice(line, 1);
     fs.writeFileSync(filePath, "");
@@ -9,18 +11,18 @@ function deleteLineFromFile(line, filePath){
     }
 }
 
-function clearFilesFromDirectory(directory){
+exports.clearFilesFromDirectory = function(directory){
     let files = fs.readdirSync(directory);
     for (file of files){
         fs.unlinkSync(directory + file);
     }
 }
 
-function getLineFromFile(filePath, line = "integer|0 index"){
+exports.getLineFromFile = function(filePath, line = "integer|0 index"){
     return fs.readFileSync(filePath, 'utf-8').split('\n')[line]
 }
 
-function deleteCarriageReturn(string){ // for deleting the \r character that notepad and the console use
+exports.deleteCarriageReturn = function(string){ // for deleting the \r character that notepad and the console use
     let output = "";
     string = string.split('');
     for (char of string){
@@ -33,4 +35,3 @@ function deleteCarriageReturn(string){ // for deleting the \r character that not
     }
     return output;
 }
-

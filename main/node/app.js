@@ -4,14 +4,14 @@ const path=require("path");
 const { Midi } = require('@tonejs/midi')
 const { parse } = require('querystring');
 const formidable = require('formidable');
+const music = require('./PublicResources/modules/c117/nichMusic.js');
+const practical = require('./PublicResources/modules/c117/nichPractical.js');
+const userFunc = require('./PublicResources/modules/c117/nichUsers.js');
 
 const hostname = '127.0.0.1';
 const port = 8080;
 
-const verbose = true;
-
-let testS = "abvxdf3252"
-console.log(testS.replace(/\D/g, ''));
+const verbose = true; // For console logging
 
 //https://blog.todotnet.com/2018/11/simple-static-file-webserver-in-node-js/
 //https://stackoverflow.com/questions/16333790/node-js-quick-file-server-static-files-over-http
@@ -20,6 +20,10 @@ const publicResources="PublicResources/";
 //secture file system access as described on
 //https://nodejs.org/en/knowledge/file-system/security/introduction/
 const rootFileSystem=process.cwd();
+const SavedFilesDir = rootFileSystem+"/"+publicResources+"webpage/SavedFiles/";
+
+userFunc.host = SavedFilesDir;
+
 function securePath(userPath){
   if (userPath.indexOf('\0') !== -1) {
     // could also test for illegal chars: if (!/^[a-z0-9]+$/.test(filename)) {return undefined;}
@@ -34,211 +38,6 @@ function securePath(userPath){
 }
 /* more accurate error codes should be sent to client */
 
-/* For finding stuff */
-const SavedFilesDir = path.resolve(__dirname)+"/PublicResources/webpage/SavedFiles/";
-const WebpageDir = path.resolve(__dirname)+"/PublicResources/webpage/";
-
-// ################## NICHOLAS
-function trackExistsInFile(trackID, filePath){ // this function must only be called when it is certain the file exists
-    let fileLines = fs.readFileSync(filePath, "utf-8").split('\n');
-    let re = RegExp("\"id\":\""+trackID+"\"");
-
-    let flag = false;
-    let i = 0;
-    do {
-        if (re.test(fileLines[i])){
-            flag = true;
-        }
-        else i++;
-    } while (flag === false && i < fileLines.length);
-    if (flag === true){
-        return i;
-    }
-    else return false;
-}
-
-function acceptSuggestion(songOwner, trackID){
-    let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
-    let suggestionInfo = []; // suggestionInfo will contain info about which song the track is suggested to, which user suggested it, and the track
-    let suggester;
-    let track;
-    let trackOwner;
-    let songPath;
-    let songsFolderPath = SavedFilesDir + 'users/' + songOwner + '/songs/';
-    let trackLine;
-    let songName;
-
-    if (!userExists(songOwner)){
-        return "Error 1";
-    }
-    else if (trackExistsInFile(trackID, suggestionsFilePath) === false){
-        return "Error 2";
-    }
-    else {
-        trackLine = trackExistsInFile(trackID, suggestionsFilePath);
-        suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8').split('\n')[trackLine].split('|');
-        songName = suggestionInfo[0];
-        songPath = songsFolderPath + songName + '.txt';
-        trackOwner = suggestionInfo[1];
-        suggester = suggestionInfo[2];
-        track = suggestionInfo[3];
-        if (!(fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
-            return "Error 3";
-        }
-        else if (trackExistsInFile(trackID, songPath)){
-            deleteLineFromFile()
-            return "Error 4";
-        }
-        else{
-            appendTrack(track, trackOwner, songPath);
-            deleteLineFromFile(trackLine, suggestionsFilePath);
-            if (userExists(trackOwner)){
-                console.log("notifying trackOwner");
-                appendContribution(trackOwner, trackID, songOwner, songName);
-                appendNotification(songOwner + ' included your track "' + trackID + '" into their song "' + songName + '" (suggested by ' + suggester + ')\n', trackOwner);
-            }
-            if (userExists(suggester)){
-                console.log("notifying suggester");
-                appendContributor(suggester, songPath);
-                appendNotification(songOwner + ' accepted your suggestion to their song ' + songName + '\n', suggester);
-            }
-            return "Success";
-        }
-    }
-}
-
-function appendContribution(contributor, trackID, songOwner, songName){
-    let contributionsFilePath = SavedFilesDir + 'users/' + contributor + '/contributions.txt';
-    fs.appendFileSync(contributionsFilePath, songOwner + '|' + songName + '|' + trackID + '\n');
-}
-
-function appendNotification(notification, user){
-    let notificationsFilePath = SavedFilesDir + 'users/' + user + "/notifications.txt";
-    fs.appendFileSync(notificationsFilePath, notification);
-}
-
-function deleteLineFromFile(line, filePath){
-    let linesArr = fs.readFileSync(filePath, 'utf-8').split('\n');
-    linesArr.splice(line, 1);
-    fs.writeFileSync(filePath, "");
-    for (line of linesArr){
-        fs.appendFileSync(suggestionsFilePath, suggestion + '\n');
-    }
-}
-
-function appendContributor(contributor, songPath){
-    let fileLines = (fs.readFileSync(songPath, "utf-8")).split('\n')
-    let contributorsArray = fileLines[2].split(' ');
-    let i = 3;
-    contributorsArray.splice(0, 1); // getting rid of the word 'Contributors:'
-    contributorsArray.pop(); // getting rid of the excess space, which is left behind by the .split action on line 2 of this function
-    if (!(contributorsArray.includes(contributor))){
-        contributorsArray.push(contributor);
-        fs.writeFileSync(songPath,
-            fileLines[0] + '\n'+ fileLines[1] + "\nContributors: ");
-        for (cont of contributorsArray){
-            fs.appendFileSync(songPath, cont + ' ');
-        }
-        for (i; i < fileLines.length; i++){
-            fs.appendFileSync(songPath, '\n' + fileLines[i]);
-        }
-    }
-}
-
-function rejectSuggestion(songOwner, trackID){
-    let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
-    let suggestionInfo;
-    let suggester;
-    if (!userExists(songOwner)){
-        return "Error 1";
-    }
-    else if (trackExistsInFile(trackID, suggestionsFilePath) === false){
-        return "Error 2";
-    }
-    else {
-        suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8').split('\n')[line].split('|');
-        suggester = suggestionInfo[2];
-        deleteLineFromFile(trackExistsInFile(trackID, suggestionsFilePath));
-        if (userExists(suggester)){
-            appendNotification(songOwner + ' rejected your suggestion to their song ' + songName)
-        }
-    }
-}
-
-function createSong(songPath){
-    let creationDate = new Date();
-    let separatedPath = songPath.split('/');
-    let userName = separatedPath[separatedPath.length - 3];
-    fs.writeFileSync(songPath,
-        "Date created: " + creationDate + "\nCreated by: " + userName + "\nContributors: \n");
-}
-
-function createUser(userName){
-    let userPath = SavedFilesDir + '/users/' + userName
-    fs.mkdirSync(userPath);
-    fs.mkdirSync(userPath + '/songs');
-    fs.writeFileSync(userPath + '/tracks.txt', "");
-    fs.writeFileSync(userPath + '/suggestions.txt', "");
-    fs.writeFileSync(userPath + "/contributions.txt", "");
-    fs.writeFileSync(userPath + "/notifications.txt", "");
-}
-
-function getLineFromFile(filePath, line = "integer|0 index"){
-    return fs.readFileSync(filePath, 'utf-8').split('\n')[line]
-}
-
-function userExists(userName){
-    return fs.readdirSync(SavedFilesDir + 'users').includes(userName);
-}
-
-function suggestTrack(trackOwner, track, songOwner, songName, suggester){ // this function must only be called when it is known that all four values given as parameters exist
-    let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
-    fs.appendFileSync(suggestionsFilePath, songName + '|' + trackOwner + '|' + suggester + '|' + track);
-}
-
-function appendTrack(track, trackOwner, songPath){
-    console.log("track: "+track+", trackOwner: "+trackOwner+", songPath: "+songPath);
-    fs.appendFileSync(songPath, track + '\n');
-    appendContributor(trackOwner, songPath);
-}
-
-function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester){
-    console.log(trackOwner+", "+trackID);
-    let songsFolderPath = SavedFilesDir + 'users/' + songOwner + '/songs/';
-    let tracksFilePath = SavedFilesDir + 'users/' + trackOwner + '/tracks.txt';
-    let suggestionsFilePath = SavedFilesDir + 'users/' + songOwner + '/suggestions.txt';
-    let line;
-    if (!userExists(trackOwner)){
-        return "Error 1";
-    }
-    else if (trackExistsInFile(trackID, tracksFilePath) === false){
-        return "Error 2";
-    }
-    else if (!userExists(songOwner)){
-        return "Error 3";
-    }
-    else if (!(fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
-        return "Error 4";
-    }
-    else if (trackExistsInFile(trackID, songsFolderPath + songName + '.txt')){
-        return "Error 5";
-    }
-    else if (songOwner !== requester){
-        if ((trackExistsInFile(trackID, suggestionsFilePath) === false)){
-            line = trackExistsInFile(trackID, tracksFilePath);
-            suggestTrack(trackOwner, getLineFromFile(tracksFilePath, line), songOwner, songName, requester);
-            return "Track suggested";
-        }
-        else {
-            return "Error 6";
-        }
-    }
-    else {
-        line = trackExistsInFile(trackID, tracksFilePath);
-        appendTrack(getLineFromFile(tracksFilePath, line), trackOwner, songsFolderPath+songName+".txt");
-        return "Track appended";
-    }
-}
 
 // #################### MADS
 function removeEmptyLines(array){
@@ -297,8 +96,12 @@ const server = http.createServer((req, res) => {
     console.log("GOT: " + req.method + " " +req.url);
     if(req.method=="GET"){
         switch(req.url){
-            case "/":
-                fileResponse("index.html",res);
+            case "/index.html":
+                res.writeHead(301,
+                    {Location: "webpage/index.html"}
+                );
+                res.end();
+                //fileResponse("index.html",res);
             break;
             default:
                 fileResponse(req.url,res);
@@ -406,7 +209,7 @@ const server = http.createServer((req, res) => {
                         res.end(JSON.stringify({error: "User already exists"}));
                     }
                     else {
-                        createUser(user);
+                        userFunc.createUser(user);
                         res.writeHead(200, {
                             "Content-type": "text/javascript"
                         });
@@ -420,7 +223,7 @@ const server = http.createServer((req, res) => {
                 }).on("end", () => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    status = handleAppendRequest(obj.trackOwner, obj.trackID, obj.songOwner, obj.songName, obj.requester);
+                    status = music.handleAppendRequest(obj.trackOwner, obj.trackID, obj.songOwner, obj.songName, obj.requester);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
@@ -542,7 +345,7 @@ const server = http.createServer((req, res) => {
                 }).on("end", () => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    status = acceptSuggestion(obj.songOwner, obj.trackID);
+                    status = music.acceptSuggestion(obj.songOwner, obj.trackID);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
@@ -555,7 +358,7 @@ const server = http.createServer((req, res) => {
                 }).on("end", () => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    status = rejectSuggestion(obj.songOwner, obj.trackID);
+                    status = music.rejectSuggestion(obj.songOwner, obj.trackID);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
@@ -583,7 +386,7 @@ const server = http.createServer((req, res) => {
                         res.end();
                     }
                     else {
-                        createSong(SavedFilesDir + "/users/" + obj.user + "/songs/" + obj.song + '.txt', obj.user);
+                        music.createSong(SavedFilesDir + "/users/" + obj.user + "/songs/" + obj.song + '.txt', obj.user);
                         res.writeHead(200, {
                             "Content-type": "text/javascript"
                         });
@@ -600,7 +403,7 @@ const server = http.createServer((req, res) => {
                     fileinfo = Buffer.concat(fileinfo).toString();
                     fileinfo = JSON.parse(fileinfo);
                     songPath = SavedFilesDir + "users/" + fileinfo.user + '/songs/' + fileinfo.song + '.txt';
-                    createSong(songPath);
+                    music.createSong(songPath);
                     res.writeHead(200);
                     res.end();
                 });
@@ -659,7 +462,7 @@ const server = http.createServer((req, res) => {
                             if(verbose) console.log(deleteTrackBody+ " , "+deleteIds[i]);
                             if(verbose) console.log("while loop iteration "+i);
                             if(i > deleteIds.length){
-                                console.log("Not a valid id to delete");
+                                if(verbose)console.log("Not a valid id to delete");
                                 endResponse = true;
                                 break;
                             }
@@ -667,7 +470,7 @@ const server = http.createServer((req, res) => {
                         }
 
                         if(endResponse){
-                            console.log("Response ended");
+                            if(verbose)console.log("Response ended");
                             res.writeHead(404);
                             res.end("Not a valid id to delete")
                         }

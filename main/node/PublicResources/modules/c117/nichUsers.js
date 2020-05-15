@@ -1,15 +1,20 @@
-function getNotifications(userName){
+const fs=require("fs");
+
+let host = "";
+
+exports.host = host;
+exports.getNotifications = function(userName){
     let notificationsFilePath = host + 'users/' + userName + 'notifications.txt';
     let notifications = fs.readFileSync(notificationsFilePath, 'utf-8').split('\n');
     return notifications;
 }
 
-function appendNotification(notification, user){
+exports.appendNotification = function(notification, user){
     let notificationsFilePath = host + 'users/' + user + "/notifications.txt";
     fs.appendFileSync(notificationsFilePath, notification);
 }
 
-function handleNewUserRequest(requestedName){
+exports.handleNewUserRequest = function(requestedName){
     if (userExists(requestedName)){
         return "Error 1";
     }
@@ -19,7 +24,7 @@ function handleNewUserRequest(requestedName){
     }
 }
 
-function createUser(userName){
+exports.createUser = function(userName){
     let userPath = host + 'users/' + userName
     fs.mkdirSync(userPath);
     fs.mkdirSync(userPath + '/songs');
@@ -29,7 +34,7 @@ function createUser(userName){
     fs.writeFileSync(userPath + "/notifications.txt", "");
 }
 
-function deleteUser(userName){
+exports.deleteUser = function(userName){
     let userPath = host + 'users/' + userName + '/';
     if (!userExists(userName)){
         return "Error 1";
@@ -43,7 +48,6 @@ function deleteUser(userName){
     }
 }
 
-function userExists(userName){
+exports.userExists = function(userName){
     return fs.readdirSync(host + 'users').includes(userName);
 }
-

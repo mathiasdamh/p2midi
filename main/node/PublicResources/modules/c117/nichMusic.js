@@ -1,11 +1,13 @@
-function trackIDToName(trackID, tracksFilePath){
+const fs=require("fs");
+
+exports.trackIDToName = function(trackID, tracksFilePath){
     let line = trackExistsInFile(trackID, tracksFilePath);
-    let trackInfo = fs.readFileSync(tracksFilePath, 'utf-8').split('\n')[line]; 
+    let trackInfo = fs.readFileSync(tracksFilePath, 'utf-8').split('\n')[line];
     let trackName = JSON.parse(trackInfo).name;
     return trackName;
 }
 
-function trackExistsInFile(trackID, filePath){ // this function must only be called when it is certain the file exists
+exports.trackExistsInFile = function(trackID, filePath){ // this function must only be called when it is certain the file exists
     let fileLines = fs.readFileSync(filePath, "utf-8").split('\n');
     let re = RegExp('"id":"' + trackID + '"');
     let flag = false;
@@ -22,19 +24,19 @@ function trackExistsInFile(trackID, filePath){ // this function must only be cal
     else return false;
 }
 
-function suggestTrack(trackOwner, track, songOwner, songName, suggester){ // this function must only be called when it is known that all five values given as parameters exist
+exports.suggestTrack = function(trackOwner, track, songOwner, songName, suggester){ // this function must only be called when it is known that all five values given as parameters exist
     let suggestionsFilePath = host + 'users/' + songOwner + '/suggestions.txt';
     fs.appendFileSync(suggestionsFilePath, songName + '|' + trackOwner + '|' + suggester + '|' + track + '\n');
 }
 
-function appendTrack(track, trackID, trackOwner, songOwner, songName){
+exports.appendTrack = function(track, trackID, trackOwner, songOwner, songName){
     let songPath = host + 'users/' + songOwner + '/songs/' + songName + '.txt'
     fs.appendFileSync(songPath, track + '\n');
     appendContributor(trackOwner, songPath);
     appendContribution(trackOwner, trackID, songOwner, songName);
 }
 
-function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester){
+exports.handleAppendRequest = function(trackOwner, trackID, songOwner, songName, requester){
     let songsFolderPath = host + 'users/' + songOwner + '/songs/';
     let tracksFilePath = host + 'users/' + trackOwner + '/tracks.txt';
     let suggestionsFilePath = host + 'users/' + songOwner + '/suggestions.txt';
@@ -80,7 +82,7 @@ function handleAppendRequest(trackOwner, trackID, songOwner, songName, requester
     }
 }
 
-function handleCreateSongRequest(songName, songOwner){
+exports.handleCreateSongRequest = function(songName, songOwner){
     let songsFolderPath = host + 'users/' + songOwner + '/songs/';
     if (!userExists(songOwner)){
         return "Error 1";
@@ -94,15 +96,15 @@ function handleCreateSongRequest(songName, songOwner){
     }
 }
 
-function createSong(songPath){
+exports.createSong = function(songPath){
     let creationDate = new Date();
     let separatedPath = songPath.split('/');
     let userName = separatedPath[separatedPath.length - 3];
-    fs.writeFileSync(songPath, 
+    fs.writeFileSync(songPath,
         "Date created: " + creationDate + "\nCreated by: " + userName + "\nContributors: \n");
 }
 
-function acceptSuggestion(songOwner, songName, trackID){
+exports.acceptSuggestion = function(songOwner, songName, trackID){
     let suggestionsFilePath = host + 'users/' + songOwner + '/suggestions.txt';
     let suggestionInfo = []; // suggestionInfo will contain info about which song the track is suggested to, which user suggested it, and the track
     let suggester;
@@ -153,7 +155,7 @@ function acceptSuggestion(songOwner, songName, trackID){
     }
 }
 
-function isSuggested(suggestedTrackID, suggestedSongName, suggestionsFilePath){
+exports.isSuggested = function(suggestedTrackID, suggestedSongName, suggestionsFilePath){
     let suggestions = fs.readFileSync(suggestionsFilePath, 'utf-8');
     let suggestionsArr = suggestions.split('\n');
     let suggestionInfo;
@@ -174,7 +176,7 @@ function isSuggested(suggestedTrackID, suggestedSongName, suggestionsFilePath){
     else return false;
 }
 
-function rejectSuggestion(songOwner, songName, trackID){
+exports.rejectSuggestion = function(songOwner, songName, trackID){
     let suggestionsFilePath = host + 'users/' + songOwner + '/suggestions.txt';
     let suggestionInfo;
     let suggester;
@@ -197,12 +199,12 @@ function rejectSuggestion(songOwner, songName, trackID){
     }
 }
 
-function appendContribution(contributor, trackID, songOwner, songName){
+exports.appendContribution = function(contributor, trackID, songOwner, songName){
     let contributionsFilePath = host + 'users/' + contributor + '/contributions.txt';
     fs.appendFileSync(contributionsFilePath, songOwner + '|' + songName + '|' + trackID + '\n');
 }
 
-function appendContributor(contributor, songPath){
+exports.appendContributor = function(contributor, songPath){
     let fileLines = (fs.readFileSync(songPath, "utf-8")).split('\n')
     let contributorsArray = fileLines[2].split(' ');
     let i = 3;
@@ -210,7 +212,7 @@ function appendContributor(contributor, songPath){
     contributorsArray.pop(); // getting rid of the excess space, which is left behind by the .split action on line 2 of this function
     if (!(contributorsArray.includes(contributor))){
         contributorsArray.push(contributor);
-        fs.writeFileSync(songPath, 
+        fs.writeFileSync(songPath,
             fileLines[0] + '\n'+ fileLines[1] + "\nContributors: ");
         for (cont of contributorsArray){
             fs.appendFileSync(songPath, cont + ' ');
@@ -220,4 +222,3 @@ function appendContributor(contributor, songPath){
         }
     }
 }
-
