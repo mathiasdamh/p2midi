@@ -1,0 +1,9 @@
+Date created: Fri May 15 2020 11:28:26 GMT+0200 (GMT+02:00)
+Created by: mads
+Contributors: mads 
+{"id":"mads12","midiNotes":[{"midi":48,"time":0,"duration":173.0000000097789},{"midi":50,"time":430.99500000244007,"duration":184.00500000279862},{"midi":52,"time":852.9950000083772,"duration":319.0000000031432}],"name":"ab","owner":"mads","instrument":0}
+{"id":"mads13","midiNotes":[{"midi":53,"time":1450,"duration":184.0000000083819},{"midi":55,"time":1861.9950000022072,"duration":186.00499999593012},{"midi":57,"time":2273.000000003958,"duration":320.0000000069849}],"name":"abc","owner":"mads","instrument":"24"}
+{"id":"mads14","midiNotes":[{"midi":57,"time":2910,"duration":202.99999999406282},{"midi":59,"time":3330.9999999875436,"duration":228.00000000279397},{"midi":60,"time":3760.995000000694,"duration":741.0049999889452}],"name":"abcd","owner":"mads","instrument":"56"}
+{"id":"mads15","midiNotes":[{"midi":62,"time":4590,"duration":308.0000000045402},{"midi":64,"time":5026.000000001513,"duration":251.0000000038417},{"midi":65,"time":5462.000000003027,"duration":1008.0000000016298}],"name":"abcde","owner":"mads","instrument":"73"}
+{"id":"mads16","midiNotes":[{"midi":48,"time":6430,"duration":157.99999999580905},{"midi":48,"time":6836.999999991967,"duration":173.99999999906868},{"midi":48,"time":7263.999999988009,"duration":214.00000000721775}],"name":"abcdef","owner":"mads","instrument":"118"}
+{"id":"mads17","midiNotes":[{"midi":67,"time":8010,"duration":313.9999999984866},{"midi":69,"time":8424.999999993597,"duration":216.00000000034925},{"midi":71,"time":8829.999999992433,"duration":452.000000004773}],"name":"abcdefe","owner":"mads","instrument":"107"}

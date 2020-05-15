@@ -1,18 +1,51 @@
-let currentUser = "mads" // Bliver brugt til at gemme tracks.
-
-async function createNewUser(){
-    let desiredName = prompt("Please enter your user name: ");
-    let isNameTaken = await checkIfNameIsTaken(desiredName)
-    .then(status => {
-        if (status === true){
-            alert("Name is already taken");
+async function clearFile(userName, songName){
+    await fetch('/overwritesong', {
+        method: "PUT",
+        body: JSON.stringify({user: userName, song: songName}),
+        headers: {
+            "Content-Type": "text"
         }
-        else console.log("user created");
-    })
-    .catch(err => {
-        console.log(err);
-    })
-};
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        //console.log(data);
+    }).catch(err => {
+        //console.log(err);
+    });
+}
+
+async function createNewUser(desiredName){
+    await fetch('/newUser', {
+        method: 'PUT',
+        body: desiredName,
+        headers: {
+            "Content-Type": "text/javascript"
+        }
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        //console.log(data);
+    }).catch(err => {
+        //console.log(err);
+    });
+}
+
+async function deleteUser(userName){
+    await fetch('deleteUser', {
+        method: "DELETE",
+        body: userName,
+        headers: {
+            "Content-Type": "text/javascript"
+        }
+    }).then(response => {
+        return response.text();
+    }).then(data => {
+        //console.log(data);
+    }).catch(err => {
+        //console.log(err);
+    });
+}
+
 
 async function checkIfNameIsTaken(name){
     let res = await fetch("userCheck", {
@@ -29,7 +62,7 @@ async function checkIfNameIsTaken(name){
         else return false;
     })
     .catch(err => {
-        console.log(err);
+        //console.log(err);
     });
     return res;
 };

@@ -1,4 +1,5 @@
 const fs=require("fs");
+const host = process.cwd() + "/PublicResources/webpage/SavedFiles/";
 
 exports.deleteLineFromFile = function(line, filePath){
     let linesArr = fs.readFileSync(filePath, 'utf-8').split('\n');
@@ -34,4 +35,34 @@ exports.deleteCarriageReturn = function(string){ // for deleting the \r characte
         }
     }
     return output;
+}
+
+// #################### MADS
+exports.removeEmptyLines = function(array){
+    for (i = 0; i < array.length; i++) {
+        if(array[i] === ""){
+            array.splice(i, 1);
+        }
+    }
+    return array;
+}
+
+exports.decideTrackId = function(tracks){
+    let id = 0;
+    if (tracks.length === 0) {
+        return id;
+    } else if( tracks.length > 0) {
+        let parsedData;
+        let parsedId;
+        for (let i = 0; i < tracks.length; i++) {
+            parsedData = JSON.parse(tracks[i]);
+            parsedId = parsedData.id.replace(/\D/g, '');
+            //console.log("parsedId: "+parsedId);
+            if (id < parsedId) {
+                id = parsedId;
+            }
+            id++;
+        } // for
+        return id;
+    } // else if
 }

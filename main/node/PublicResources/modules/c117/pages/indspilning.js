@@ -1,5 +1,7 @@
 document.body.onload = main;
 
+let currentUser = "mads" // Bliver brugt til at gemme tracks.
+
 let trackDisplay = false; // For displaying tracks
 let trackOtherDisplay = false; // For displaying other tracks
 let songDisplay = false; // For displaying songs
@@ -9,10 +11,15 @@ async function updateTrackData(){
     let trackIdInfo = document.getElementById('trackIdValue');
     let trackId = document.getElementById('trackId').value;
     let otherUsername = document.getElementById('otherUsername').value;
+    let data;
     let user;
     if(trackId !== undefined && trackId !== ""){
         user = await getValidUser(currentUser, otherUsername, trackId);
-        const data = await getMidiTrackById(user, trackId);
+        if(user !== -1){
+            data = await getMidiTrackById(user, trackId);
+        }else{
+            data = await getMidiTrackById(currentUser, trackId);
+        }
 
         if (data === undefined || data === -1){
             trackIdInfo.innerHTML = "No track found with Id: "+trackId;
@@ -146,7 +153,7 @@ async function getValidUser(current, other, trackId){
     let otherRes = await getMidiTrackById(other, trackId);
 
     if( (currentRes+otherRes) === -2){
-        console.log("Not valid user: "+current+", "+other);
+        //console.log("Not valid users for trackId: "+current+", "+other);
         return -1;
     }else if(currentRes === -1){
         return other;
@@ -160,7 +167,7 @@ async function getValidSongUser(current, other, songOwner, songName){
     let otherRes = await getSongByName(songOwner, songName);
 
     if( (currentRes+otherRes) === -2){
-        console.log("Not valid user: "+current+", "+other);
+        //console.log("Not valid user: "+current+", "+other);
         return -1;
     }else if(currentRes === -1){
         return other;
@@ -202,12 +209,14 @@ async function btnSendTrack(){ // Sender en track
 
 async function btnCreateMidi(){ // Laver midi fil
     let trackID = document.getElementById('trackId').value;
+    let otherUsername = document.getElementById('otherUsername').value;
+    let user = await getValidUser(currentUser, otherUsername, trackID);
 
-    const data = await getMidiTrackById(currentUser, trackID)
+    const data = await getMidiTrackById(user, trackID)
 
     let trackName = JSON.parse(data).name;
 
-    createMidiFromTrack(currentUser, trackID, trackName);
+    createMidiFromTrack(user, trackID, trackName);
 }
 
 function btnResetRecord(){ // Resetter start tid, og note arrays
@@ -231,14 +240,16 @@ async function btnAppendTrack(){
 
     await appendTrack(trackOwner, trackId, songOwner, songName, currentUser)
     .then(res=>{
-        console.log("Sent append request for "+trackData.name+"(id: "+trackData.id+") to "+songOwner+"\'s song: "+songName);
+        //console.log("Sent append request for "+trackData.name+"(id: "+trackData.id+") to "+songOwner+"\'s song: "+songName);
 
         updateSongData();
     });
 }
 
 function btnCreateSong(){
-    createNewSong(currentUser)
+    let newSongName = document.getElementById('newSongName').value;
+
+    createNewSong(currentUser, newSongName)
     .then(()=>{
         if(songDisplay) displaySongFiles();
     });
@@ -299,7 +310,7 @@ async function btnPlayTrack(){
     let otherUsername = document.getElementById('otherUsername').value;
     let user = await getValidUser(currentUser, otherUsername, trackId);
 
-    console.log("user: "+user+", trackId: "+trackId);
+    //console.log("user: "+user+", trackId: "+trackId);
 
     createMidiFromTrack(user, trackId, "tempmidi").then(()=>{
 
@@ -324,10 +335,11 @@ async function btnPlaySong(){
     });
 }
 
+/*
 async function playMidiFile(filePath){
     MIDI.Player.loadFile(filePath, () => {
         MIDI.Player.addListener(function(data) {
-            console.log(data.now +"/"+data.end+" "+data.channel);
+            //console.log(data.now +"/"+data.end+" "+data.channel);
 
             if(!recording){
                 startRecordTimer(0);
@@ -341,6 +353,7 @@ async function playMidiFile(filePath){
         MIDI.Player.start();
     });
 }
+*/
 
 function btnStop(){
     MIDI.Player.stop();
@@ -364,12 +377,48 @@ function btnDelayTrack(){
     addDelayToTrack(currentUser, trackId, Number.parseFloat(delay))
     .then(()=>{
         updateTrackData();
-        console.log("Delayed track "+trackId+" by "+delay+" miliseconds");
+        //console.log("Delayed track "+trackId+" by "+delay+" miliseconds");
     });
 }
 
+async function btnCheckSuggestions(){
+    let suggestions = await getSuggestions(currentUser);
+    let suggestionsArr = removeEmptyLines(suggestions.split("\n"));
+
+    let suggestionList = document.getElementById("suggestionList");
+
+    suggestionList.innerHTML = "";
+
+    for (var i = 0; i < suggestionsArr.length; i++) {
+        let tempSplit = suggestionsArr[i].split("|");
+        let suggestTrack = JSON.parse(tempSplit[3]);
+        let trackName = suggestTrack.name;
+        let trackId = suggestTrack.id;
+        let LIelement = document.createElement("li");
+        LIelement.innerHTML = "From "+tempSplit[2]+", suggesting "+tempSplit[1]+"\'s track: \""+trackName+"\" to your song: "+tempSplit[0]+"   ";
+
+        let acceptButton = document.createElement("input");
+        acceptButton.setAttribute("type", "button");
+        acceptButton.setAttribute("value", "Accept");
+        acceptButton.onclick = function(){
+            acceptSuggestion(currentUser, tempSplit[0], trackId);
+            LIelement.parentNode.removeChild(LIelement);
+        }
+        let rejectButton = document.createElement("input");
+        rejectButton.setAttribute("type", "button");
+        rejectButton.setAttribute("value", "Reject");
+        rejectButton.onclick = function(){
+            rejectSuggestion(currentUser, tempSplit[0], trackId);
+            LIelement.parentNode.removeChild(LIelement);
+        }
+        LIelement.appendChild(acceptButton);
+        LIelement.appendChild(rejectButton);
+
+        suggestionList.appendChild(LIelement);
+    }
+}
+
 // Tilføjelse af event listerners
-document.getElementById('btnStart').addEventListener("click", main);
 document.getElementById('btnSendTrack').addEventListener("click", btnSendTrack);
 document.getElementById('btnCreateMidi').addEventListener("click", btnCreateMidi);
 document.getElementById('btnResetRecord').addEventListener("click", btnResetRecord);
@@ -385,3 +434,4 @@ document.getElementById('btnDeleteTrack').addEventListener("click", btnDeleteTra
 document.getElementById('btnDelayTrack').addEventListener("click", btnDelayTrack);
 document.getElementById('btnShowOtherTracks').addEventListener("click", btnShowOtherTracks);
 document.getElementById('btnPlaySong').addEventListener("click", btnPlaySong);
+document.getElementById('btnCheckSuggestions').addEventListener("click", btnCheckSuggestions);

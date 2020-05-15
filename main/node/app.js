@@ -39,35 +39,6 @@ function securePath(userPath){
 /* more accurate error codes should be sent to client */
 
 
-// #################### MADS
-function removeEmptyLines(array){
-    for (i = 0; i < array.length; i++) {
-        if(array[i] === ""){
-            array.splice(i, 1);
-        }
-    }
-    return array;
-}
-
-function decideTrackId(tracks){
-    let id = 0;
-    if (tracks.length === 0) {
-        return id;
-    } else if( tracks.length > 0) {
-        let parsedData;
-        let parsedId;
-        for (let i = 0; i < tracks.length; i++) {
-            parsedData = JSON.parse(tracks[i]);
-            parsedId = parsedData.id.replace(/\D/g, '');
-            console.log("parsedId: "+parsedId);
-            if (id < parsedId) {
-                id = parsedId;
-            }
-            id++;
-        } // for
-        return id;
-    } // else if
-}
 /* ############################################################################
    ############################################################################
     FROM HERE REQUESTS GET HANDLED
@@ -96,7 +67,7 @@ const server = http.createServer((req, res) => {
     console.log("GOT: " + req.method + " " +req.url);
     if(req.method=="GET"){
         switch(req.url){
-            case "/index.html":
+            case "/index":
                 res.writeHead(301,
                     {Location: "webpage/index.html"}
                 );
@@ -136,7 +107,7 @@ const server = http.createServer((req, res) => {
                                // Bliver sendt med POST requesten
                 let midiOwner = req.headers["owner-name"];
                 let midiName = req.headers["song-name"];
-                let midiPath = SavedFilesDir + "midi/" + midiOwner + "_" + midiName + ".mid";
+                let midiPath = SavedFilesDir + "midi/" + midiName + ".mid";
                 req.on('data', chunk =>{ // Samler dataet sendt i POST requesten og
                                          // samler det sammen i midiBody
                     midiBody += chunk.toString();
@@ -172,9 +143,9 @@ const server = http.createServer((req, res) => {
                             if(data === undefined){
                                 console.log("No tracks.txt found for " + trackOwner + ", creating new file");
                             }else{
-                                let dataSet = removeEmptyLines(data.split("\n"));
+                                let dataSet = practical.removeEmptyLines(data.split("\n"));
 
-                                newId = decideTrackId(dataSet);
+                                newId = practical.decideTrackId(dataSet);
                             } // else
                         }
                         return newId;
@@ -243,7 +214,7 @@ const server = http.createServer((req, res) => {
                     fs.readFile(updateTrackPath, "utf-8", (err, data) => {
                         if(err) throw err;
 
-                        let trackDataArr = removeEmptyLines(data.split('\n'));
+                        let trackDataArr = practical.removeEmptyLines(data.split('\n'));
 
                         let lineToUpdate = 0;
 
@@ -339,26 +310,28 @@ const server = http.createServer((req, res) => {
                     });
                 });
                 break;
-            case '/acceptSuggestion':
+            case '/webpage/acceptSuggestion':
                 req.on("data", (chunk) => {
                     data.push(chunk);
                 }).on("end", () => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    status = music.acceptSuggestion(obj.songOwner, obj.trackID);
+                    status = music.acceptSuggestion(obj.songOwner, obj.songName, obj.trackID);
+                    console.log(status);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
                     res.end(status);
                 });
                 break;
-            case '/rejectSuggestion':
+            case '/webpage/rejectSuggestion':
                 req.on("data", chunk => {
                     data.push(chunk);
                 }).on("end", () => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    status = music.rejectSuggestion(obj.songOwner, obj.trackID);
+                    status = music.rejectSuggestion(obj.songOwner, obj.songName, obj.trackID);
+                    console.log(status);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
@@ -408,6 +381,25 @@ const server = http.createServer((req, res) => {
                     res.end();
                 });
                 break;
+            case "/newUser":
+                let userName;
+                let newUserData = [];
+                req.on("data", chunk => {
+                    newUserData.push(chunk);
+                }).on("end", () => {
+                    userName = Buffer.concat(newUserData).toString();
+                    console.log("userName: "+userName);
+                    if(userName){
+                        result = userFunc.handleNewUserRequest(userName);
+                        res.writeHead(200, {
+                            "Content-type": "text/javascript"
+                        });
+                        res.end(result);
+                    }
+                    res.writeHead(400);
+                    res.end();
+                });
+                break;
             default: console.log("yooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
         }// end switch
     }else if(req.method === "DELETE"){
@@ -440,7 +432,7 @@ const server = http.createServer((req, res) => {
                     fs.readFile(deleteTrackPath, "utf-8", (err, data) => {
                         if (err) console.log(err)
 
-                        let trackDataArr = removeEmptyLines(data.split('\n'));
+                        let trackDataArr = practical.removeEmptyLines(data.split('\n'));
 
                         if(verbose) console.log(trackDataArr);
 
@@ -489,6 +481,22 @@ const server = http.createServer((req, res) => {
                         console.log("Response ended");
                         res.end();
                     });
+                });
+                break;
+            case '/webpage/deleteUser':
+                let userName;
+                let result;
+                let deleteUserData = [];
+                req.on("data", chunk => {
+                    deleteUserData.push(chunk);
+                }).on("end", () => {
+                    userName = Buffer.concat(deleteUserData).toString();
+                    console.log("userName: " + userName);
+                    result = userFunc.deleteUser(userName);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
+                    res.end(result);
                 });
                 break;
             default:
