@@ -75,7 +75,7 @@ const server = http.createServer((req, res) => {
                 //fileResponse("index.html",res);
             break;
             default:
-                fileResponse(req.url,res);
+                fileResponse(decodeURI(req.url), res);
             break;
         }
     }else if(req.method=="POST"){ // Tager sig af POST requests
@@ -107,7 +107,7 @@ const server = http.createServer((req, res) => {
                                // Bliver sendt med POST requesten
                 let midiOwner = req.headers["owner-name"];
                 let midiName = req.headers["song-name"];
-                let midiPath = SavedFilesDir + "midi/" + midiName + ".mid";
+                let midiPath = SavedFilesDir + "midi/" + midiOwner + "_" + midiName + ".mid";
                 req.on('data', chunk =>{ // Samler dataet sendt i POST requesten og
                                          // samler det sammen i midiBody
                     midiBody += chunk.toString();
@@ -278,36 +278,24 @@ const server = http.createServer((req, res) => {
 
                 });
                 break;
-            case '/upload.html':
+            case '/webpage/upload.html':
                 let uploadForm = new formidable.IncomingForm();
                 uploadForm.parse(req, function(err, fields, files){
                     //console.log(files.filetoupload);
-                    console.log(files.filetoupload.type);
-                    let fileType;
-                    switch (files.filetoupload.type) {
-                        case 'audio/mid':
-                            fileType = 'mid/';
-                            break;
-                        case 'text/txt':
-                        case 'text/plain':
-                            fileType = 'txt/';
-                            break;
-                        case 'image/png':
-                        case 'image/jpeg':
-                            fileType = 'img/';
-                            break;
-                        default:
-                        fileType = "txt/";
-                    }
-                    let oldpath = files.filetoupload.path;
-                    let newpath = SavedFilesDir+'uploads/'+fileType+files.filetoupload.name;
+                    if(files.filetoupload.type === "audio/mid"){
+                        let oldpath = files.filetoupload.path;
+                        let newpath = SavedFilesDir+'midi/'+files.filetoupload.name;
 
-                    fs.rename(oldpath, newpath, function (err){
-                        if (err) throw err;
-                        res.write("file uploaded");
-                        console.log("file uploaded");
+                        fs.rename(oldpath, newpath, function (err){
+                            if (err) throw err;
+                            res.write("File uploaded: "+files.filetoupload.name);
+                            res.end();
+                        });
+                    }else{
+                        res.writeHead(400)
+                        res.write("Please upload only midi files")
                         res.end();
-                    });
+                    }
                 });
                 break;
             case '/webpage/acceptSuggestion':

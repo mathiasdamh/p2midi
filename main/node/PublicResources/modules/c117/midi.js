@@ -15,7 +15,7 @@ function startRecordTimer(time){
     timer = setInterval(()=>{
         counter += 10;
 
-        document.getElementById('currentTime').innerHTML = "Current time: "+counter;
+        if(document.getElementById('currentTime')) document.getElementById('currentTime').innerHTML = "Current time: "+counter;
     } , 10);
 }
 
@@ -146,7 +146,8 @@ function resetTime(){
     //console.log("Time reset");
 }
 
-async function createMidiFromTrack(owner, id, name){
+async function createMidiFromTrack(owner, id, name, excludeOwnerInName){
+    excludeOwnerInName = excludeOwnerInName || false;
     // tonejs/midi funktioner
     const tempMidi = new Midi();
     const tempTrack = tempMidi.addTrack();
@@ -163,14 +164,19 @@ async function createMidiFromTrack(owner, id, name){
     tempTrack.channel = 1;
 
     // Sender midi data til create midi funktion.
-    createMidi(owner, tempMidi, name);
+    if(excludeOwnerInName){
+        createMidi("", tempMidi, name);
+    }else{
+        createMidi(owner, tempMidi, name);
+    }
 
     return 0;
 }
 
 /* Creates a midi from a song
  */
-async function createMidiFromSong(owner, songName, otherName){
+async function createMidiFromSong(owner, songName, otherName, excludeOwnerInName){
+    excludeOwnerInName = excludeOwnerInName || false;
     // tonejs/midi funktioner
     const tempMidi = new Midi();
     let tempTrack;
@@ -195,13 +201,19 @@ async function createMidiFromSong(owner, songName, otherName){
         prevTrack = tempTrack;
     }
 
-    tempMidi.name = songName;
+    if(excludeOwnerInName){
+        owner = "";
+    }else{
+        owner = owner;
+    }
+
     if(typeof otherName === "string"){
         createMidi(owner, tempMidi, otherName);
     }else{
         createMidi(owner, tempMidi, songName);
     }
-
+    tempMidi.name = songName;
+    return 0;
 }
 
 async function createMidi(owner, midiData, name){
@@ -235,7 +247,7 @@ async function getMidiData(filePath){
 // Indlæser alle instrumenter fra alle tracks
 async function loadInstruments(midiData){
     //console.log("loading instruments");
-    console.log(midiData);
+    //console.log(midiData);
     try {
         for (let i = 0; i < midiData.tracks.length; i++) {
             //console.log("channel: "+midiData.tracks[i].channel+", program: "+midiData.tracks[i].instrument.number);
@@ -262,16 +274,17 @@ async function loadInstruments(midiData){
 /* Læser en fil fra file_path parameteren,
  * så den er klar til at afspille sangen.
  */
-async function load_file(file_path){
+async function loadMidiFile(filePath, dontPlayAfterLoad){
+    dontPlayAfterLoad = dontPlayAfterLoad || false;
     //console.log(file_path);
     //console.log("start load_file()" + file_path);
 
-    let midi = await getMidiData(file_path);
+    let midi = await getMidiData(filePath);
 
     //console.log(midi);
     loadInstruments(midi)
     .then(()=>{
-        MIDI.Player.loadFile(file_path, () => {
+        MIDI.Player.loadFile(filePath, () => {
             //console.log("file loaded "+file_path);
             playerEnd = (MIDI.Player.endTime/1000);
 
@@ -284,7 +297,7 @@ async function load_file(file_path){
                     //console.log("end of song, stopping player");
                 };
             });
-            MIDI.Player.start();
+            if(!dontPlayAfterLoad) MIDI.Player.start();
         })
         return 0;
     })

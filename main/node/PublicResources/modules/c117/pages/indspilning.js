@@ -312,9 +312,9 @@ async function btnPlayTrack(){
 
     //console.log("user: "+user+", trackId: "+trackId);
 
-    createMidiFromTrack(user, trackId, "tempmidi").then(()=>{
+    createMidiFromTrack(user, trackId, "tempmidi", true).then(()=>{
 
-        load_file("SavedFiles/midi/"+user+"_tempmidi.mid")
+        loadMidiFile("SavedFiles/midi/_tempmidi.mid")
         .then(()=>{
         })
     }); //.then
@@ -326,11 +326,10 @@ async function btnPlaySong(){
     let otherUsername = document.getElementById('otherUsername').value;
     let user = await getValidSongUser(songOwner, otherUsername, songOwner, songName);
 
-    createMidiFromSong(user, songName, "tempmidi").then(()=>{
+    createMidiFromSong(user, songName, "tempmidi", true).then(()=>{
 
-        load_file("SavedFiles/midi/"+user+"_tempmidi.mid")
+        loadMidiFile("SavedFiles/midi/_tempmidi.mid")
         .then(()=>{
-            MIDI.Player.start();
         })
     });
 }
@@ -400,6 +399,7 @@ async function btnCheckSuggestions(){
         let acceptButton = document.createElement("input");
         acceptButton.setAttribute("type", "button");
         acceptButton.setAttribute("value", "Accept");
+        acceptButton.setAttribute("class", "button");
         acceptButton.onclick = function(){
             acceptSuggestion(currentUser, tempSplit[0], trackId);
             LIelement.parentNode.removeChild(LIelement);
@@ -407,12 +407,14 @@ async function btnCheckSuggestions(){
         let rejectButton = document.createElement("input");
         rejectButton.setAttribute("type", "button");
         rejectButton.setAttribute("value", "Reject");
+        rejectButton.setAttribute("class", "button");
         rejectButton.onclick = function(){
             rejectSuggestion(currentUser, tempSplit[0], trackId);
             LIelement.parentNode.removeChild(LIelement);
         }
         LIelement.appendChild(acceptButton);
         LIelement.appendChild(rejectButton);
+        LIelement.setAttribute("class", "suggestion");
 
         suggestionList.appendChild(LIelement);
     }
