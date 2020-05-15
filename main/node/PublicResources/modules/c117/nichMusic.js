@@ -1,7 +1,12 @@
 const fs=require("fs");
+const host = process.cwd() + "/PublicResources/webpage/SavedFiles/";
+const userFunc = require("./nichUsers.js");
+const music = require("./nichMusic.js")
+const practical = require("./nichPractical.js");
+///////
 
 exports.trackIDToName = function(trackID, tracksFilePath){
-    let line = trackExistsInFile(trackID, tracksFilePath);
+    let line = music.trackExistsInFile(trackID, tracksFilePath);
     let trackInfo = fs.readFileSync(tracksFilePath, 'utf-8').split('\n')[line];
     let trackName = JSON.parse(trackInfo).name;
     return trackName;
@@ -32,8 +37,8 @@ exports.suggestTrack = function(trackOwner, track, songOwner, songName, suggeste
 exports.appendTrack = function(track, trackID, trackOwner, songOwner, songName){
     let songPath = host + 'users/' + songOwner + '/songs/' + songName + '.txt'
     fs.appendFileSync(songPath, track + '\n');
-    appendContributor(trackOwner, songPath);
-    appendContribution(trackOwner, trackID, songOwner, songName);
+    music.appendContributor(trackOwner, songPath);
+    music.appendContribution(trackOwner, trackID, songOwner, songName);
 }
 
 exports.handleAppendRequest = function(trackOwner, trackID, songOwner, songName, requester){
@@ -43,30 +48,31 @@ exports.handleAppendRequest = function(trackOwner, trackID, songOwner, songName,
     let line;
     let songPath;
     let track;
-    if (!userExists(trackOwner)){
+    if (!userFunc.userExists(trackOwner)){
         return "Error 1";
     }
-    else if (trackExistsInFile(trackID, tracksFilePath) === false){
+    else if (music.trackExistsInFile(trackID, tracksFilePath) === false){
+        console.log("trackID: "+trackID+", tracksFilePath: "+tracksFilePath);
         return "Error 2";
     }
-    else if (!userExists(songOwner)){
+    else if (!userFunc.userExists(songOwner)){
         return "Error 3";
     }
     else if (!(fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
         return "Error 4";
     }
-    else if (trackExistsInFile(trackID, songsFolderPath + songName + '.txt')){
+    else if (music.trackExistsInFile(trackID, songsFolderPath + songName + '.txt')){
         return "Error 5";
     }
-    else if (!userExists(requester)){
+    else if (!userFunc.userExists(requester)){
         return "Error 6";
     }
     else if (songOwner !== requester){
-        if (isSuggested(trackID, songName, suggestionsFilePath) === false){ // SKAL TESTES
-            line = trackExistsInFile(trackID, tracksFilePath); // SKAL TESTES
-            track = getLineFromFile(tracksFilePath, line);
-            track = deleteCarriageReturn(track);
-            suggestTrack(trackOwner, track, songOwner, songName, requester);
+        if (music.isSuggested(trackID, songName, suggestionsFilePath) === false){ // SKAL TESTES
+            line = music.trackExistsInFile(trackID, tracksFilePath); // SKAL TESTES
+            track = practical.getLineFromFile(tracksFilePath, line);
+            track = practical.deleteCarriageReturn(track);
+            music.suggestTrack(trackOwner, track, songOwner, songName, requester);
             return "Track suggested";
         }
         else {
@@ -75,23 +81,23 @@ exports.handleAppendRequest = function(trackOwner, trackID, songOwner, songName,
     }
     else {
         songPath = songsFolderPath + songName + '.txt';
-        line = trackExistsInFile(trackID, tracksFilePath);
-        appendTrack(getLineFromFile(tracksFilePath, line), trackID, trackOwner, songOwner, songName);
-        appendNotification(songOwner + ' appended your track ' + trackIDToName(trackID, tracksFilePath) + ' to their song ' + songName + '\n', trackOwner);
+        line = music.trackExistsInFile(trackID, tracksFilePath);
+        music.appendTrack(practical.getLineFromFile(tracksFilePath, line), trackID, trackOwner, songOwner, songName);
+        userFunc.appendNotification(songOwner + ' appended your track ' + music.trackIDToName(trackID, tracksFilePath) + ' to their song ' + songName + '\n', trackOwner);
         return "Track appended";
     }
 }
 
 exports.handleCreateSongRequest = function(songName, songOwner){
     let songsFolderPath = host + 'users/' + songOwner + '/songs/';
-    if (!userExists(songOwner)){
+    if (!userFunc.userExists(songOwner)){
         return "Error 1";
     }
     else if ((fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
         return "Error 2";
     }
     else {
-        createSong(songsFolderPath + songName + '.txt');
+        music.createSong(songsFolderPath + songName + '.txt');
         return "Success";
     }
 }
@@ -116,14 +122,14 @@ exports.acceptSuggestion = function(songOwner, songName, trackID){
     let trackLine;
     let tracksFilePath;
 
-    if (!userExists(songOwner)){
+    if (!userFunc.userExists(songOwner)){
         return "Error 1";
     }
-    else if (isSuggested(trackID, songName, suggestionsFilePath) === false){
+    else if (music.isSuggested(trackID, songName, suggestionsFilePath) === false){
         return "Error 2";
     }
     else {
-        trackLine = isSuggested(trackID, songName, suggestionsFilePath);
+        trackLine = music.isSuggested(trackID, songName, suggestionsFilePath);
         suggestionInfo = (fs.readFileSync(suggestionsFilePath, 'utf-8')).split('\n')[trackLine].split('|'); //getting an array of information on the specific suggestion
         songPath = songsFolderPath + songName + '.txt';
         suggestedSongName = suggestionInfo[0];
@@ -134,21 +140,21 @@ exports.acceptSuggestion = function(songOwner, songName, trackID){
         if (!(fs.readdirSync(songsFolderPath).includes(songName + '.txt'))){
             return "Error 3";
         }
-        else if (trackExistsInFile(trackID, songPath)){
-            deleteLineFromFile(trackLine, suggestionsFilePath);
+        else if (music.trackExistsInFile(trackID, songPath)){
+            practical.deleteLineFromFile(trackLine, suggestionsFilePath);
             return "Error 4";
         }
         else {
-            appendTrack(track, trackID, trackOwner, songOwner, songName);
-            deleteLineFromFile(trackLine, suggestionsFilePath);
-            if (userExists(trackOwner)){
+            music.appendTrack(track, trackID, trackOwner, songOwner, songName);
+            practical.deleteLineFromFile(trackLine, suggestionsFilePath);
+            if (userFunc.userExists(trackOwner)){
                 console.log("notifying trackOwner"); // contribution and contributer are appended in appendTrack function
-                appendNotification(songOwner + ' included your track "' + trackIDToName(trackID, tracksFilePath) + '" into their song "' + songName + '" (suggested by ' + suggester + ')\n', trackOwner);
+                userFunc.appendNotification(songOwner + ' included your track "' + music.trackIDToName(trackID, tracksFilePath) + '" into their song "' + songName + '" (suggested by ' + suggester + ')\n', trackOwner);
             }
-            if (userExists(suggester)){
+            if (userFunc.userExists(suggester)){
                 console.log("notifying suggester");
-                appendContributor(suggester, songPath);
-                appendNotification(songOwner + ' accepted your suggestion ' + trackIDToName(trackID, tracksFilePath) + ' to their song ' + songName + '\n', suggester);
+                music.appendContributor(suggester, songPath);
+                userFunc.appendNotification(songOwner + ' accepted your suggestion ' + music.trackIDToName(trackID, tracksFilePath) + ' to their song ' + songName + '\n', suggester);
             }
             return "Success";
         }
@@ -181,19 +187,19 @@ exports.rejectSuggestion = function(songOwner, songName, trackID){
     let suggestionInfo;
     let suggester;
     let line;
-    if (!userExists(songOwner)){
+    if (!userFunc.userExists(songOwner)){
         return "Error 1";
     }
-    else if (isSuggested(trackID, songName, suggestionsFilePath) === false){
+    else if (music.isSuggested(trackID, songName, suggestionsFilePath) === false){
         return "Error 2";
     }
     else {
-        line = isSuggested(trackID, songName, suggestionsFilePath);
+        line = music.isSuggested(trackID, songName, suggestionsFilePath);
         suggestionInfo = fs.readFileSync(suggestionsFilePath, 'utf-8').split('\n')[line].split('|');
         suggester = suggestionInfo[2];
-        deleteLineFromFile(line, suggestionsFilePath);
-        if (userExists(suggester)){
-            appendNotification(songOwner + ' rejected your suggestion to their song ' + songName + '\n', suggester)
+        practical.deleteLineFromFile(line, suggestionsFilePath);
+        if (userFunc.userExists(suggester)){
+            userFunc.appendNotification(songOwner + ' rejected your suggestion to their song ' + songName + '\n', suggester)
         }
         return "Success";
     }

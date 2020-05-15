@@ -1,8 +1,8 @@
 const fs=require("fs");
+const host = process.cwd() + "/PublicResources/webpage/SavedFiles/";
+const userFunc = require("./nichUsers.js");
+const practical = require("./nichPractical");
 
-let host = "";
-
-exports.host = host;
 exports.getNotifications = function(userName){
     let notificationsFilePath = host + 'users/' + userName + 'notifications.txt';
     let notifications = fs.readFileSync(notificationsFilePath, 'utf-8').split('\n');
@@ -15,11 +15,11 @@ exports.appendNotification = function(notification, user){
 }
 
 exports.handleNewUserRequest = function(requestedName){
-    if (userExists(requestedName)){
+    if (userFunc.userExists(requestedName)){
         return "Error 1";
     }
     else {
-        createUser(requestedName);
+        userFunc.createUser(requestedName);
         return "Success";
     }
 }
@@ -36,13 +36,13 @@ exports.createUser = function(userName){
 
 exports.deleteUser = function(userName){
     let userPath = host + 'users/' + userName + '/';
-    if (!userExists(userName)){
+    if (!userFunc.userExists(userName)){
         return "Error 1";
     }
     else {
-        clearFilesFromDirectory(userPath + 'songs/');
+        practical.clearFilesFromDirectory(userPath + 'songs/');
         fs.rmdirSync(userPath + 'songs/');
-        clearFilesFromDirectory(userPath);
+        practical.clearFilesFromDirectory(userPath);
         fs.rmdirSync(userPath);
         return "Success";
     }

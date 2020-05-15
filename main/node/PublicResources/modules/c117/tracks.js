@@ -52,7 +52,7 @@ async function sendTrack(owner, trackName, notes){ // !!!NEEDS REVAMPING!!! for 
             "Content-Type": "text/javascript"
         }
     }).then
-    (res => {console.log("Sent track succesfully");
+    (res => {//console.log("Sent track succesfully");
     },
     err =>  {alert("Could not send track\n"+err);
     });
@@ -110,11 +110,16 @@ async function appendTrack(trackOwner, trackID, songOwner, songName, user){ //Ap
             songOwner: songOwner,
             songName: songName,
             requester: user
-            })
+            }),
+        headers: {
+        "Content-Type": "text/javascript"
+        }
     }).then(response => {
         return response.text();
     }).then(data => {
-        console.log(data);
+        //console.log(data);
+    }).catch(err => {
+        console.log(err);
     });
 }
 
@@ -129,7 +134,7 @@ async function deleteTrack(owner, id){
             },
             body: id,
         });
-        console.log(res.status);
+        //console.log(res.status);
         return res;
     } catch (e) {
         console.log("Error in deleteTrack("+owner+", "+id+")");

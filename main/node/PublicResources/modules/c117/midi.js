@@ -9,9 +9,9 @@ let recording = false;
 function startRecordTimer(time){
     counter = 0;
     if(time !== undefined) startTime = time;
-    console.log(startTime);
+    //console.log(startTime);
     recording = true;
-    console.log("starting record timer");
+    //console.log("starting record timer");
     timer = setInterval(()=>{
         counter += 10;
 
@@ -20,7 +20,7 @@ function startRecordTimer(time){
 }
 
 function stopRecordTimer(){
-    console.log("stopping record timer");
+    //console.log("stopping record timer");
     clearInterval(timer);
     recording = false;
     startTime = 0;
@@ -36,9 +36,6 @@ let noteArray = []; //notes which have been ended
  *  skal starte handlingen.
  */
 function main(){
-     // Fjerner start knappen så man ikke kan starte flere af gangen.
-    document.getElementById('btnStart').parentNode.removeChild(document.getElementById('btnStart'));
-
     // Plugin inlæsning
     MIDI.loadPlugin({
         soundfontUrl: "./FluidR3_GM/",
@@ -100,14 +97,14 @@ function reactMidiMessage(channel, midiMessage){
 
             break;
         case 192+channel: // switch program channel 1
-            console.log("switching instrument to "+ MIDI.GM.byId[midiMessage.data[1]].instrument);
+            //console.log("switching instrument to "+ MIDI.GM.byId[midiMessage.data[1]].instrument);
             MIDI.programChange(channel, midiMessage.data[1]);
             MIDI.loadPlugin({
                 instrument: midiMessage.data[1]
             });
         default:
-            console.log("default reaction to midimessage\ngetMidiMessage(midiMessage)");
-            console.log(midiMessage);
+            //console.log("default reaction to midimessage\ngetMidiMessage(midiMessage)");
+            //console.log(midiMessage);
             break;
     }
 }
@@ -126,13 +123,13 @@ function newNote(message, noteArray){ // make a new note (duration will be defin
 function endNote(message, activeNotes, noteArray){
     for (let i = 0; i < activeNotes.length; i++){ // loop through activeNotes
         if (message.data[1] === activeNotes[i].midi){
-            console.log("starttime: "+activeNotes[i].time);
+            //console.log("starttime: "+activeNotes[i].time);
             activeNotes[i].duration = (message.timeStamp+countStartRecord-(startTime)) - activeNotes[i].time; // {mads} Satte startTime og countStartRecord ind
             noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
         }
     }
 
-    console.log("endtime: "+(message.timeStamp+countStartRecord-(startTime)));
+    //console.log("endtime: "+(message.timeStamp+countStartRecord-(startTime)));
 
     updateCurrentTrackData(noteArray.length, (message.timeStamp+countStartRecord-(startTime)));
     //console.log(noteArray.length);
@@ -141,12 +138,12 @@ function endNote(message, activeNotes, noteArray){
 function resetNotes(){
     noteArray = [];
     activeNotes = [];
-    console.log("Note arrays reset");
+    //console.log("Note arrays reset");
 }
 
 function resetTime(){
     startTime = 0;
-    console.log("Time reset");
+    //console.log("Time reset");
 }
 
 async function createMidiFromTrack(owner, id, name){
@@ -237,16 +234,16 @@ async function getMidiData(filePath){
 
 // Indlæser alle instrumenter fra alle tracks
 async function loadInstruments(midiData){
-    console.log("loading instruments");
+    //console.log("loading instruments");
     console.log(midiData);
     try {
         for (let i = 0; i < midiData.tracks.length; i++) {
-            console.log("channel: "+midiData.tracks[i].channel+", program: "+midiData.tracks[i].instrument.number);
+            //console.log("channel: "+midiData.tracks[i].channel+", program: "+midiData.tracks[i].instrument.number);
             // Indlæser selve instrumentet så det kan bruges af midi afspilleren
             MIDI.loadResource({
                 instrument: midiData.tracks[i].instrument.number,
                 onsuccess: function(){
-                    console.log("loaded instrument: "+midiData.tracks[i].instrument.number);
+                    //console.log("loaded instrument: "+midiData.tracks[i].instrument.number);
                 }
             });
 
@@ -257,7 +254,7 @@ async function loadInstruments(midiData){
         console.log(e);
         console.log("error in loadInstruments(midiData)");
     } finally {
-        console.log("instruments loaded");
+        //console.log("instruments loaded");
         return 0;
     }
 }
@@ -266,31 +263,28 @@ async function loadInstruments(midiData){
  * så den er klar til at afspille sangen.
  */
 async function load_file(file_path){
-    console.log(file_path);
-    console.log("start load_file()" + file_path);
+    //console.log(file_path);
+    //console.log("start load_file()" + file_path);
 
     let midi = await getMidiData(file_path);
 
-    console.log(midi);
+    //console.log(midi);
     loadInstruments(midi)
     .then(()=>{
         MIDI.Player.loadFile(file_path, () => {
-            console.log("file loaded "+file_path);
+            //console.log("file loaded "+file_path);
             playerEnd = (MIDI.Player.endTime/1000);
 
             MIDI.Player.addListener(function(data) {
-                console.log(data.now +"/"+data.end+" "+data.channel);
+                //console.log(data.now +"/"+data.end+" "+data.channel);
                 if(!recording) startRecordTimer();
 
                 if(data.now === data.end) {
                     MIDI.Player.stop();
-                    console.log("end of song, stopping player");
+                    //console.log("end of song, stopping player");
                 };
             });
-
             MIDI.Player.start();
-
-
         })
         return 0;
     })

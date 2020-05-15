@@ -62,71 +62,78 @@
     </div>
     <h2>Start recording your own MIDI files. Nothing but your imagination limits you!</h2>
     <div class="main">
-        <input type="button" id="btnStart" value="Start MIDI Plugin">
-
-        <div class="wrapper">
-            <p id="currentTime">Current time: 0</p>
-            <p id="currentTrackData">Notes: 0, duration: 0</p>
-            <input type="button" class="button" id="btnResetRecord" value="Reset Notes and Recording Time">
-            <p>Track Name:<input type="text" name="30" id="trackName" value="Track Name">
-            <input type="button" class="button" id="btnSendTrack" value="Create Track"></p>
-            <p> Instrument select:
-            <select id="instrument" name="instruments">
-                <option value="0" selected>Piano</option>
-                <option value="24">Guitar</option>
-                <option value="56">Trumpet</option>
-                <option value="73">Flute</option>
-                <option value="118">Drum</option>
-                <option value="107">Koto</option>
-            </select>
-            </p>
-
-        </div>
-
-        <div id="trackWrapper" class="wrapper">
-            <div class="left">
-                <p>Track ID:<input type="text" width="50" id="trackId" value=""></p>
-
-                <input type="button" class="button" id="btnPlayTrack" value="Play Track">
-                <input type="button" class="button" id="btnStop" value="Stop Playing">
-                <input type="button" class="button" id="btnCreateMidi" value="Create MIDI for Track">
-                <p>Check another user: <input type="text" id="otherUsername" value="nicholas">
+        <div class="left">
+            <div class="wrapper">
+                <p id="currentTime">Current time: 0</p>
+                <p id="currentTrackData">Notes: 0, duration: 0</p>
+                <input type="button" class="button" id="btnResetRecord" value="Reset Notes and Recording Time">
+                <p>Track Name:<input type="text" name="30" id="trackName" value="trackName">
+                <input type="button" class="button" id="btnSendTrack" value="Create Track"></p>
+                <p> Instrument select:
+                <select id="instrument" name="instruments">
+                    <option value="0" selected>Piano</option>
+                    <option value="24">Guitar</option>
+                    <option value="56">Trumpet</option>
+                    <option value="73">Flute</option>
+                    <option value="118">Drum</option>
+                    <option value="107">Koto</option>
+                </select>
                 </p>
-                <p><input type="button" class="button" id="btnDeleteTrack" value="Delete Track">
-                <input type="button" class="button" id="btnDelayTrack" value="Delay Track">
-                <input type="number" style="width:70px" id="delayDuration" value=""></p>
-
-
-                <p id="trackIdValue"></p>
             </div>
-            <div class="right">
-                <input type="button" class="button" id="btnShowTracks" value="Show all your Tracks">
-                <ul id="trackList">
-                </ul>
-                <input type="button" class="button" id="btnShowOtherTracks" value="Show all the other users' Tracks">
-                <ul id="trackListOther">
-                </ul>
+            <div id="trackWrapper" class="wrapper">
+                <div class="left">
+                    <p>Track ID:<input type="text" width="50" id="trackId" value=""></p>
+
+                    <input type="button" class="button" id="btnPlayTrack" value="Play Track">
+                    <input type="button" class="button" id="btnStop" value="Stop Playing">
+                    <input type="button" class="button" id="btnCreateMidi" value="Create MIDI for Track">
+                    <p>Check another user: <input type="text" id="otherUsername" value="nicholas">
+                    </p>
+                    <p><input type="button" class="button" id="btnDeleteTrack" value="Delete Track">
+                    <input type="button" class="button" id="btnDelayTrack" value="Delay Track">
+                    <input type="number" style="width:70px" id="delayDuration" value=""></p>
+
+
+                    <p id="trackIdValue"></p>
+                </div>
+                <div class="right">
+                    <input type="button" class="button" id="btnShowTracks" value="Show all your Tracks">
+                    <ul id="trackList">
+                    </ul>
+                    <input type="button" class="button" id="btnShowOtherTracks" value="Show all the other users' Tracks">
+                    <ul id="trackListOther">
+                    </ul>
+                </div>
             </div>
         </div>
+        <div class="right">
+            <div id="songWrapper" class="wrapper">
+                <div class="left">
+                    <p>Song Name:<input type="text" id="songName" value="name"></p>
+                    <p id="songNameValue"></p>
+                    <p>Song Owner:<input type="text" id="songOwner" value=""></p>
+                    <p>Track Owner:<input type="text" id="trackOwner" value="track owner"></p>
 
-        <div id="songWrapper" class="wrapper">
-            <div class="left">
-                <p>Song Name:<input type="text" id="songName" value="name"></p>
-                <p id="songNameValue"></p>
-                <p>Song Owner:<input type="text" id="songOwner" value=""></p>
-                <p>Track Owner:<input type="text" id="trackOwner" value="track owner"></p>
+                    <p><input type="button" class="button" id="btnAppendTrack" value="Append Track to Song">
+                    <input type="button" class="button" id="btnCreateMidiSong" value="Create MIDI for Song"></p>
+                    <p><input type="button" class="button" id="btnPlaySong" value="Play Song">
+                    <input type="button" class="button" id="btnDeleteSong" value="Delete Song"></p>
+                    <p><input type="button" class="button" id="btnCreateSong" value="Create New Song">
+                    <input type="text" id="newSongName" value="songName"></p>
 
-                <p><input type="button" class="button" id="btnAppendTrack" value="Append Track to Song">
-                <input type="button" class="button" id="btnCreateMidiSong" value="Create MIDI for Song"></p>
-                <p><input type="button" class="button" id="btnPlaySong" value="Play Song">
-                <input type="button" class="button" id="btnCreateSong" value="Create New Song">
-                <input type="button" class="button" id="btnDeleteSong" value="Delete Song"></p>
+                </div>
 
+                <div class="right">
+                    <input type="button" class="button" id="btnShowSongs" value="Show all your Songs">
+                    <ul id="songFiles">
+                    </ul>
+                </div>
             </div>
+            <div class="wrapper">
+                <input type="button" id="btnCheckSuggestions" value="Check Suggestions">
+                <p id="suggestionText">Suggestions: </p>
+                <ul id="suggestionList">
 
-            <div class="right">
-                <input type="button" class="button" id="btnShowSongs" value="Show all your Songs">
-                <ul id="songFiles">
                 </ul>
             </div>
         </div>

@@ -1,6 +1,6 @@
+Date created: Fri May 15 2020 08:38:49 GMT+0200 (GMT+02:00)
+Created by: mads
+Contributors: nicholas 
 {"id":"nicholas0","midiNotes":[],"name":"a","owner":"nicholas","instrument":0}
-{"id":"nicholas1","midiNotes":[],"name":"b","owner":"nicholas","instrument":0}
 {"id":"nicholas2","midiNotes":[],"name":"c","owner":"nicholas","instrument":0}
-{"id":"nicholas3","midiNotes":[],"name":"d","owner":"nicholas","instrument":0}
 {"id":"nicholas4","midiNotes":[],"name":"e","owner":"nicholas","instrument":0}
-{"id":"nicholas5","midiNotes":[],"name":"f","owner":"nicholas","instrument":0}
