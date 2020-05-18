@@ -223,6 +223,50 @@ table {
     font-size: 48px;
 }
 
+#suggestionText {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+    text-transform: capitalize;
+    font-size: 20px;
+    text-shadow: 0px 1px 1px rgba(0,0,0,.65);
+    padding-bottom: 2px;
+    border-bottom: 1px solid #7a7b80;
+}
+
+#suggestionList .suggestion {
+    position: relative;
+    display: block;
+    padding: .4em .4em .4em .8em;
+    margin: .5em 0 .5em 1.3em;
+    text-decoration: none;
+    transition: all .3s ease-out;
+}
+
+#suggestionList .suggestion::before {
+    content: counter(li);
+    counter-increment: li;
+    position: absolute;
+    left: -2.2em;
+    top: 50%;
+    margin-top: -1em;
+    background: #fa8072;
+    height: 2em;
+    width: 2em;
+    line-height: 2em;
+    text-align: center;
+    font-weight: bold;
+}
+
+#suggestionList .suggestion:after {
+    position: absolute;
+    content: '';
+    border: .5em solid transparent;
+    left: -1em;
+    top: 50%;
+    margin-top: -.5em;
+    transition: all .3s ease-out;
+}
+
 /* Download */
 h3 {
     color: white;
