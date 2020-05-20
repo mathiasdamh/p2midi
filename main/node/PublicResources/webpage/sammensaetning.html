@@ -20,12 +20,11 @@
     <div class="topnav">
         <a href="index.html">Home</a>
         <a href="indspilning.html">Recording</a>
+        <a href="afspilning.html">Playing</a>
+        <a class="active" href="sammensaetning.html">Composition</a>
+        <a href="suggestions.html">Suggestions</a>
         <a href="download.html">Download</a>
         <a href="upload.html">Upload</a>
-        <a href="afspilning.html">Playing</a>
-        <a href="redigering.html">Edit</a>
-        <a class="active" href="sammensaetning.html">Composition</a>
-        <a href="om.html">About</a>
         <a href="login.html">Login</a>
         <div class="search-container">
           <form action="search.js">
@@ -34,6 +33,62 @@
           </form>
         </div>
     </div>
+    <div class="main">
+        <div class="left">
+            <div id="trackWrapper" class="wrapper">
+                <div class="left">
+                    <p>Track ID:<input type="text" width="50" id="trackId" value=""></p>
+
+                    <input type="button" class="button" id="btnPlayTrack" value="Play Track">
+                    <input type="button" class="button" id="btnStop" value="Stop Playing">
+                    <input type="button" class="button" id="btnCreateMidi" value="Create MIDI for Track">
+                    <p>Check another user: <input type="text" id="otherUsername" value="nicholas">
+                    </p>
+                    <p><input type="button" class="button" id="btnDeleteTrack" value="Delete Track">
+                    <input type="button" class="button" id="btnDelayTrack" value="Delay Track">
+                    <input type="number" style="width:70px" id="delayDuration" value=""></p>
+
+
+                    <p id="trackIdValue"></p>
+                </div>
+                <div class="right">
+                    <input type="button" class="button" id="btnShowTracks" value="Show all your Tracks">
+                    <ul id="trackList">
+                    </ul>
+                    <input type="button" class="button" id="btnShowOtherTracks" value="Show all the other users' Tracks">
+                    <ul id="trackListOther">
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="right">
+            <div id="songWrapper" class="wrapper">
+                <div class="left">
+                    <p>Song Name:<input type="text" id="songName" value="name"></p>
+                    <p id="songNameValue"></p>
+                    <p>Song Owner:<input type="text" id="songOwner" value=""></p>
+                    <p>Track Owner:<input type="text" id="trackOwner" value="track owner"></p>
+
+                    <p><input type="button" class="button" id="btnAppendTrack" value="Append Track to Song">
+                    <input type="button" class="button" id="btnCreateMidiSong" value="Create MIDI for Song"></p>
+                    <p><input type="button" class="button" id="btnPlaySong" value="Play Song">
+                    <input type="button" class="button" id="btnDeleteSong" value="Delete Song"></p>
+                    <p><input type="button" class="button" id="btnCreateSong" value="Create New Song">
+                    <input type="text" id="newSongName" value="songName"></p>
+
+                </div>
+
+                <div class="right">
+                    <input type="button" class="button" id="btnShowSongs" value="Show all your Songs">
+                    <ul id="songFiles">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../modules/c117/pages/sammensætning.js" type="text/javascript">
+    </script>
 
 </body>
 </html>
