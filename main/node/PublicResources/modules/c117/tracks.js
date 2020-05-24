@@ -2,42 +2,12 @@
 */
 class midiTrack {
     constructor(name, trackNotes, owner, instrument) {
-        this.id = -1;
+        this.id = undefined;
         ( trackNotes !== undefined && trackNotes.length >= 0) ? this.midiNotes = trackNotes : this.midiNotes = [];
         this.name = name;
         this.owner = owner;
         this.instrument = instrument || 0;
     };
-
-    // Til at tilføje en eller flere noder
-    addNotes(notes){
-        if(notes !== undefined){ //Tjek om der er blevet givet en værdifuld parameter
-            /* Hvis der tilføjes flere noder vil det være et [[]] array af array.
-            *  Derfor (length >= 1) og (typeof === object).
-            */
-            (notes.length >= 1 && typeof notes[0] === "object") ? notes.forEach((item, i) => {
-                for (let j = 0; j < item.length; j++) {
-                    if (typeof item[j] !== "number") {
-                        console.log("note not a number");
-                        return -1;
-                    }
-                }
-                this.midiNotes.push(item);
-            })
-            : // Og hvis længden er 1, så tjek om det er et object, derefter push.
-            (notes.length === 1 || typeof notes === "object") ? this.midiNotes.push(notes) :
-             console.log("unexpected input: "+notes);
-        }
-    };
-
-    resetNotes(){
-        this.midiNotes = [];
-    }
-
-    set newName(newName){
-        this.name = newName;
-    }
-
 }
 
 /* Sends track data to the server
@@ -94,8 +64,8 @@ async function getMidiTrackById(owner, searchId){
         return -1;
     } catch (e) {
         console.log("Error in getMidiTrackById("+owner+", "+searchId+")");
-
         console.log(e);
+        return e;
     }
 }
 
