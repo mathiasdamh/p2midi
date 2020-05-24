@@ -39,9 +39,12 @@ exports.deleteCarriageReturn = function(string){ // for deleting the \r characte
 
 // #################### MADS
 exports.removeEmptyLines = function(array){
-    for (i = 0; i < array.length; i++) {
-        if(array[i] === ""){
-            array.splice(i, 1);
+    let length = array.length;
+    let deletedItems = 0;
+    for (i = 0; i < length; i++) {
+        if(!array[i]){
+            array.splice(i-deletedItems, 1);
+            deletedItems++;
         }
     }
     return array;
@@ -57,7 +60,6 @@ exports.decideTrackId = function(tracks){
         for (let i = 0; i < tracks.length; i++) {
             parsedData = JSON.parse(tracks[i]);
             parsedId = parsedData.id.replace(/\D/g, '');
-            //console.log("parsedId: "+parsedId);
             if (id < parsedId) {
                 id = parsedId;
             }
