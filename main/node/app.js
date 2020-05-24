@@ -125,45 +125,18 @@ const server = http.createServer((req, res) => {
                 res.end('unexpected ending ' + req.url);
                 break;
             case '/webpage/musicData':
-                let trackBody = '';
-                let trackOwner;
-                let trackPath;
+                let trackBody = [];
                 req.on("data", chunk => {
-                    trackBody += chunk.toString();
-
+                    trackBody.push(chunk);
                 }).on("end", () => {
-                    trackOwner = JSON.parse(trackBody).owner;
-                    trackPath = (SavedFilesDir+ "users/"+trackOwner+"/tracks.txt");
-                    let trackIdDecided = new Promise(function(res, rej){
-                        res(fs.existsSync(trackPath))})
-                    .then(value => {
-                        let newId = 0;
-                        if(value){
-                            let data = fs.readFileSync(trackPath, "utf-8")
-                            if(data === undefined){
-                                console.log("No tracks.txt found for " + trackOwner + ", creating new file");
-                            }else{
-                                let dataSet = practical.removeEmptyLines(data.split("\n"));
-
-                                newId = practical.decideTrackId(dataSet);
-                            } // else
-                        }
-                        return newId;
-                    })
-                    .then((newId)=>{
-                        trackBody = JSON.parse(trackBody);
-                        trackBody.id = trackOwner+newId;
-                        return trackBody;
-                    })
-                    .then((data)=>{
-                        fs.appendFile(trackPath, JSON.stringify(data) + "\n", (err) => {
-                            if (err) throw err;
-                            res.writeHead(200);
-                            res.end();
-                        });
-                    })
-                }); //.on(end)
-
+                    trackBody = Buffer.concat(trackBody).toString();
+                    trackBody = JSON.parse(trackBody);
+                    let trackPath = SavedFilesDir + "users/" + trackBody.owner + "/tracks.txt";
+                    let status = music.handleNewTrack(trackBody, trackPath);
+                    res.writeHead(200, {
+                        'Content-type': 'text/javascript'
+                    });
+                });
                 break;
             case '/webpage/userCheck':
                 let user;
