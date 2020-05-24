@@ -23,5 +23,8 @@
   "homepage": "https://github.com/mathiasdamh/p2midi#readme",
   "devDependencies": {
     "jest": "^26.0.1"
+  },
+  "dependencies": {
+    "formidable": "^1.2.2"
   }
 }
