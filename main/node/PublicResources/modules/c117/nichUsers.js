@@ -16,11 +16,11 @@ exports.appendNotification = function(notification, user){
 
 exports.handleNewUserRequest = function(requestedName){
     if (userFunc.userExists(requestedName)){
-        return "Error 1";
+        return "Username is taken!";
     }
     else {
         userFunc.createUser(requestedName);
-        return "Success";
+        return "User created";
     }
 }
 
@@ -37,14 +37,14 @@ exports.createUser = function(userName){
 exports.deleteUser = function(userName){
     let userPath = host + 'users/' + userName + '/';
     if (!userFunc.userExists(userName)){
-        return "Error 1";
+        return "An unknown error occurred when deleting the user from the server!";
     }
     else {
         practical.clearFilesFromDirectory(userPath + 'songs/');
         fs.rmdirSync(userPath + 'songs/');
         practical.clearFilesFromDirectory(userPath);
         fs.rmdirSync(userPath);
-        return "Success";
+        return "User deleted";
     }
 }
 
