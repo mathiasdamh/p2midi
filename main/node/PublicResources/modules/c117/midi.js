@@ -3,7 +3,7 @@ let startTime = 0; // Brugt til at få tiden startet ved 0, i stedet for det fø
 let timer;
 let counter = 0;
 let countStartRecord = 0; // når man spiller samtidigt med at man spiller et track
-let extraTime = 1;
+let extraTime = 0.001;
 let recording = false;
 
 function startRecordTimer(time){
@@ -35,6 +35,7 @@ let noteArray = []; //notes which have been ended
  *  bliver forhindret i at starte, hvis browseren forlanger at en bruger
  *  skal starte handlingen.
  */
+
 function main(){
     // Plugin inlæsning
     MIDI.loadPlugin({
@@ -61,9 +62,6 @@ function main(){
         for (let input of midiAccess.inputs.values()){
             input.onmidimessage = getMIDIMessage;
         }
-
-        var inputs = midiAccess.inputs;   // Input controllere
-        var outputs = midiAccess.outputs; // Output controllere
     }
 
     /* Denne funktion agere på beskeder fra controlleren, og bruger MIDI.js
@@ -86,19 +84,19 @@ function reactMidiMessage(channel, midiMessage){
             }
             //console.log("noteOn() "+midiMessage.data[1]+", "+midiMessgae.data[2]);
             newNote(midiMessage, activeNotes);
-            MIDI.noteOn(channel, midiMessage.data[1], midiMessage.data[2]);
+            MIDI.noteOn(0, midiMessage.data[1], midiMessage.data[2]);
 
 
             break;
         case 128+channel: // note Off channel 1
             //console.log("noteOff() "+midiMessage.data[1]);
-            MIDI.noteOff(channel, midiMessage.data[1], 0);
+            MIDI.noteOff(0, midiMessage.data[1], 0);
             endNote(midiMessage, activeNotes, noteArray);
 
             break;
         case 192+channel: // switch program channel 1
             //console.log("switching instrument to "+ MIDI.GM.byId[midiMessage.data[1]].instrument);
-            MIDI.programChange(channel, midiMessage.data[1]);
+            MIDI.programChange(0, midiMessage.data[1]);
             MIDI.loadPlugin({
                 instrument: midiMessage.data[1]
             });
@@ -126,6 +124,7 @@ function endNote(message, activeNotes, noteArray){
             //console.log("starttime: "+activeNotes[i].time);
             activeNotes[i].duration = (message.timeStamp+countStartRecord-(startTime)) - activeNotes[i].time; // {mads} Satte startTime og countStartRecord ind
             noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
+
         }
     }
 
@@ -179,6 +178,7 @@ async function createMidiFromSong(owner, songName, otherName, excludeOwnerInName
     excludeOwnerInName = excludeOwnerInName || false;
     // tonejs/midi funktioner
     const tempMidi = new Midi();
+    tempMidi.name = songName;
     let tempTrack;
     let prevTrack = undefined;
 
@@ -212,7 +212,7 @@ async function createMidiFromSong(owner, songName, otherName, excludeOwnerInName
     }else{
         createMidi(owner, tempMidi, songName);
     }
-    tempMidi.name = songName;
+
     return 0;
 }
 
