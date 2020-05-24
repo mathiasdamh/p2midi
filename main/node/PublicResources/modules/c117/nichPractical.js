@@ -23,20 +23,6 @@ exports.getLineFromFile = function(filePath, line = "integer|0 index"){
     return fs.readFileSync(filePath, 'utf-8').split('\n')[line]
 }
 
-exports.deleteCarriageReturn = function(string){ // for deleting the \r character that notepad and the console use
-    let output = "";
-    string = string.split('');
-    for (char of string){
-        if (char !== '\r'){
-            output += char;
-        }
-        else {
-            console.log("deleted carriage return");
-        }
-    }
-    return output;
-}
-
 // #################### MADS
 exports.removeEmptyLines = function(array){
     let length = array.length;

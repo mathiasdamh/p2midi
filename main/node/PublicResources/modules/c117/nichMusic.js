@@ -54,8 +54,8 @@ exports.handleAppendRequest = function(trackOwner, trackID, songOwner, songName,
     if (!userFunc.userExists(trackOwner)){
         return "The specified track owner does not exist!";
     }
-    else if (music.trackExistsInFile(trackID, tracksFilePath) === false){
-        console.log("trackID: "+trackID+", tracksFilePath: "+tracksFilePath);
+    line = music.trackExistsInFile(trackID, tracksFilePath)
+    if (line === false){
         return "The specified user has no such track!";
     }
     else if (!userFunc.userExists(songOwner)){
@@ -74,14 +74,13 @@ exports.handleAppendRequest = function(trackOwner, trackID, songOwner, songName,
         songPath = songsFolderPath + songName + '.txt';
         music.appendTrack(practical.getLineFromFile(tracksFilePath, line), trackID, trackOwner, songOwner, songName);
         if (songOwner !== trackOwner){
-            music.appendNotification(songOwner + ' appended your track ' + music.trackIDToName(trackID, tracksFilePath) + ' to their song ' + songName + '\n', trackOwner);
+            userFunc.appendNotification(songOwner + ' appended your track ' + music.trackIDToName(trackID, tracksFilePath) + ' to their song ' + songName + '\n', trackOwner);
         }
         return "Track appended";
     }
     else {
         if (music.isSuggested(trackID, songName, suggestionsFilePath) === false){
             track = practical.getLineFromFile(tracksFilePath, line);
-            track = practical.deleteCarriageReturn(track);
             music.suggestTrack(trackOwner, track, songOwner, songName, requester);
             return "Track suggested";
         }
@@ -112,6 +111,14 @@ exports.createSong = function(songPath){
     let userName = separatedPath[separatedPath.length - 3];
     fs.writeFileSync(songPath,
         "Date created: " + creationDate + "\nCreated by: " + userName + "\nContributors: \n");
+}
+
+exports.deleteSong = function(songPath){
+    fs.unlink(
+        songPath,
+        function(err){
+            if(err) console.log(err);
+    });
 }
 
 exports.acceptSuggestion = function(songOwner, songName, trackID){

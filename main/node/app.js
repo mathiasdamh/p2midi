@@ -1,8 +1,6 @@
 const http = require('http');
 const fs=require("fs");
 const path=require("path");
-const { Midi } = require('@tonejs/midi')
-const { parse } = require('querystring');
 const formidable = require('formidable');
 const music = require('./PublicResources/modules/c117/nichMusic.js');
 const practical = require('./PublicResources/modules/c117/nichPractical.js');
@@ -371,12 +369,8 @@ const server = http.createServer((req, res) => {
                     deleteSongBody += chunk.toString();
                 });
                 req.on('end', ()=>{
-                    fs.unlink(
-                        publicResources+"webpage/SavedFiles/users/"+req.headers["owner-name"]+"/songs/"+deleteSongBody+".txt",
-                        function(err){
-                            if(err) console.log(err);
-                            res.end("ended");
-                    });
+                    music.deleteSong(SavedFilesDir+"users/"+req.headers["owner-name"]+"/songs/"+deleteSongBody+".txt");
+                    res.end();
                 });
                 break;
             case '/webpage/deleteTrack':
