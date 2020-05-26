@@ -3,6 +3,7 @@ const users = require('./nichUsers');
 
 const host = process.cwd() + "/PublicResources/webpage/SavedFiles/";
 
+/*
 test('if the user exists, return true, else return false', () => {
     expect(users.userExists("adam")).toBe(true);
     expect(users.userExists("adam2")).toBe(false);
@@ -35,18 +36,19 @@ test('return appropriate error/success message', () => {
     expect(music.handleCreateSongRequest("song1", "notAUser")).toBe("An unknown error occurred when attempting to create the song");
     expect(music.handleCreateSongRequest("song4", "charles")).toBe("Song created");
 });
+*/
 
 test('returns true if the track is suggested, else return false', () => {
     expect(music.isSuggested("adam1", "charles1", host + "users/charles/suggestions.txt")).toBe(1);
-    expect(music.isSuggested("adam3", "charles1", host + "users/charles/suggestions.txt")).toBe(false);
-    expect(music.isSuggested("adam1", "charles2", host + "users/charles/suggestions.txt")).toBe(false);
+    expect(music.isSuggested("adam3", "charles1", host + "users/charles/suggestions.txt")).toBe(4);
+    expect(music.isSuggested("adam1", "charles2", host + "users/charles/suggestions.txt")).toBe(5);
 })
 
 test("return appropriate status message", () => {
     expect(music.acceptSuggestion("notAUser", "song1", "asdf12")).toBe("An unknown error occurred while accepting the suggestion!");
     expect(music.acceptSuggestion("charles", "charles1", "adam4")).toBe("Could not find the specified suggestion");
     expect(music.acceptSuggestion("charles", "charles3", "adam1")).toBe("Could not accept the suggestion, as the song no longer exists!");
-    expect(music.acceptSuggestion("charles", "charles1", "adam1")).toBe("The song already contains the track! Deleting from suggestions");
+    expect(music.acceptSuggestion("charles", "charles2", "adam1")).toBe("The song already contains the track! Deleting from suggestions");
     expect(music.acceptSuggestion("charles", "charles1", "adam2")).toBe("Suggestion accepted");
 });
 
@@ -56,6 +58,7 @@ test("return the appropriate status message", () => {
     expect(music.rejectSuggestion("charles", "charles1", "adam3")).toBe("Success");
 });
 
-
+/*
 music.deleteSong(host+"users/charles/songs/song4.txt");
 users.deleteUser("asdf1");
+*/
