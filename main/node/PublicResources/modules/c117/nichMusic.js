@@ -72,9 +72,14 @@ exports.handleAppendRequest = function(trackOwner, trackID, songOwner, songName,
     }
     else if (songOwner === requester){
         songPath = songsFolderPath + songName + '.txt';
-        music.appendTrack(practical.getLineFromFile(tracksFilePath, line), trackID, trackOwner, songOwner, songName);
+        
+        music.appendTrack(practical.getLineFromFile(tracksFilePath, line),
+        trackID, trackOwner, songOwner, songName);
+
         if (songOwner !== trackOwner){
-            userFunc.appendNotification(songOwner + ' appended your track ' + music.trackIDToName(trackID, tracksFilePath) + ' to their song ' + songName + '\n', trackOwner);
+            userFunc.appendNotification(songOwner + ' appended your track '
+            + music.trackIDToName(trackID, tracksFilePath) + ' to their song '
+            + songName + '\n', trackOwner);
         }
         return "Track appended";
     }

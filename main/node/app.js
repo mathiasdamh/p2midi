@@ -9,41 +9,28 @@ const userFunc = require('./PublicResources/modules/c117/nichUsers.js');
 const hostname = '127.0.0.1';
 const port = 8080;
 
-const verbose = true; // For console logging
-
-//https://blog.todotnet.com/2018/11/simple-static-file-webserver-in-node-js/
-//https://stackoverflow.com/questions/16333790/node-js-quick-file-server-static-files-over-http
+const verbose = true; // Til ekstra console logging
 
 const publicResources="PublicResources/";
-//secture file system access as described on
-//https://nodejs.org/en/knowledge/file-system/security/introduction/
+
 const rootFileSystem=process.cwd();
 const SavedFilesDir = rootFileSystem+"/"+publicResources+"webpage/SavedFiles/";
 
-userFunc.host = SavedFilesDir;
-
 function securePath(userPath){
   if (userPath.indexOf('\0') !== -1) {
-    // could also test for illegal chars: if (!/^[a-z0-9]+$/.test(filename)) {return undefined;}
     return undefined;
-
   }
-  userPath= publicResources+userPath;
 
-  let p= path.join(rootFileSystem,path.normalize(userPath));
-  //console.log("The path is:"+p);
+  userPath = publicResources+userPath;
+
+  let p = path.join(rootFileSystem, path.normalize(userPath));
+  if(verbose) console.log("The path is:"+p);
   return p;
 }
-/* more accurate error codes should be sent to client */
 
-
-/* ############################################################################
-   ############################################################################
-    FROM HERE REQUESTS GET HANDLED
-*/
 function fileResponse(filename,res){
-  const sPath=securePath(filename);
-  console.log("Reading:"+sPath);
+  const sPath = securePath(filename);
+  if(verbose) console.log("Reading:"+sPath);
   fs.readFile(sPath, (err, data) => {
     if (err) {
       console.error(err);
@@ -60,60 +47,66 @@ function fileResponse(filename,res){
   })
 }
 
+/* ############################################################################
+   ################## FROM HERE REQUESTS GET HANDLED  #########################
+   ############################################################################
+*/
+
 const server = http.createServer((req, res) => {
-    let date=new Date();
-    console.log("GOT: " + req.method + " " +req.url);
-    if(req.method=="GET"){
+    if(verbose) console.log("GOT: " + req.method + " " +req.url);
+
+    if(req.method=="GET"){ // Tager sig af GET requests
         switch(req.url){
             case "/index":
                 res.writeHead(301,
                     {Location: "webpage/index.html"}
                 );
                 res.end();
-                //fileResponse("index.html",res);
             break;
             default:
                 fileResponse(decodeURI(req.url), res);
             break;
         }
-    }else if(req.method=="POST"){ // Tager sig af POST requests
+    }
+    else if(req.method=="POST"){ // Tager sig af POST requests
         let data = [];
         let obj;
         let status = "";
         switch(req.url){
             case "/webpage/songFilesDir":
                 let songDirBody = '';
+                let songDirPath = SavedFilesDir + "users/" + songDirBody + "/songs";
                 req.on('data', chunk =>{
                     songDirBody += chunk.toString();
                 });
                 req.on('end', ()=>{
-                    let songDirArr = fs.readdirSync(SavedFilesDir+"users/"+songDirBody+"/songs");
-                    console.log(songDirArr);
+                    let songDirArr = fs.readdirSync(songDirPath);
+                    if(verbose) console.log(songDirArr);
                     res.write(JSON.stringify(songDirArr));
                     res.end();
                 });
                 break;
             case "/webpage/midiFilesDir":
                 let dirArr = fs.readdirSync(SavedFilesDir+"midi");
-                console.log(dirArr);
+                if(verbose) console.log(dirArr);
                 res.write(JSON.stringify(dirArr))
                 res.end();
                 break;
             case "/webpage/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
                                                // Specificeret under Indspilning.html
                 let midiBody = ''; // En tom string til at holde den data som
-                               // Bliver sendt med POST requesten
+                                   // Bliver sendt med POST requesten
                 let midiOwner = req.headers["owner-name"];
                 let midiName = req.headers["song-name"];
                 let midiPath = SavedFilesDir + "midi/" + midiOwner + "_" + midiName + ".mid";
-                req.on('data', chunk =>{ // Samler dataet sendt i POST requesten og
+                req.on('data', chunk => { // Samler dataet sendt i POST requesten og
                                          // samler det sammen i midiBody
                     midiBody += chunk.toString();
                 });
-                req.on('end', ()=>{
+                req.on('end', () => {
 
                     midiBody = JSON.parse(midiBody); // Dataet er blevet sendt som en streng, og
-                                             // her bliver det omdannet til et object
+                                                     // her bliver det omdannet til et object
                     // Skriver dataet ud til en MIDI fil
                     fs.writeFileSync(midiPath, new Buffer(Object.values(midiBody)));
 
@@ -194,11 +187,11 @@ const server = http.createServer((req, res) => {
                         let updateParsedId;
                         let updateIds = []
                         for (i = 0; i < trackDataArr.length; i++) {
-                            console.log(i+" for loop");
+                            if(verbose) console.log(i+" for loop");
                             updateParsedData = JSON.parse(trackDataArr[i]);
-                            console.log(updateParsedData);
+                            if(verbose) console.log(updateParsedData);
                             updateParsedId = updateParsedData.id.slice(updateObj.owner.length, updateParsedData.id.length);
-                            console.log(updateParsedId);
+                            if(verbose) console.log(updateParsedId);
                             updateIds.push(updateParsedId);
                         }
                         if(verbose) console.log(updateIds);
@@ -210,7 +203,7 @@ const server = http.createServer((req, res) => {
                         while (currentId != updateIds[i]) {
                             if(verbose) console.log("while loop iteration "+i);
                             if(i > updateIds.length){
-                                console.log("Not a valid id to update");
+                                if(verbose) console.log("Not a valid id to update");
                                 endResponse = true;
                                 break;
                             }
@@ -218,13 +211,13 @@ const server = http.createServer((req, res) => {
                         }
 
                         if(endResponse){
-                            console.log("Response ended");
+                            if(verbose) console.log("Response ended");
                             res.writeHead(404);
                             res.end("Not a valid id to update")
                         }
 
                         lineToUpdate = i;
-                        console.log("lineToUpdate: "+lineToUpdate);
+                        if(verbose) console.log("lineToUpdate: "+lineToUpdate);
                         updateParsedData = JSON.parse(trackDataArr[lineToUpdate]);
                         for (i = 0; i < updateParsedData.midiNotes.length; i++) {
                             updateParsedData.midiNotes[i].time += updateObj.delay;
@@ -234,16 +227,16 @@ const server = http.createServer((req, res) => {
                         let newDataString = "";
                         for (i = 0; i < trackDataArr.length; i++) {
                             if(trackDataArr[i] !== undefined){
-                                console.log("trackDataArr: ");
-                                console.log(trackDataArr[i]);
+                                if(verbose) console.log("trackDataArr: ");
+                                if(verbose) console.log(trackDataArr[i]);
                                 newDataString += trackDataArr[i] + "\n";
                             }
                         }
-                        console.log("newDataString: ");
-                        console.log(newDataString);
+                        if(verbose) console.log("newDataString: ");
+                        if(verbose) console.log(newDataString);
                         fs.writeFileSync(updateTrackPath, newDataString);
                         res.writeHead(200);
-                        console.log("Response ended");
+                        if(verbose) console.log("Response ended");
                         res.end();
                     });
 
@@ -276,7 +269,7 @@ const server = http.createServer((req, res) => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
                     status = music.acceptSuggestion(obj.songOwner, obj.songName, obj.trackID);
-                    console.log(status);
+                    if(verbose) console.log(status);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
@@ -290,7 +283,7 @@ const server = http.createServer((req, res) => {
                     data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
                     status = music.rejectSuggestion(obj.songOwner, obj.songName, obj.trackID);
-                    console.log(status);
+                    if(verbose) console.log(status);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
                     });
@@ -299,13 +292,13 @@ const server = http.createServer((req, res) => {
                 break;
             default:
                 res.end('unknown POST request');
-                console.log("unknown POST request");
+                if(verbose) console.log("unknown POST request");
                 break;
         }
     }else if (req.method === "PUT"){
         switch (req.url){
             case '/songs':
-                console.log("new song PUT request");
+                if(verbose) console.log("new song PUT request");
                 let data = [];
                 req.on("data", chunk => {
                     data.push(chunk);
@@ -347,7 +340,7 @@ const server = http.createServer((req, res) => {
                     newUserData.push(chunk);
                 }).on("end", () => {
                     userName = Buffer.concat(newUserData).toString();
-                    console.log("userName: "+userName);
+                    if(verbose) console.log("userName: "+userName);
                     if(userName){
                         result = userFunc.handleNewUserRequest(userName);
                         res.writeHead(200, {
@@ -359,7 +352,7 @@ const server = http.createServer((req, res) => {
                     res.end();
                 });
                 break;
-            default: console.log("yooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
+            default: if(verbose) console.log("Unhandled put request: "+req.url);
         }// end switch
     }else if(req.method === "DELETE"){
         switch (req.url) {
@@ -433,7 +426,7 @@ const server = http.createServer((req, res) => {
                         }
                         fs.writeFileSync(deleteTrackPath, newDataString)
                         res.writeHead(200);
-                        console.log("Response ended");
+                        if(verbose) console.log("Response ended");
                         res.end();
                     });
                 });
@@ -446,7 +439,7 @@ const server = http.createServer((req, res) => {
                     deleteUserData.push(chunk);
                 }).on("end", () => {
                     userName = Buffer.concat(deleteUserData).toString();
-                    console.log("userName: " + userName);
+                    if(verbose) console.log("userName: " + userName);
                     result = userFunc.deleteUser(userName);
                     res.writeHead(200, {
                         "Content-type": "text/javascript"
@@ -455,20 +448,19 @@ const server = http.createServer((req, res) => {
                 });
                 break;
             default:
-                console.log("default switch case, DELETE request: "+req.url);
+                if(verbose) console.log("default switch case, DELETE request: "+req.url);
                 break;
         }
     }
 }); // end request handler
 
-//better alternative: use require('mmmagic') library
 function guessMimeType(fileName){
   const fileExtension=fileName.split('.').pop().toLowerCase();
-  console.log(fileExtension);
-  const ext2Mime ={ //Aught to check with IANA spec
+  if(verbose) console.log(fileExtension);
+  const ext2Mime ={
     "txt": "text/txt",
     "html": "text/html",
-    "ico": "image/ico", // CHECK x-icon vs image/vnd.microsoft.icon
+    "ico": "image/ico",
     "js": "text/javascript",
     "json": "application/json",
     "css": 'text/css',
@@ -482,12 +474,10 @@ function guessMimeType(fileName){
     "docx": 'application/msword',
     "mid": 'audio/mid'
    };
-    //incomplete
+
   return (ext2Mime[fileExtension]||"text/plain");
 }
 
 server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });
-
-//https://www.w3schools.com/nodejs/nodejs_url.asp
