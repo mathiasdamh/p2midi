@@ -104,13 +104,14 @@ async function appendTrack(trackOwner, trackID, songOwner, songName, user){ //Ap
 */
 async function deleteTrack(owner, id){
     try {
-        const res = await fetch ("deleteTrack", {
+        let res = await fetch ("deleteTrack", {
             method: "DELETE",
             headers:{
                 "owner-name":owner
             },
             body: id,
         });
+        res = res.text();
         writeErrorInHTML(res)
         return res;
     } catch (e) {
@@ -118,6 +119,7 @@ async function deleteTrack(owner, id){
         writeErrorInHTML("", e)
         console.log(e);
     }
+    return res;
 }
 
 /* Adds a delay (miliseconds) to all notes in a track
