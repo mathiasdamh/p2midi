@@ -1,6 +1,6 @@
 const http = require('http');
-const fs=require("fs");
-const path=require("path");
+const fs = require("fs");
+const path = require("path");
 const formidable = require('formidable');
 const music = require('./PublicResources/modules/c117/nichMusic.js');
 const practical = require('./PublicResources/modules/c117/nichPractical.js');
@@ -75,11 +75,11 @@ const server = http.createServer((req, res) => {
         switch(req.url){
             case "/webpage/songFilesDir":
                 let songDirBody = '';
-                let songDirPath = SavedFilesDir + "users/" + songDirBody + "/songs";
                 req.on('data', chunk =>{
                     songDirBody += chunk.toString();
                 });
                 req.on('end', ()=>{
+                    let songDirPath = SavedFilesDir + "users/" + songDirBody + "/songs";
                     let songDirArr = fs.readdirSync(songDirPath);
                     if(verbose) console.log(songDirArr);
                     res.write(JSON.stringify(songDirArr));
@@ -93,32 +93,37 @@ const server = http.createServer((req, res) => {
                 res.end();
                 break;
             case "/webpage/newMidiFile": // Denne URL hvis man gerne vil lave en ny MIDI fil
-                                               // Specificeret under Indspilning.html
+
                 let midiBody = ''; // En tom string til at holde den data som
                                    // Bliver sendt med POST requesten
                 let midiOwner = req.headers["owner-name"];
                 let midiName = req.headers["song-name"];
                 let midiPath = SavedFilesDir + "midi/" + midiOwner + "_" + midiName + ".mid";
                 req.on('data', chunk => { // Samler dataet sendt i POST requesten og
-                                         // samler det sammen i midiBody
+                                          // sætter det sammen i midiBody
                     midiBody += chunk.toString();
                 });
                 req.on('end', () => {
-
                     midiBody = JSON.parse(midiBody); // Dataet er blevet sendt som en streng, og
                                                      // her bliver det omdannet til et object
                     // Skriver dataet ud til en MIDI fil
-                    fs.writeFileSync(midiPath, new Buffer(Object.values(midiBody)));
-
-                    res.writeHead(200);
-                    res.end('end write midi file');
+                    try {
+                        fs.writeFileSync(midiPath, new Buffer(Object.values(midiBody)));
+                        res.writeHead(200);
+                        res.end('end write midi file');
+                    } catch (e) {
+                        res.writeHead(400)
+                        res.write("Error in creating new MIDI file")
+                    }
                 });
-                res.end('unexpected ending ' + req.url);
                 break;
             case '/webpage/musicData':
+
                 let trackBody = [];
+
                 req.on("data", chunk => {
                     trackBody.push(chunk);
+
                 }).on("end", () => {
                     trackBody = Buffer.concat(trackBody).toString();
                     trackBody = JSON.parse(trackBody);
@@ -127,6 +132,7 @@ const server = http.createServer((req, res) => {
                     res.writeHead(200, {
                         'Content-type': 'text/javascript'
                     });
+                    res.end(status);
                 });
                 break;
             case '/webpage/userCheck':
@@ -358,12 +364,16 @@ const server = http.createServer((req, res) => {
         switch (req.url) {
             case '/webpage/deleteSong':
                 let deleteSongBody = '';
-                req.on('data', (chunk) =>{
+                let deleteSongOwner = req.headers["owner-name"]
+                let deleteSongPath = SavedFilesDir + "users/" +
+                                     deleteSongOwner +"/songs/"+deleteSongBody+".txt"
+                req.on('data', (chunk) => {
                     deleteSongBody += chunk.toString();
                 });
-                req.on('end', ()=>{
-                    music.deleteSong(SavedFilesDir+"users/"+req.headers["owner-name"]+"/songs/"+deleteSongBody+".txt");
-                    res.end();
+                req.on('end', () => {
+                    let status = music.deleteSong(deleteSongPath);
+                    res.writeHead(200);
+                    res.end(status);
                 });
                 break;
             case '/webpage/deleteTrack':

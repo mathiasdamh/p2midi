@@ -1,10 +1,4 @@
-document.body.onload = main;
-
 let currentUser = "mads" // Bliver brugt til at gemme tracks.
-
-let trackDisplay = false; // For displaying tracks
-let trackOtherDisplay = false; // For displaying other tracks
-let songDisplay = false; // For displaying songs
 /* Updates information about the current entered track
 */
 async function btnCheckSuggestions(){

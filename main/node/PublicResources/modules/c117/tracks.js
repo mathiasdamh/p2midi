@@ -13,6 +13,8 @@ class midiTrack {
 /* Sends track data to the server
 */
 async function sendTrack(owner, trackName, notes){ // !!!NEEDS REVAMPING!!! for sending the track/file (undecided which) to a server
+    if(checkIllegalChars(trackName)) return -1;
+
     newTrack = new midiTrack(trackName, notes, owner, MIDI.getInstrument(0)); // Bruger midiTrack class
 
     await fetch('musicData', {
@@ -21,10 +23,13 @@ async function sendTrack(owner, trackName, notes){ // !!!NEEDS REVAMPING!!! for 
         headers: {
             "Content-Type": "text/javascript"
         }
-    }).then
-    (res => {//console.log("Sent track succesfully");
-    },
-    err =>  {alert("Could not send track\n"+err);
+    }).then(res => {
+        return res.text();
+    }).then(res => {
+        writeErrorInHTML(res);
+        return res;
+    }).catch(err => {
+        alert("Could not send track\n"+err);
     });
 }
 
@@ -42,7 +47,7 @@ async function getMidiTrackData(owner){
         return data;
     } catch (e) {
         console.log("Error in getMidiTrackData("+owner+")");
-        console.log(e);
+        writeErrorInHTML("", e)
     };
 }
 
@@ -64,7 +69,7 @@ async function getMidiTrackById(owner, searchId){
         return -1;
     } catch (e) {
         console.log("Error in getMidiTrackById("+owner+", "+searchId+")");
-        console.log(e);
+        writeErrorInHTML("", e)
         return e;
     }
 }
@@ -85,10 +90,11 @@ async function appendTrack(trackOwner, trackID, songOwner, songName, user){ //Ap
         "Content-Type": "text/javascript"
         }
     }).then(response => {
-        return response.text();
-    }).then(data => {
-        //console.log(data);
+        response = response.text();
+        writeErrorInHTML(response)
+        return response;
     }).catch(err => {
+        writeErrorInHTML("", err)
         console.log(err);
     });
 }
@@ -104,10 +110,11 @@ async function deleteTrack(owner, id){
             },
             body: id,
         });
-        //console.log(res.status);
+        writeErrorInHTML(res)
         return res;
     } catch (e) {
         console.log("Error in deleteTrack("+owner+", "+id+")");
+        writeErrorInHTML("", e)
         console.log(e);
     }
 }
@@ -121,8 +128,10 @@ async function addDelayToTrack(owner, id, delay){
             body:JSON.stringify({owner:owner,id:id,delay:delay})
         });
 
+        writeErrorInHTML(res)
     } catch (e) {
         console.log("Error in addDelayToTrack("+owner+", "+id+", "+delay+")");
+        writeErrorInHTML("", e)
         console.log(e);
     }
 
@@ -164,6 +173,7 @@ async function addNotesFromTrack(midiTrack, trackData){
         }
     } catch (e) {
         console.log("Error in addNotesFromTrack("+midiTrack+", "+trackData+")");
+        writeErrorInHTML("", e)
         console.log(e);
     }
 }

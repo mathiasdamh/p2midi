@@ -1,5 +1,5 @@
 async function createNewSong(userName, songName){
-    //console.log("creating new song...");
+    if(checkIllegalChars(songName)) return -1;
     await fetch('/songs', {
         method: "PUT",
         body: JSON.stringify({user: userName, song: songName}),
@@ -7,10 +7,11 @@ async function createNewSong(userName, songName){
             "Content-Type": "text/javascript"
         }
     }).then(response => {
-        return response.text();
-    }).then(data => {
-        //console.log(data);
+        response = response.text();
+        writeErrorInHTML(response)
+        return response;
     }).catch(err => {
+        writeErrorInHTML("", err)
         console.log(err);
     });
 }
@@ -24,12 +25,14 @@ async function deleteSong(songOwner, songName){
         body:songName
     }).then(res=>{
         displaySongFiles();
+        res = res.text();
+        return res
     })
-    .then(res => {//console.log("Song deleted");
-                  //console.log("Response: ");
-                  //console.log(res);
-                 })
+    .then(res => {
+        writeErrorInHTML(res)
+    })
     .catch(err=>{
+        writeErrorInHTML("", err)
         console.log(err);
     });
 }
@@ -42,10 +45,13 @@ async function clearFile(userName, songName){
             "Content-Type": "text"
         }
     }).then(response => {
-        return response.text();
+        response = response.text();
+        writeErrorInHTML(response);
+        return response
     }).then(data => {
         //console.log(data);
     }).catch(err => {
+        writeErrorInHTML("", err)
         console.log(err);
     });
 }
@@ -54,47 +60,41 @@ async function getContributions(userName){
     await fetch('SavedFiles/users/' + userName +  '/contributions.txt', {
     })
     .then(response => {
-        return response.text();
+        response = response.text();
+        writeErrorInHTML(response);
+        return response
     }).then(data => {
         //console.log(data);
     }).catch(err => {
+        writeErrorInHTML("", err)
         console.log(err);
     });
 }
 
 async function getNotifications(userName){
-    let returnValue;
-
-    await fetch('SavedFiles/users/' + userName +  '/notifications.txt', {
+    const res = await fetch('SavedFiles/users/' + userName +  '/notifications.txt', {
     })
     .then(response => {
         response = response.text();
-        //console.log(response);
-        returnValue = response;
-    }).then(data => {
-        //console.log(data);
-        return data;
+        writeErrorInHTML(response);
+        return response
     }).catch(err => {
+        writeErrorInHTML("", err)
         console.log(err);
     });
-
-    return returnValue;
 }
 
-async function getSuggestions(userName){
-    let returnValue;
-
-    await fetch('SavedFiles/users/' + userName +  '/suggestions.txt', {
+function getSuggestions(userName){
+    const res = fetch('SavedFiles/users/' + userName +  '/suggestions.txt', {
     })
     .then(response => {
-        returnValue = response.text();
-        //console.log(returnValue);
+        return response.text();
     })
     .catch(err => {
+        writeErrorInHTML("", err)
         console.log(err);
     });
-
-    return returnValue;
+    return res;
 }
 
 async function getSongByName(owner, songName){
@@ -111,9 +111,10 @@ async function getSongByName(owner, songName){
         if (response.status !== 404) {
             return data;
         }
-        return -1;
+        return "Couldn't find song";
     } catch (e) {
         console.log("Error in getSongByName("+owner+", "+songName+")");
+        writeErrorInHTML("", e)
         console.log(e);
     };
 }
@@ -126,10 +127,11 @@ async function acceptSuggestion(songOwner, songName, trackID){
             "Content-Type": "text/javascript"
         }
     }).then(response => {
-        return response.text();
-    }).then(data => {
-        //console.log(data);
+        response = response.text();
+        writeErrorInHTML(response);
+        return response
     }).catch(err => {
+        writeErrorInHTML("", err)
         console.log(err);
     });
 }
@@ -142,10 +144,11 @@ async function rejectSuggestion(songOwner, songName, trackID){
             "Content-Type": "text/javascript"
         }
     }).then(response => {
-        return response.text();
-    }).then(data => {
-        //console.log(data);
+        response = response.text();
+        writeErrorInHTML(response);
+        return response
     }).catch(err => {
+        writeErrorInHTML("", err)
         console.log(err);
     });
 }
