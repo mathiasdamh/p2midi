@@ -114,21 +114,18 @@ function newNote(message, noteArray){
 }
 
 function endNote(message, activeNotes, noteArray){
-    let i = 0;
-    let flag  = false;
     let timeDiff = countStartRecord-startTime;
-    do {
+    for (let i = 0; i < activeNotes.length; i++){ // loop through activeNotes
         if (message.data[1] === activeNotes[i].midi){
             activeNotes[i].duration = (message.timeStamp + timeDiff) - activeNotes[i].time;
 
             // removing the ended note from activeNotes, and adding to noteArray
             noteArray.push(activeNotes.splice(i, 1)[0]);
-            flag = true;
         }
+        updateCurrentTrackData(noteArray.length, message.timeStamp + timeDiff);
     }
-    while (flag === false && i < activeNotes.length);
-    updateCurrentTrackData(noteArray.length, message.timeStamp + timeDiff);
 
+    updateCurrentTrackData(noteArray.length, message.timeStamp + timeDiff);
 }
 
 function resetNotes(){
