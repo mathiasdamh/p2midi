@@ -1,12 +1,17 @@
-# Datalogi P2 Projekt - MIDI
+# Datalogi P2 Projekt - Musiksamarbejd i MIDI
 
-A project about working midi in a browser
+Et projekt omkring MIDI.
 
-`main` mappen er hvor de fleste ting er.
+`main` mappen er alle tingene er.
 
 Herunder er `node` hvor serveren er i `app.js` og `node_modules` hvor node pakkerne er.
 
 I `PublicResources` er alle de ting som serveren tilbyder til klienten.
-Herunder er `modules`, som er js fra https://github.com/mudcube/MIDI.js, og `P2musik`.
+Herunder er `modules`, der indeholder alle moduler.
+`c117` mappen indeholder gruppens egen kode.
 
-`P2musik` er tænkt at være selve hjemmesiden.
+For at starte programmet, kør `node app.js` i `node` filstien.
+
+Navigér til `http://localhost:8080/index`.
+
+Denne vil redirecte til hjemmesiden.

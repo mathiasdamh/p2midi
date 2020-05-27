@@ -1,26 +1,26 @@
-let startTime = 0; // Brugt til at få tiden startet ved 0, i stedet for det første time stamp
+let startTime = 0; // Holder en tidsvaerdi fra en MIDI besked
 
-let timer;
-let counter = 0;
-let countStartRecord = 0; // når man spiller samtidigt med at man spiller et track
-let extraTime = 0.001;
-let recording = false;
+let timer; // Holder intervallet der taeller op
+let counter = 0; // Taeller fra naar man starter med at optage
+let countStartRecord = 0; // Til samtidig afspilning og indspilning
+let extraTime = 0.001; // Ekstra tid, MIDI.js har problemer med at starte fra 0.
+let recording = false; // Boolean til at optage tracks
 
 function startRecordTimer(time){
     counter = 0;
     if(time !== undefined) startTime = time;
-    //console.log(startTime);
     recording = true;
-    //console.log("starting record timer");
+    let timerElement = document.getElementById('currentTime');
     timer = setInterval(()=>{
         counter += 10;
 
-        if(document.getElementById('currentTime')) document.getElementById('currentTime').innerHTML = "Current time: "+counter;
+        if(document.getElementById('currentTime')){
+            timerElement.innerHTML = "Current time: "+counter;
+        }
     } , 10);
 }
 
 function stopRecordTimer(){
-    //console.log("stopping record timer");
     clearInterval(timer);
     recording = false;
     startTime = 0;
@@ -69,69 +69,66 @@ function main(){
     */
     function getMIDIMessage(midiMessage) {
         if(midiMessage.data[0] >= 128 && midiMessage.data[0] <= 207){
-            reactMidiMessage(midiMessage.data[0]%16, midiMessage);
+            reactMidiMessage(midiMessage.data[0] % 16, midiMessage);
         }
     }
 }
 
 function reactMidiMessage(channel, midiMessage){
     switch (midiMessage.data[0]) {
-        case 144+channel: // note On channel 1
+        case 144+channel: // Note ON besked
             if(noteArray.length === 0) {
                 countStartRecord = counter;
                 startTime = midiMessage.timeStamp;
                 if(!recording) startRecordTimer(midiMessage.timeStamp);
             }
-            //console.log("noteOn() "+midiMessage.data[1]+", "+midiMessgae.data[2]);
             newNote(midiMessage, activeNotes);
             MIDI.noteOn(0, midiMessage.data[1], midiMessage.data[2]);
 
 
             break;
-        case 128+channel: // note Off channel 1
-            //console.log("noteOff() "+midiMessage.data[1]);
+        case 128+channel: // Note OFF besked
             MIDI.noteOff(0, midiMessage.data[1], 0);
             endNote(midiMessage, activeNotes, noteArray);
 
             break;
-        case 192+channel: // switch program channel 1
-            //console.log("switching instrument to "+ MIDI.GM.byId[midiMessage.data[1]].instrument);
+        case 192+channel: // Switch Program besked
             MIDI.programChange(0, midiMessage.data[1]);
             MIDI.loadPlugin({
                 instrument: midiMessage.data[1]
             });
         default:
-            //console.log("default reaction to midimessage\ngetMidiMessage(midiMessage)");
-            //console.log(midiMessage);
             break;
     }
 }
 
-function newNote(message, noteArray){ // make a new note (duration will be defined in function endNote)
+// make a new note (duration will be defined in function endNote)
+function newNote(message, noteArray){
+    let timeDiff = countStartRecord-startTime;
     let note = {
         midi: message.data[1],
-        time: (message.timeStamp+countStartRecord-(startTime)), // {mads} Satte startTime og countStartRecord ind
+        time: message.timeStamp+timeDiff,
         duration: undefined
     }
     activeNotes.push(note);
-
-    //console.log(activeNotes[activeNotes.length - 1]);
 }
 
 function endNote(message, activeNotes, noteArray){
-    for (let i = 0; i < activeNotes.length; i++){ // loop through activeNotes
+    let i = 0;
+    let flag  = false;
+    let timeDiff = countStartRecord-startTime;
+    do {
         if (message.data[1] === activeNotes[i].midi){
-            //console.log("starttime: "+activeNotes[i].time);
-            activeNotes[i].duration = (message.timeStamp+countStartRecord-(startTime)) - activeNotes[i].time; // {mads} Satte startTime og countStartRecord ind
-            noteArray.push(activeNotes.splice(i, 1)[0]); // removing the ended note from activeNotes, and adding to noteArray
+            activeNotes[i].duration = (message.timeStamp + timeDiff) - activeNotes[i].time;
 
+            // removing the ended note from activeNotes, and adding to noteArray
+            noteArray.push(activeNotes.splice(i, 1)[0]);
+            flag = true;
         }
     }
+    while (flag === false && i < activeNotes.length);
+    updateCurrentTrackData(noteArray.length, message.timeStamp + timeDiff);
 
-    //console.log("endtime: "+(message.timeStamp+countStartRecord-(startTime)));
-
-    updateCurrentTrackData(noteArray.length, (message.timeStamp+countStartRecord-(startTime)));
-    //console.log(noteArray.length);
 }
 
 function resetNotes(){

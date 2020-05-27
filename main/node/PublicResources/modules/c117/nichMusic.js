@@ -29,9 +29,9 @@ exports.trackExistsInFile = function(trackID, filePath){ // this function must o
     else return false;
 }
 
+/* this function must only be called when it is known that all five values
+given as parameters exist */
 exports.suggestTrack = function(trackOwner, track, songOwner, songName, suggester){
-    /* this function must only be called when it is known that all five values
-    given as parameters exist */
     let suggestionsFilePath = host + 'users/' + songOwner + '/suggestions.txt';
     fs.appendFileSync(suggestionsFilePath, songName + '|' + trackOwner + '|'
         + suggester + '|' + track + '\n');
@@ -169,14 +169,12 @@ exports.acceptSuggestion = function(songOwner, songName, trackID){
             music.appendTrack(track, trackID, trackOwner, songOwner, songName);
             practical.deleteLineFromFile(trackLine, suggestionsFilePath);
             if (userFunc.userExists(trackOwner)){
-                console.log("notifying trackOwner");
                 // contribution and contributer are appended in appendTrack function
                 music.appendNotification(songOwner + ' included your track "'
                     + music.trackIDToName(trackID, tracksFilePath) + '" into their song "'
                     + songName + '" (suggested by ' + suggester + ')\n', trackOwner);
             }
             if (userFunc.userExists(suggester)){
-                console.log("notifying suggester");
                 music.appendContributor(suggester, songPath);
                 music.appendNotification(songOwner + ' accepted your suggestion '
                     + music.trackIDToName(trackID, tracksFilePath) + ' to their song '

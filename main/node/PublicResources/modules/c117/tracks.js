@@ -55,6 +55,7 @@ async function getMidiTrackData(owner){
 */
 async function getMidiTrackById(owner, searchId){
     try {
+        if(owner == undefined) return -1;
         const data = await getMidiTrackData(owner) // await fordi skal bruge værdi fra promise
 
         let dataSet = removeEmptyLines(data.split("\n"));
@@ -127,8 +128,9 @@ async function addDelayToTrack(owner, id, delay){
             method:"POST",
             body:JSON.stringify({owner:owner,id:id,delay:delay})
         });
-
-        writeErrorInHTML(res)
+        let response = res.text();
+        writeErrorInHTML(response)
+        return response;
     } catch (e) {
         console.log("Error in addDelayToTrack("+owner+", "+id+", "+delay+")");
         writeErrorInHTML("", e)

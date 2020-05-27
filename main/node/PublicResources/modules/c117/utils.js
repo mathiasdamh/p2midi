@@ -6,28 +6,28 @@ async function clearFile(userName, songName){
             "Content-Type": "text"
         }
     }).then(response => {
-        return response.text();
-    }).then(data => {
-        //console.log(data);
+        response = response.text();
+        writeErrorInHTML(response);
+        return response
     }).catch(err => {
-        //console.log(err);
+        writeErrorInHTML("", err);
     });
 }
 
 async function createNewUser(desiredName){
     if(checkIllegalChars(desiredName)) return -1;
-    await fetch('/newUser', {
-        method: 'PUT',
+    return await fetch("/newUser", {
+        method: "PUT",
         body: desiredName,
         headers: {
             "Content-Type": "text/javascript"
         }
     }).then(response => {
-        return response.text();
-    }).then(data => {
-        //console.log(data);
+        response = response.text();
+        writeErrorInHTML(response);
+        return response
     }).catch(err => {
-        //console.log(err);
+        alert("The username request was not properly processed!\n" + err);
     });
 }
 
@@ -39,11 +39,11 @@ async function deleteUser(userName){
             "Content-Type": "text/javascript"
         }
     }).then(response => {
-        return response.text();
-    }).then(data => {
-        //console.log(data);
+        response = response.text();
+        writeErrorInHTML(response);
+        return response
     }).catch(err => {
-        //console.log(err);
+        writeErrorInHTML("", err);
     });
 }
 
@@ -63,7 +63,7 @@ async function checkIfNameIsTaken(name){
         else return false;
     })
     .catch(err => {
-        //console.log(err);
+        alert(err);
     });
     return res;
 };

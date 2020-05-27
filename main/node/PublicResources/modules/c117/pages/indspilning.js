@@ -131,6 +131,7 @@ async function btnSendTrack(){ // Sender en track
     .then(res=>{
         if(trackDisplay) displayTracks();
         updateTrackData();
+        btnResetRecord();
     })
 }
 

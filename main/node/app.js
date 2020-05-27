@@ -219,8 +219,8 @@ const server = http.createServer((req, res) => {
                         if(endResponse){
                             if(verbose) console.log("Response ended");
                             res.writeHead(404);
-                            res.end("Not a valid id to update")
-                        }
+                            res.end("Not a valid id to update");
+                        }else{
 
                         lineToUpdate = i;
                         if(verbose) console.log("lineToUpdate: "+lineToUpdate);
@@ -243,7 +243,8 @@ const server = http.createServer((req, res) => {
                         fs.writeFileSync(updateTrackPath, newDataString);
                         res.writeHead(200);
                         if(verbose) console.log("Response ended");
-                        res.end();
+                        res.end("Delayed track");
+                        }
                     });
 
                 });
