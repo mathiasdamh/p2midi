@@ -15,6 +15,7 @@ async function clearFile(userName, songName){
 }
 
 async function createNewUser(desiredName){
+    if(checkIllegalChars(desiredName)) return -1;
     await fetch('/newUser', {
         method: 'PUT',
         body: desiredName,
@@ -77,4 +78,29 @@ function removeEmptyLines(array){
         }
     }
     return array;
+}
+
+async function writeErrorInHTML(message, err){
+    message = (message == undefined) ? "" : message;
+    err = (err == undefined) ? "" : err;
+
+    console.log("Writing error message in HTML");
+
+    if(document.getElementById('errorElement')){
+        let errorElement = document.getElementById('errorElement');
+        if(typeof message == "object") message = await message;
+        if(typeof err == "object") err = await err;
+        errorElement.innerHTML = message;
+        errorElement.innerHTML += "\t";
+        errorElement.innerHTML += err;
+    }
+};
+
+function checkIllegalChars(textstring){
+    let allowedCharacters = /^[0-9a-zA-Z]+$/;
+    if(!allowedCharacters.test(textstring)){
+        alert("Please only use letters and numbers.");
+        return true;
+    }
+    return false;
 }

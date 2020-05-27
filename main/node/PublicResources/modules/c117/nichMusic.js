@@ -72,7 +72,7 @@ exports.handleAppendRequest = function(trackOwner, trackID, songOwner, songName,
     }
     else if (songOwner === requester){
         songPath = songsFolderPath + songName + '.txt';
-        
+
         music.appendTrack(practical.getLineFromFile(tracksFilePath, line),
         trackID, trackOwner, songOwner, songName);
 
@@ -119,11 +119,13 @@ exports.createSong = function(songPath){
 }
 
 exports.deleteSong = function(songPath){
-    fs.unlink(
-        songPath,
-        function(err){
-            if(err) console.log(err);
-    });
+    console.log("path:\n" + songPath);
+    try {
+        fs.unlinkSync(songPath);
+        return "Song deleted";
+    } catch (e) {
+        return "Invalid song name";
+    }
 }
 
 exports.acceptSuggestion = function(songOwner, songName, trackID){
