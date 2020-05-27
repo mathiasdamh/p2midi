@@ -75,11 +75,11 @@ const server = http.createServer((req, res) => {
         switch(req.url){
             case "/webpage/songFilesDir":
                 let songDirBody = '';
-                let songDirPath = SavedFilesDir + "users/" + songDirBody + "/songs";
                 req.on('data', chunk =>{
                     songDirBody += chunk.toString();
                 });
                 req.on('end', ()=>{
+                    let songDirPath = SavedFilesDir + "users/" + songDirBody + "/songs";
                     let songDirArr = fs.readdirSync(songDirPath);
                     if(verbose) console.log(songDirArr);
                     res.write(JSON.stringify(songDirArr));
