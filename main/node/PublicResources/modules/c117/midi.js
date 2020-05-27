@@ -40,7 +40,7 @@ function main(){
     // Plugin inlæsning
     MIDI.loadPlugin({
         soundfontUrl: "./FluidR3_GM/",
-        instruments: [0,24,56,73,118,107],
+        instruments: [0, 24, 56, 73, 118, 107],
         onsuccess: function() {
 
         }
