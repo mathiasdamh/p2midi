@@ -1,8 +1,0 @@
-<<<<<<< HEAD
-charles|charles1|adam2
-=======
-charles|charles1|adam3
-charles|charles1|adam2
-charles|charles2|adam2
-charles|charles2|adam3
->>>>>>> prototype
