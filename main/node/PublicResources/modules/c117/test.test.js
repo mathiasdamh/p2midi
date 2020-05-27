@@ -1,5 +1,5 @@
-const music = require('./nichMusic');
-const users = require('./nichUsers');
+const music = require('./serverMusic');
+const users = require('./serverUsers');
 
 const host = process.cwd() + "/PublicResources/webpage/SavedFiles/";
 

@@ -1,7 +1,7 @@
 const fs=require("fs");
 const host = process.cwd() + "/PublicResources/webpage/SavedFiles/";
-const userFunc = require("./nichUsers.js");
-const practical = require("./nichPractical");
+const userFunc = require("./serverUsers.js");
+const practical = require("./serverPractical");
 
 exports.getNotifications = function(userName){
     let notificationsFilePath = host + 'users/' + userName + 'notifications.txt';

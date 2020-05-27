@@ -2,9 +2,9 @@ const http = require('http');
 const fs = require("fs");
 const path = require("path");
 const formidable = require('formidable');
-const music = require('./PublicResources/modules/c117/nichMusic.js');
-const practical = require('./PublicResources/modules/c117/nichPractical.js');
-const userFunc = require('./PublicResources/modules/c117/nichUsers.js');
+const music = require('./PublicResources/modules/c117/serverMusic.js');
+const practical = require('./PublicResources/modules/c117/serverPractical.js');
+const userFunc = require('./PublicResources/modules/c117/serverUsers.js');
 
 const hostname = '127.0.0.1';
 const port = 8080;

@@ -1,8 +1,8 @@
 const fs=require("fs");
 const host = process.cwd() + "/PublicResources/webpage/SavedFiles/";
-const userFunc = require("./nichUsers.js");
-const music = require("./nichMusic.js")
-const practical = require("./nichPractical.js");
+const userFunc = require("./serverUsers.js");
+const music = require("./serverMusic.js")
+const practical = require("./serverPractical.js");
 ///////
 
 exports.trackIDToName = function(trackID, tracksFilePath){
