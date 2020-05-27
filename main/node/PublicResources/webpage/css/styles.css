@@ -431,11 +431,11 @@ h3 {
     min-height: 250px;
     padding: 25px 25px 65px 25px;
 
-    background: url(../SavedFiles/uploads/img/grey.png);
-    background: -webkit-linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%), url(../SavedFiles/uploads/img/grey.png);
-    background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0.1) 100%), url(../SavedFiles/uploads/img/grey.png);
-    background: -o-linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%), url(../SavedFiles/uploads/img/grey.png);
-    background: linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%), url(../SavedFiles/uploads/img/grey.png);
+    Background: grey;
+    background: -webkit-linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
+    background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0.1) 100%);
+    background: -o-linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
+    background: linear-gradient(top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
 }
 
 .uploadForm h3 {
