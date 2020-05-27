@@ -309,20 +309,13 @@ const server = http.createServer((req, res) => {
                 req.on("data", chunk => {
                     data.push(chunk);
                 }).on("end", () => {
+                    data = Buffer.concat(data).toString();
                     obj = JSON.parse(data);
-                    let songs = fs.readdirSync(SavedFilesDir + '/users/' + obj.user + '/songs/');
-                    if (songs.includes(obj.song + '.txt')){
-                        res.writeHead(200, {'Content-Type': 'text'});
-                        res.write(JSON.stringify({error: "song already exists"}));
-                        res.end();
-                    }
-                    else {
-                        music.createSong(SavedFilesDir + "/users/" + obj.user + "/songs/" + obj.song + '.txt', obj.user);
-                        res.writeHead(200, {
-                            "Content-type": "text/javascript"
-                        });
-                        res.end(JSON.stringify({error: "none"}));
-                    }
+                    result = music.handleCreateSongRequest(obj.song, obj.user);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
+                    res.end(result);
                 });
                 break;
             case "/overwritesong":
@@ -365,14 +358,16 @@ const server = http.createServer((req, res) => {
             case '/webpage/deleteSong':
                 let deleteSongBody = '';
                 let deleteSongOwner = req.headers["owner-name"]
-                let deleteSongPath = SavedFilesDir + "users/" +
-                                     deleteSongOwner +"/songs/"+deleteSongBody+".txt"
                 req.on('data', (chunk) => {
                     deleteSongBody += chunk.toString();
                 });
                 req.on('end', () => {
+                    let deleteSongPath = SavedFilesDir + "users/" +
+                                         deleteSongOwner +"/songs/" + deleteSongBody + ".txt";
                     let status = music.deleteSong(deleteSongPath);
-                    res.writeHead(200);
+                    res.writeHead(200, {
+                        "Content-type": "text/javascript"
+                    });
                     res.end(status);
                 });
                 break;
@@ -384,8 +379,9 @@ const server = http.createServer((req, res) => {
                     deleteTrackBody += chunk.toString();
                 });
                 req.on('end', ()=>{
-                    deleteTrackPath = publicResources+"webpage/SavedFiles/users/"+deleteOwner+"/tracks.txt";
-                    deleteTrackBody = deleteTrackBody.slice(deleteOwner.length, deleteTrackBody.length);
+                    deleteTrackPath = SavedFilesDir + "users/" + deleteOwner + "/tracks.txt";
+                    deleteTrackBody = deleteTrackBody.slice(deleteOwner.length,
+                                                            deleteTrackBody.length);
                     let i = 0;
                     fs.readFile(deleteTrackPath, "utf-8", (err, data) => {
                         if (err) console.log(err)

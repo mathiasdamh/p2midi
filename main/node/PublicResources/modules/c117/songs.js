@@ -16,25 +16,26 @@ async function createNewSong(userName, songName){
     });
 }
 
-async function deleteSong(songOwner, songName){
-    fetch("deleteSong", {
+function deleteSong(songOwner, songName){
+    const response = fetch("deleteSong", {
         method:"DELETE",
         headers:{
             "owner-name":songOwner
         },
         body:songName
     }).then(res=>{
-        displaySongFiles();
-        res = res.text();
-        return res
+        return res.text();
     })
     .then(res => {
         writeErrorInHTML(res)
+        displaySongFiles();
+        return res;
     })
     .catch(err=>{
         writeErrorInHTML("", err)
         console.log(err);
     });
+    return response;
 }
 
 async function clearFile(userName, songName){

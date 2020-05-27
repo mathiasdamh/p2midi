@@ -119,12 +119,13 @@ exports.createSong = function(songPath){
 }
 
 exports.deleteSong = function(songPath){
-    fs.unlink(songPath, function(err){
-        if(err) {
-            console.log(err);
-        }
+    console.log("path:\n" + songPath);
+    try {
+        fs.unlinkSync(songPath);
         return "Song deleted";
-    });
+    } catch (e) {
+        return "Invalid song name";
+    }
 }
 
 exports.acceptSuggestion = function(songOwner, songName, trackID){
