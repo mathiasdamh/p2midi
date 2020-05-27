@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- tonejs -->
+    <script src="https://unpkg.com/@tonejs/midi"></script>
+    <!-- c1-17 -->
+    <script src="../modules/c117/midi.js" type="text/javascript"></script>
+    <script src="../modules/c117/songs.js" type="text/javascript"></script>
+    <script src="../modules/c117/tracks.js" type="text/javascript"></script>
+    <script src="../modules/c117/utils.js" type="text/javascript"></script>
+</head>
+<body>
+    <header>
+        <h1>WebMusic - P2</h1>
+    </header>
+    <div class="topnav">
+        <a href="index.html">Home</a>
+        <a href="indspilning.html">Recording</a>
+        <a href="afspilning.html">Playing</a>
+        <a href="sammensaetning.html">Composition</a>
+        <a href="suggestions.html">Suggestions</a>
+        <a href="download.html">Download</a>
+        <a class="active" href="upload.html">Upload</a>
+        <a href="login.html">Login</a>
+        <div class="search-container">
+          <form action="server.js">
+            <input type="text" placeholder="Search.." name="search">
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+    </div>
+    <p id="errorElement"></p>
+    <h2>Upload your MIDI files here!</h2>
+    <div class="main">
+        <div class="uploadForm" id="uploader">
+            <h3 class="uploadText">Upload Form</h3>
+            <form novalidate="novalidate" method="post" target="resp" enctype="multipart/form-data">
+                <input type="file" class="button" id="pickFiles" name="filetoupload" value="Select">
+                <input type="submit" class="button" id="uploadFiles" value="Upload">
+            <div id="filelist" class="list">
+                <iframe name="resp" src="fileupload.html" width="400"></iframe>
+            </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+    </script>
+</body>
+</html>

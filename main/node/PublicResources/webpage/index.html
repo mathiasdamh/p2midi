@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontpage</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!--<link rel="stylesheet" href="register.css">-->
+</head>
+<body>
+    <header>
+        <h1>WebMusic - P2</h1>
+    </header>
+    <div class="topnav">
+      <a class="active" href="index.html">Home</a>
+      <a href="indspilning.html">Recording</a>
+      <a href="afspilning.html">Playing</a>
+      <a href="sammensaetning.html">Composition</a>
+      <a href="suggestions.html">Suggestions</a>
+      <a href="download.html">Download</a>
+      <a href="upload.html">Upload</a>
+      <a href="login.html">Login</a>
+        <div class="search-container">
+          <form action="server.js">
+            <input type="text" placeholder="Search.." name="search">
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+    </div>
+    <p id="errorElement"></p>
+
+    <h2>Welcome to P2WebMusic, an online MIDI-based program for music collaboration
+    </h2>
+    <div class=txt>
+      <p>Feel free to browse the webpage!</p>
+    </div>
+
+    <form id="signup">
+        <h1>Start doing cool stuff in only seconds!</h1>
+        <input type="email" placeholder="name@mail.com" required="">
+        <input type="password" placeholder="Choose your password" required="">
+        <input type="password" placeholder="Confrim your password" required="">
+        <button type="submit">Sign up!</button>
+        <div class="txt">
+          <p>Already have an account? <a href="login.html">Log in!</a></p>
+        </div>
+    </form>
+
+    <!--<form action="server/server.js">
+        <div class="container">
+          <h1>Registrer</h1>
+          <p>Udfyld formularen herunder!</p>
+          <hr>
+
+          <label for="email"><b>Email</b></label>
+          <input type="text" placeholder="Email" name="email" required>
+
+          <label for="psw"><b>Password</b></label>
+          <input type="password" placeholder="Password" name="psw" required>
+
+          <label for="psw-repeat"><b>Password</b></label>
+          <input type="password" placeholder="Password" name="psw-repeat" required>
+          <hr>
+
+          <p>By creating an account you agree to our <a href="#">Terms & Privacy</a>.</p>
+          <button type="submit" class="registerbtn">Register</button>
+        </div>
+
+        <div class="container signin">
+          <p>Already have an account? <a href="login.html">Sign in</a>.</p>
+        </div>
+      </form>-->
+</body>
+</html>

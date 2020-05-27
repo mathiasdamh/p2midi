@@ -1,0 +1,12 @@
+<<<<<<< HEAD
+charles included your track "adam2" into their song "charles1" (suggested by bob)
+charles included your track "melody1" into their song "charles1" (suggested by bob)
+charles included your track "piano melody1" into their song "charles1" (suggested by bob)
+charles included your track "piano melody1" into their song "charles2" (suggested by bob)
+charles included your track "melody1" into their song "charles2" (suggested by bob)
+charles appended your track melody1 to their song charles2
+charles appended your track piano melody1 to their song charles2
+charles rejected your suggestion to their song charles1
+charles appended your track melody1 to their song charles2
+charles appended your track piano melody1 to their song charles2
+charles rejected your suggestion to their song charles1

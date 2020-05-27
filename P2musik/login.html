@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="styles.css">
+    <!--<link rel="stylesheet" href="login.css">-->
+</head>
+<body>
+    <header>
+        <h1>WebMusik - P2</h1>
+    </header>
+    <div class="topnav">
+        <a class="active" href="index.html">Home</a>
+        <a href="indspilning.html">Indspilning</a>
+        <a href="Download.html">Download</a>
+        <a href="server/upload.html">Upload</a>
+        <a href="Afspilning.html">Afspilning</a>
+        <a href="Redigering.html">Redigering</a>
+        <a href="Sammensætning.html">Sammensætning</a>
+        <a href="om.html">Om</a>
+        <a href="login.html">Login</a>
+        <div class="search-container">
+          <form action="server.js">
+            <input type="text" placeholder="Search.." name="search">
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+    </div>
+
+    <div class="login-container">
+      <div class="login-header">
+        <h2>Login til WebMusik</h1>
+      </div>
+
+      <form name="login" onsubmit="return validateForm() ;" method="post">
+        <ul>
+          <li>Username: <input class="username" type="text" name="username">
+          </li>
+          <li>Password: <input class="password" type="text" name="password">
+          </li>
+        </ul>
+        <input type="button" class="submit" value="Log In" name="submit" onclick="validate()">
+      </form>
+    </div>
+
+    <script>
+      let count = 2;
+      let usernameArray = ["Niklas", "Tim"];
+      let passwordArray = ["1234", "12345"];
+      
+      function validate(){
+        let un = document.login.username.value;
+        let pw = document.login.password.value;
+        let valid = false;
+
+        for (var i = 0; i < usernameArray.length; i++){
+          if ((un == usernameArray[i]) && (pw == passwordArray[i])){
+            valid = true;
+            break;
+          }
+        }
+        if (valid){
+          alert("Login was succesful");
+          window.location = "Indspilning.html";
+          return false;
+        }
+        let again = " tries";
+        if(count == 1){
+          again = " try"
+        }
+        if(count >= 1){
+          alert("Wrong Password Or Username")
+          count--;
+        } else{
+          alert("Incorret password or username, you are now blocked");
+          document.login.username.value = "You are now BLOCKED";
+          document.login.password.value = "U cant see this";
+          document.login.username.disabled = true;
+          document.login.password.disabled = true;
+          return false;
+        }
+      }
+    </script>
+    
+</body>
+</html>
